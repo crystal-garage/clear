@@ -2,11 +2,11 @@ version: 2.0
 shards:
   admiral:
     git: https://github.com/jwaldrip/admiral.cr.git
-    version: 1.11.4+git.commit.50a01f29ffe2b921fe4d2a4dbbc135bf551a4742
+    version: 1.12.1
 
   ameba:
     git: https://github.com/veelenga/ameba.git
-    version: 0.14.3+git.commit.720810c3cb0709349e6dcbc56d18c9eddc36b815
+    version: 0.14.3+git.commit.9a91e42bcca51cd6142e2645919e51ef79767e71
 
   db:
     git: https://github.com/crystal-lang/crystal-db.git
@@ -22,5 +22,5 @@ shards:
 
   pg:
     git: https://github.com/will/crystal-pg.git
-    version: 0.23.2+git.commit.cafe1e2a48764464299b44ab26449eb503be5934
+    version: 0.24.0
 

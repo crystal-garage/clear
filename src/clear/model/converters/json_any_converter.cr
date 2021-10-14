@@ -7,6 +7,8 @@ module Clear::Model::Converter::JSON::AnyConverter
       nil
     when ::JSON::Any
       x
+    when ::JSON::PullParser
+      ::JSON::Any.new(x)
     else
       ::JSON.parse(x.to_s)
     end
