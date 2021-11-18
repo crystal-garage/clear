@@ -2,8 +2,8 @@
 
 # Clear
 
-![Crystal CI](https://github.com/mamantoha/clear/workflows/Crystal%20CI/badge.svg)
-[![GitHub release](https://img.shields.io/github/release/mamantoha/clear.svg)](https://github.com/mamantoha/clear/releases)
+![Crystal CI](https://github.com/crystal-garage/clear/workflows/Crystal%20CI/badge.svg)
+[![GitHub release](https://img.shields.io/github/release/crystal-garage/clear.svg)](https://github.com/crystal-garage/clear/releases)
 
 Clear is an ORM built specifically for PostgreSQL in Crystal.
 
@@ -72,7 +72,7 @@ In `shards.yml`
 ```yml
 dependencies:
   clear:
-    github: mamantoha/clear
+    github: crystal-garage/clear
     branch: develop
 ```
 
