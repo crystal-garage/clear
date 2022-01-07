@@ -38,7 +38,7 @@ module IntervalSpec
         3.times do |x|
           mth = Random.rand(-1000..1000)
           days = Random.rand(-1000..1000)
-          microseconds = Random.rand(-10000000..10000000)
+          microseconds = Random.rand(-10_000_000..10_000_000)
 
           IntervalModel.create! id: x, i: Clear::Interval.new(months: mth, days: days, microseconds: microseconds)
 
