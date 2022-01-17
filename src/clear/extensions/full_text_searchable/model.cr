@@ -167,17 +167,20 @@ module Clear::Model::FullTextSearchable
     arr_tokens
   end
 
+  DISALLOWED_TSQUERY_CHARACTERS = /['?\\:‘’]/
+
   # Parse client side text and generate string ready to be ingested by PG's `to_tsquery`.
   #
   # Author note: pg `to_tsquery` is awesome but can easily fail to parse.
-  #   `search` method use then a wrapper text_to_search used to ensure than
+  #   `search` method use then a wrapper `to_tsq` used to ensure than
   #   request is understood and produce ALWAYS legal string for `to_tsquery`
   # This is a good helper then to use with the input of your end-users !
   #
   # However, this helper can be improved, as it doesn't use all the features
   # of tsvector (parentesis, OR operator etc...)
   def self.to_tsq(text)
-    text = text.gsub(/\+/, " ")
+    text = text.gsub(DISALLOWED_TSQUERY_CHARACTERS, " ")
+    # text = text.gsub(/\+/, " ")
     tokens = split_to_exp(text)
 
     tokens.join(" & ") do |(modifier, value)|
