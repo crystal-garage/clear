@@ -18,10 +18,10 @@ dependencies:
     branch: master
   pg:
     github: will/crystal-pg
-    version: "~> 0.24.0"
+    version: "~> 0.26.0"
   inflector:
     github: phoffer/inflector.cr
-    version: "~> 0.1.8"
+    version: ">= 0.1.8"
 
 development_dependencies:
   ameba:
