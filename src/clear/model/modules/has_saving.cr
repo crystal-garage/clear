@@ -14,12 +14,11 @@ module Clear::Model::HasSaving
       # models as saved in the database.
       #
       # ## Example:
-      # ```crystal
-      #
-      #  users = [ User.new(id: 1), User.new(id: 2), User.new(id: 3)]
-      #  users = User.import(users)
       # ```
-      def self.import(array : Enumerable(self), on_conflict : (Clear::SQL::InsertQuery -> )? = nil)
+      # users = [User.new(id: 1), User.new(id: 2), User.new(id: 3)]
+      # users = User.import(users)
+      # ```
+      def self.import(array : Enumerable(self), on_conflict : (Clear::SQL::InsertQuery ->)? = nil)
         array.each do |item|
           raise "One of your model is persisted while calling import" if item.persisted?
         end
@@ -37,7 +36,7 @@ module Clear::Model::HasSaving
         o = [] of self
         query.fetch(@@connection) do |hash|
           o << Clear::Model::Factory.build(self.name, hash, persisted: true,
-          fetch_columns: false, cache: nil).as(self)
+            fetch_columns: false, cache: nil).as(self)
         end
 
         o.each(&.trigger_after_events(:create))
