@@ -1,0 +1,4 @@
+Lint/NotNil:
+  Description: Identifies usage of `not_nil!` calls
+  Enabled: false
+  Severity: Warning
