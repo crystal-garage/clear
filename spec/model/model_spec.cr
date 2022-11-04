@@ -624,6 +624,26 @@ module ModelSpec
         end
       end
 
+      it "raises a RecordNotFoundError without first" do
+        temporary do
+          reinit
+
+          expect_raises(Clear::SQL::RecordNotFoundError) do
+            User.query.first!
+          end
+        end
+      end
+
+      it "raises a RecordNotFoundError without last" do
+        temporary do
+          reinit
+
+          expect_raises(Clear::SQL::RecordNotFoundError) do
+            User.query.last!
+          end
+        end
+      end
+
       it "can delete a model" do
         temporary do
           reinit
