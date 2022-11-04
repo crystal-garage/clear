@@ -218,8 +218,8 @@ module Clear::Model
     end
 
     def dup
-      if @polymorphic
-        super.flag_as_polymorphic!(@polymorphic_key.not_nil!, @polymorphic_scope.not_nil!)
+      if @polymorphic && (polymorphic_key = @polymorphic_key) && (polymorphic_scope = @polymorphic_scope)
+        super.flag_as_polymorphic!(polymorphic_key, polymorphic_scope)
       else
         super
       end
@@ -446,7 +446,7 @@ module Clear::Model
 
     # Basically a custom way to write `OFFSET x LIMIT 1`
     def [](off, fetch_columns = false) : T
-      self[off, fetch_columns]?.not_nil!
+      self[off, fetch_columns] || raise Clear::SQL::RecordNotFoundError.new
     end
 
     # Basically a custom way to write `OFFSET x LIMIT 1`
@@ -456,7 +456,7 @@ module Clear::Model
 
     # Get a range of models
     def [](range : Range(Int64), fetch_columns = false) : Array(T)
-      self[range, fetch_columns]?.not_nil
+      self[range, fetch_columns]
     end
 
     # Get a range of models
@@ -483,7 +483,7 @@ module Clear::Model
 
     # A convenient way to write `where{ condition }.first!`
     def find!(tuple : NamedTuple, fetch_columns = false) : T
-      where(tuple).first(fetch_columns).not_nil!
+      where(tuple).first!(fetch_columns)
     end
 
     # Try to fetch a row. If not found, build a new object and setup
@@ -534,7 +534,7 @@ module Clear::Model
     # Get the last row from the collection query.
     # if not found, throw an error
     def last!(fetch_columns = false) : T
-      last(fetch_columns).not_nil!
+      last(fetch_columns) || raise Clear::SQL::RecordNotFoundError.new
     end
 
     # Redefinition of `join_impl` to avoid ambiguity on the column
