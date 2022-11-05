@@ -377,7 +377,7 @@ module ModelSpec
         temporary do
           reinit_example_models
 
-          u = User.query.find_or_create({last_name: "Henry"}) do |user|
+          u = User.query.find_or_create(last_name: "Henry") do |user|
             user.first_name = "Thierry"
             user.save
           end
@@ -386,7 +386,7 @@ module ModelSpec
           u.last_name.should eq("Henry")
           u.id.should eq(1)
 
-          u = User.query.find_or_create({last_name: "Henry"}) do |user|
+          u = User.query.find_or_create(last_name: "Henry") do |user|
             user.first_name = "King" # << This should not be triggered since we found the row
           end
           u.first_name.should eq("Thierry")

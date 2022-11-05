@@ -289,6 +289,22 @@ module Clear::Model
     end
 
     # :nodoc:
+    # redefine where with tuple as argument which add tags
+    def where(**tuple)
+      hash = tuple.to_h.transform_keys &.to_s
+
+      any_hash = {} of String => Clear::SQL::Any
+
+      # remove terms which are not real value but conditions like range or array
+      hash.each { |k, v|
+        any_hash[k] = v if v.is_a?(Clear::SQL::Any)
+      }
+
+      tags(any_hash)
+      super(**tuple)
+    end
+
+    # :nodoc:
     def clear_tags
       @tags = {} of String => Clear::SQL::Any
       self
@@ -481,9 +497,13 @@ module Clear::Model
       where(tuple).first!(fetch_columns)
     end
 
+    def find_or_build(**tuple) : T
+      find_or_build(**tuple) { }
+    end
+
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
-    def find_or_build(tuple : NamedTuple, &block : T -> Nil) : T
+    def find_or_build(**tuple, &block : T -> Nil) : T
       r = where(tuple).first
 
       return r if r
@@ -502,8 +522,18 @@ module Clear::Model
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
     # Just after building, save the object.
-    def find_or_create(tuple : NamedTuple, &block : T -> Nil) : T
-      r = find_or_build(tuple, &block)
+    def find_or_create(**tuple) : T
+      r = find_or_build(**tuple)
+
+      r.save!
+      r
+    end
+
+    # Try to fetch a row. If not found, build a new object and setup
+    # the fields like setup in the condition tuple.
+    # Just after building, save the object.
+    def find_or_create(**tuple, &block : T -> Nil) : T
+      r = find_or_build(**tuple, &block)
       r.save
       r
     end
