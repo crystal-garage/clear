@@ -200,12 +200,18 @@ module Clear
     # - `cascade` set to true will append `CASCADE` to the query
     # - `truncate_inherited` set to false will append `ONLY` to the query
     # - `connection_name` will be: `Model.connection` or `default` unless optionally defined.
-    def self.truncate(tablename : T.class | String, restart_sequence = false, cascade = false, truncate_inherited = true, connection_name : String? = nil) forall T
-      if (tablename.is_a?(String))
-        connection_name ||= "default"
+    def self.truncate(tablename : Clear::Model.class | String | Symbol,
+                      restart_sequence : Bool = false, cascade : Bool = false,
+                      truncate_inherited : Bool = true, connection_name : String = "default") forall T
+      case tablename
+      when String
+        # do nothing. This is important as I can't use T in the case block
+      when Symbol
+        tablename = Clear::SQL.escape(tablename.to_s)
       else
-        connection_name ||= tablename.connection
-        tablename ||= tablename.table
+        # can check here the T.class
+        connection_name = tablename.connection
+        tablename = tablename.full_table_name
       end
 
       only = truncate_inherited ? "" : " ONLY "
@@ -213,7 +219,7 @@ module Clear
       cascade = cascade ? " CASCADE " : ""
 
       execute(connection_name,
-        {"TRUNCATE TABLE ", only, Clear::SQL.escape(tablename), restart_sequence, cascade}.join
+        {"TRUNCATE TABLE ", only, tablename, restart_sequence, cascade}.join
       )
     end
 

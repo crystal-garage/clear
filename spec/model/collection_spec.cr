@@ -74,7 +74,7 @@ module CollectionSpec
         User.query.last!.first_name.should eq("user 9")
         User.query.order_by({id: :desc}).last!.first_name.should eq("user 0")
 
-        Clear::SQL.truncate("users", cascade: true)
+        Clear::SQL.truncate(User, cascade: true)
 
         expect_raises(Clear::SQL::RecordNotFoundError) do
           User.query.last!
