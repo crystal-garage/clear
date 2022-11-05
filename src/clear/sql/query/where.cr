@@ -94,14 +94,6 @@ module Clear::SQL::Query::Where
     self.where(Clear::SQL.raw_enum(str, parameters))
   end
 
-  def or_where(str : String, parameters : Tuple | Enumerable(T)) forall T
-    return where(str, parameters) if @wheres.empty?
-    old_clause = Clear::Expression::Node::AndArray.new(@wheres)
-    @wheres.clear
-    @wheres << Clear::Expression::Node::DoubleOperator.new(old_clause, Clear::Expression::Node::Raw.new(Clear::Expression.raw_enum("(#{str})", parameters)), "OR")
-    change!
-  end
-
   # Build SQL `where` interpolating `:keyword` with the NamedTuple passed in argument.
   # ```
   # where("id = :id OR date >= :start", {id: 1, start: 1.day.ago})
@@ -111,14 +103,6 @@ module Clear::SQL::Query::Where
     self.where(Clear::SQL.raw(str, **parameters))
   end
 
-  def or_where(str : String, parameters : NamedTuple)
-    return where(str, parameters) if @wheres.empty?
-    old_clause = Clear::Expression::Node::AndArray.new(@wheres)
-    @wheres.clear
-    @wheres << Clear::Expression::Node::DoubleOperator.new(old_clause, Clear::Expression::Node::Raw.new(Clear::Expression.raw("(#{str})", **parameters)), "OR")
-    change!
-  end
-
   # Build custom SQL `where`
   #   beware of SQL injections!
   # ```
@@ -126,6 +110,22 @@ module Clear::SQL::Query::Where
   # ```
   def where(str : String)
     @wheres << Clear::Expression::Node::Raw.new(str)
+    change!
+  end
+
+  def or_where(str : String, parameters : Tuple | Enumerable(T)) forall T
+    return where(str, parameters) if @wheres.empty?
+    old_clause = Clear::Expression::Node::AndArray.new(@wheres)
+    @wheres.clear
+    @wheres << Clear::Expression::Node::DoubleOperator.new(old_clause, Clear::Expression::Node::Raw.new(Clear::Expression.raw_enum("(#{str})", parameters)), "OR")
+    change!
+  end
+
+  def or_where(str : String, parameters : NamedTuple)
+    return where(str, parameters) if @wheres.empty?
+    old_clause = Clear::Expression::Node::AndArray.new(@wheres)
+    @wheres.clear
+    @wheres << Clear::Expression::Node::DoubleOperator.new(old_clause, Clear::Expression::Node::Raw.new(Clear::Expression.raw("(#{str})", **parameters)), "OR")
     change!
   end
 
