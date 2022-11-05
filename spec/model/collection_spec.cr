@@ -42,6 +42,48 @@ module CollectionSpec
       end
     end
 
+    it "first / first!" do
+      temporary do
+        reinit_example_models
+
+        10.times do |x|
+          User.create! first_name: "user #{x}"
+        end
+
+        User.query.first!.first_name.should eq("user 0")
+        User.query.order_by({id: :desc}).first!.first_name.should eq("user 9")
+
+        Clear::SQL.truncate("users", cascade: true)
+
+        expect_raises(Clear::SQL::RecordNotFoundError) do
+          User.query.first!
+        end
+
+        User.query.first.should be_nil
+      end
+    end
+
+    it "last / last!" do
+      temporary do
+        reinit_example_models
+
+        10.times do |x|
+          User.create! first_name: "user #{x}"
+        end
+
+        User.query.last!.first_name.should eq("user 9")
+        User.query.order_by({id: :desc}).last!.first_name.should eq("user 0")
+
+        Clear::SQL.truncate("users", cascade: true)
+
+        expect_raises(Clear::SQL::RecordNotFoundError) do
+          User.query.last!
+        end
+
+        User.query.last.should be_nil
+      end
+    end
+
     it "delete_all" do
       temporary do
         reinit_example_models
