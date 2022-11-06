@@ -89,8 +89,8 @@ module Clear::SQL::Query::Where
   # where("id = :id OR date >= :start", id: 1, start: 1.day.ago)
   # # WHERE id = 1 AND date >= '201x-xx-xx ...'
   # ```
-  def where(str : String, **tuple)
-    where(Clear::Expression::Node::Raw.new(Clear::SQL.raw(str, **tuple)))
+  def where(template : String, **tuple)
+    where(Clear::Expression::Node::Raw.new(Clear::SQL.raw(template, **tuple)))
   end
 
   # Build SQL `where` condition using a template string and
@@ -99,8 +99,8 @@ module Clear::SQL::Query::Where
   # where("x = ? OR y = ?", 1, "l'eau") # WHERE x = 1 OR y = 'l''eau'
   # ```
   # Raise error if there's not enough parameters to cover all the `?` placeholders
-  def where(str : String, *args)
-    where(Clear::Expression::Node::Raw.new(Clear::SQL.raw(str, *args)))
+  def where(template : String, *args)
+    where(Clear::Expression::Node::Raw.new(Clear::SQL.raw(template, *args)))
   end
 
   # Build custom SQL `where`
@@ -108,8 +108,8 @@ module Clear::SQL::Query::Where
   # ```
   # where("ADD_SOME_DANGEROUS_SQL_HERE") # WHERE ADD_SOME_DANGEROUS_SQL_HERE
   # ```
-  def where(str : String)
-    @wheres << Clear::Expression::Node::Raw.new(str)
+  def where(template : String)
+    @wheres << Clear::Expression::Node::Raw.new(template)
     change!
   end
 
@@ -149,12 +149,12 @@ module Clear::SQL::Query::Where
     change!
   end
 
-  def or_where(str : String, **tuple)
-    or_where(Clear::Expression::Node::Raw.new(Clear::Expression.raw("(#{str})", **tuple)))
+  def or_where(template : String, **tuple)
+    or_where(Clear::Expression::Node::Raw.new(Clear::Expression.raw("(#{template})", **tuple)))
   end
 
-  def or_where(str : String, *args)
-    or_where(Clear::Expression::Node::Raw.new(Clear::Expression.raw("(#{str})", *args)))
+  def or_where(template : String, *args)
+    or_where(Clear::Expression::Node::Raw.new(Clear::Expression.raw("(#{template})", *args)))
   end
 
   # Build SQL `where` condition using the Expression engine.
