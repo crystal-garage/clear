@@ -10,7 +10,7 @@ class Clear::Expression::Node::NodeArray < Clear::Expression::Node
   end
 
   def resolve : String
-    if @expression.any?
+    if !@expression.empty?
       {
         "(",
         @expression.join(" #{@link} ", &.resolve),
