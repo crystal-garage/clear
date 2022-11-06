@@ -84,23 +84,23 @@ module Clear::SQL::Query::Where
     change!
   end
 
+  # Build SQL `where` interpolating `:keyword` with the NamedTuple passed in argument.
+  # ```
+  # where("id = :id OR date >= :start", id: 1, start: 1.day.ago)
+  # # WHERE id = 1 AND date >= '201x-xx-xx ...'
+  # ```
+  def where(str : String, **tuple)
+    where(Clear::Expression::Node::Raw.new(Clear::SQL.raw(str, **tuple)))
+  end
+
   # Build SQL `where` condition using a template string and
   # interpolating `?` characters with parameters given in a tuple or array.
   # ```
-  # where("x = ? OR y = ?", {1, "l'eau"}) # WHERE x = 1 OR y = 'l''eau'
+  # where("x = ? OR y = ?", 1, "l'eau") # WHERE x = 1 OR y = 'l''eau'
   # ```
   # Raise error if there's not enough parameters to cover all the `?` placeholders
-  def where(str : String, parameters : Tuple | Enumerable(T)) forall T
-    self.where(Clear::SQL.raw_enum(str, parameters))
-  end
-
-  # Build SQL `where` interpolating `:keyword` with the NamedTuple passed in argument.
-  # ```
-  # where("id = :id OR date >= :start", {id: 1, start: 1.day.ago})
-  # # WHERE id = 1 AND date >= '201x-xx-xx ...'
-  # ```
-  def where(str : String, parameters : NamedTuple)
-    self.where(Clear::SQL.raw(str, **parameters))
+  def where(str : String, *args)
+    where(Clear::Expression::Node::Raw.new(Clear::SQL.raw(str, *args)))
   end
 
   # Build custom SQL `where`
@@ -113,30 +113,56 @@ module Clear::SQL::Query::Where
     change!
   end
 
-  def or_where(str : String, parameters : Tuple | Enumerable(T)) forall T
-    return where(str, parameters) if @wheres.empty?
-    old_clause = Clear::Expression::Node::NodeArray.new(@wheres, "AND")
-    @wheres.clear
-    @wheres << Clear::Expression::Node::DoubleOperator.new(old_clause, Clear::Expression::Node::Raw.new(Clear::Expression.raw_enum("(#{str})", parameters)), "OR")
+  # Build SQL `or_where` condition using a Clear::Expression::Node
+  # ```
+  # query.or_where(Clear::Expression::Node::InArray.new("id", ['1', '2', '3', '4']))
+  # # Note: in this example, InArray node use unsafe strings
+  # ```
+  # If useful for moving a where clause from a request to another one:
+  # ```
+  # query1.or_where { a == b } # WHERE a = b
+  # ```
+  # ```
+  # query2.or_where(query1.wheres[0]) # WHERE a = b
+  # ```
+  def or_where(node : Clear::Expression::Node)
+    return where(node) if @wheres.empty?
+
+    # Optimisation: if we have a OR Array as root, we use it and append directly the element.
+    if @wheres.size == 1 &&
+       (n = @wheres.first) &&
+       n.is_a?(Clear::Expression::Node::NodeArray) &&
+       n.link == "OR"
+      n.expression << node
+    else
+      # Concatenate the old clauses in a list of AND conditions
+      if @wheres.size == 1
+        old_clause = @wheres.first
+      else
+        old_clause = Clear::Expression::Node::NodeArray.new(@wheres, "AND")
+      end
+
+      @wheres.clear
+      @wheres << Clear::Expression::Node::NodeArray.new([old_clause, node], "OR")
+    end
+
     change!
   end
 
-  def or_where(str : String, parameters : NamedTuple)
-    return where(str, parameters) if @wheres.empty?
-    old_clause = Clear::Expression::Node::NodeArray.new(@wheres, "AND")
-    @wheres.clear
-    @wheres << Clear::Expression::Node::DoubleOperator.new(old_clause, Clear::Expression::Node::Raw.new(Clear::Expression.raw("(#{str})", **parameters)), "OR")
-    change!
+  def or_where(str : String, **tuple)
+    or_where(Clear::Expression::Node::Raw.new(Clear::Expression.raw("(#{str})", **tuple)))
   end
 
-  def or_where(str : String)
-    return where(str) if @wheres.empty?
-    old_clause = Clear::Expression::Node::NodeArray.new(@wheres, "AND")
-    @wheres = [
-      Clear::Expression::Node::DoubleOperator.new(old_clause,
-        Clear::Expression::Node::Raw.new("(#{str})"), "OR"),
-    ]
-    change!
+  def or_where(str : String, *args)
+    or_where(Clear::Expression::Node::Raw.new(Clear::Expression.raw("(#{str})", *args)))
+  end
+
+  # Build SQL `where` condition using the Expression engine.
+  # ```
+  # query.or_where { id == 1 }
+  # ```
+  def or_where(&block)
+    or_where(Clear::Expression.ensure_node!(with Clear::Expression.new yield))
   end
 
   # Clear all the where clauses and return `self`
