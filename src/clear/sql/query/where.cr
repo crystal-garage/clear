@@ -115,7 +115,7 @@ module Clear::SQL::Query::Where
 
   def or_where(str : String, parameters : Tuple | Enumerable(T)) forall T
     return where(str, parameters) if @wheres.empty?
-    old_clause = Clear::Expression::Node::AndArray.new(@wheres)
+    old_clause = Clear::Expression::Node::NodeArray.new(@wheres, "AND")
     @wheres.clear
     @wheres << Clear::Expression::Node::DoubleOperator.new(old_clause, Clear::Expression::Node::Raw.new(Clear::Expression.raw_enum("(#{str})", parameters)), "OR")
     change!
@@ -123,7 +123,7 @@ module Clear::SQL::Query::Where
 
   def or_where(str : String, parameters : NamedTuple)
     return where(str, parameters) if @wheres.empty?
-    old_clause = Clear::Expression::Node::AndArray.new(@wheres)
+    old_clause = Clear::Expression::Node::NodeArray.new(@wheres, "AND")
     @wheres.clear
     @wheres << Clear::Expression::Node::DoubleOperator.new(old_clause, Clear::Expression::Node::Raw.new(Clear::Expression.raw("(#{str})", **parameters)), "OR")
     change!
@@ -131,7 +131,7 @@ module Clear::SQL::Query::Where
 
   def or_where(str : String)
     return where(str) if @wheres.empty?
-    old_clause = Clear::Expression::Node::AndArray.new(@wheres)
+    old_clause = Clear::Expression::Node::NodeArray.new(@wheres, "AND")
     @wheres = [
       Clear::Expression::Node::DoubleOperator.new(old_clause,
         Clear::Expression::Node::Raw.new("(#{str})"), "OR"),
