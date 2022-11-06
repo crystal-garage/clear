@@ -19,10 +19,6 @@ module Clear::SQL::Query::Select
     change!
   end
 
-  # def select(name : Symbolic, var = nil)
-  #  @columns << Column.new(name, var)
-  #  self
-  # end
   def select(c : Column)
     @columns << c
     change!
