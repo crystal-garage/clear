@@ -551,6 +551,14 @@ module ModelSpec
 
           user1.dependencies.count.should eq(1)
           user2.dependents.count.should eq(1)
+
+          dependencies_first_names = [] of String
+          user1.dependencies.each { |u| dependencies_first_names << u.first_name }
+          dependencies_first_names.should eq(["Jane"])
+
+          dependents_first_names = [] of String
+          user2.dependents.each { |u| dependents_first_names << u.first_name }
+          dependents_first_names.should eq(["John"])
         end
       end
 
