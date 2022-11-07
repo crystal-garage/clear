@@ -125,6 +125,17 @@ class BigDecimalData
   column num4 : BigDecimal?
 end
 
+class ModelWithinAnotherSchema
+  include Clear::Model
+
+  self.schema = "another_schema"
+  self.table = "model_within_another_schemas"
+
+  primary_key
+
+  column title : String?
+end
+
 class ModelSpecMigration123
   include Clear::Migration
 
@@ -187,6 +198,12 @@ class ModelSpecMigration123
       t.column "registration_number", "int64", index: true
 
       t.timestamps
+    end
+
+    dir.up { execute "CREATE SCHEMA another_schema" }
+
+    create_table "model_within_another_schemas", schema: "another_schema" do |t|
+      t.column "title", "string", null: true
     end
 
     create_table("model_with_uuid", id: :uuid) { |_| }
