@@ -804,5 +804,31 @@ module ModelSpec
         end
       end
     end
+
+    describe "Clear::Model::HasColumns mass_assign" do
+      it "should do mass_assignment" do
+        temporary do
+          reinit_example_models
+
+          u1_body = {first_name: "George", last_name: "Dream", middle_name: "Sapnap"}
+          u1 = User.create_from_json(u1_body.to_json, trusted: true)
+          u1.first_name.should eq u1_body["first_name"]
+          u1.last_name.should eq u1_body["last_name"]
+          u1.middle_name.should eq u1_body["middle_name"]
+        end
+      end
+
+      it "should not do mass_assignment" do
+        temporary do
+          reinit_example_models
+
+          u1_body = {first_name: "George", last_name: "Dream", middle_name: "Sapnap"}
+          u1 = User.create_from_json(u1_body.to_json)
+          u1.first_name.should eq u1_body["first_name"]
+          u1.last_name.should eq u1_body["last_name"]
+          u1.middle_name.should be_nil
+        end
+      end
+    end
   end
 end

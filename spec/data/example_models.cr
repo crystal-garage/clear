@@ -71,7 +71,8 @@ class User
 
   column first_name : String
   column last_name : String?
-  column middle_name : String?
+  column middle_name : String?, mass_assign: false
+
   column active : Bool?
 
   column notification_preferences : JSON::Any, presence: false
