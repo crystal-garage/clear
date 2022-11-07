@@ -221,5 +221,5 @@ end
 
 def self.reinit_example_models
   reinit_migration_manager
-  ModelSpecMigration123.new.apply(Clear::Migration::Direction::UP)
+  ModelSpecMigration123.new.apply
 end
