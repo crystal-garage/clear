@@ -79,8 +79,7 @@ class User
 
   has_many posts : Post, foreign_key: "user_id"
   has_one info : UserInfo?, foreign_key: "user_id"
-  has_many categories : Category, through: :posts,
-    own_key: :user_id, foreign_key: :category_id
+  has_many categories : Category, through: :posts, own_key: :user_id, foreign_key: :category_id
 
   has_many relationships : Relationship, foreign_key: "master_id"
   has_many dependencies : User, through: Relationship, foreign_key: "dependency_id", own_key: "master_id"
@@ -206,7 +205,7 @@ class ModelSpecMigration123
       t.column "title", "string", null: true
     end
 
-    create_table("model_with_uuid", id: :uuid) { |_| }
+    create_table("model_with_uuid", id: :uuid) { }
 
     create_table :big_decimal_data do |t|
       t.column "num1", "bigdecimal", index: true
