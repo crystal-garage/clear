@@ -91,7 +91,7 @@ require "../sql/select_query"
 # By default, Clear map theses columns types:
 #
 # - `String` => `text`
-# - `Numbers` (any from 8 to 64 bits, float, double, big number, big float) => `int, large int etc... (depends of your choice)`
+# - `Numbers` (any from 8 to 64 bits, float, double, big number, big float, big decimal) => `int, large int, numeric(arbitrary precision number) etc... (depends of your choice)`
 # - `Bool` => `text or bool`
 # - `Time` => `timestamp without timezone or text`
 # - `JSON::Any` => `json and jsonb`
@@ -175,6 +175,7 @@ module Clear::Model
     # Redefinition of the fields,
     # because of a bug in the compiler
     # https://github.com/crystal-lang/crystal/issues/5281
+    # :nodoc:
     @limit : Int64?
     @offset : Int64?
     @lock : String?
@@ -198,8 +199,9 @@ module Clear::Model
     # :nodoc:
     def initialize(
       @distinct_value = nil,
-      @cte = {} of String => Clear::SQL::SelectBuilder | String,
+      @cte = {} of String => Clear::SQL::Query::CTE::Record,
       @columns = [] of SQL::Column,
+      @forced_columns = [] of SQL::Column,
       @froms = [] of SQL::From,
       @joins = [] of SQL::Join,
       @wheres = [] of Clear::Expression::Node,
@@ -211,6 +213,7 @@ module Clear::Model
       @offset = nil,
       @lock = nil,
       @before_query_triggers = [] of -> Nil,
+      # collection specific parameters ---v
       @tags = {} of String => Clear::SQL::Any,
       @cache = Clear::Model::QueryCache.new,
       @cached_result = nil
@@ -236,6 +239,11 @@ module Clear::Model
       T
     end
 
+    # :ditto:
+    def self.item_class
+      T
+    end
+
     # :nodoc:
     # Set a query cache on this Collection. Fetching and enumerate will use the cache instead of calling the SQL.
     def cached(cache : Clear::Model::QueryCache)
@@ -244,7 +252,7 @@ module Clear::Model
     end
 
     # :nodoc:
-    def with_cached_result(r : Array(T))
+    def with_cached_result(r : Array(T)?)
       @cached_result = r
       self
     end
@@ -273,14 +281,8 @@ module Clear::Model
     end
 
     # :nodoc:
-    def tags(x : NamedTuple)
-      @tags.merge!(x.to_h)
-      self
-    end
-
-    # :nodoc:
-    def tags(x : Hash(String, X)) forall X
-      @tags.merge!(x.to_h)
+    def tags(hash : Hash(String, Clear::SQL::Any))
+      @tags.merge!(hash)
       self
     end
 
@@ -497,6 +499,18 @@ module Clear::Model
       where(tuple).first!(fetch_columns)
     end
 
+    # Returns a model using primary key equality
+    # Returns `nil` if not found.
+    def find(x) : T?
+      where { var(T.table, T.pkey) == x }.first
+    end
+
+    # Returns a model using primary key equality.
+    # Raises error if the model is not found.
+    def find!(x) : T
+      find(x) || raise Clear::SQL::RecordNotFoundError.new
+    end
+
     def find_or_build(**tuple) : T
       find_or_build(**tuple) { }
     end
@@ -504,14 +518,13 @@ module Clear::Model
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
     def find_or_build(**tuple, &block : T -> Nil) : T
-      r = where(tuple).first
+      where(tuple) unless tuple.size == 0
+      r = first
 
       return r if r
 
-      str_hash = {} of String => Clear::SQL::Any
-
+      str_hash = @tags.dup
       tuple.map { |k, v| str_hash[k.to_s] = v }
-      str_hash.merge!(@tags)
 
       r = Clear::Model::Factory.build(T, str_hash)
       yield(r)
@@ -533,8 +546,11 @@ module Clear::Model
     # the fields like setup in the condition tuple.
     # Just after building, save the object.
     def find_or_create(**tuple, &block : T -> Nil) : T
-      r = find_or_build(**tuple, &block)
-      r.save
+      r = find_or_build(**tuple) do |mdl|
+        yield(mdl)
+      end
+
+      r.save!
       r
     end
 
@@ -547,19 +563,18 @@ module Clear::Model
     # Get the first row from the collection query.
     # if not found, return `nil`
     def first(fetch_columns = false) : T?
-      order_by(Clear::SQL.escape("#{T.pkey}"), :asc) if T.pkey || order_bys.empty?
+      clone = dup
 
-      limit(1).fetch do |hash|
+      if clone.order_bys.empty?
+        key = {Clear::SQL.escape(T.table), Clear::SQL.escape(T.pkey)}.join(".")
+        clone.order_by(key, :asc)
+      end
+
+      clone.limit(1).fetch do |hash|
         return Clear::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
       end
 
       nil
-    end
-
-    # Get the last row from the collection query.
-    # if not found, throw an error
-    def last!(fetch_columns = false) : T
-      last(fetch_columns) || raise Clear::SQL::RecordNotFoundError.new
     end
 
     # Redefinition of `join_impl` to avoid ambiguity on the column
@@ -572,26 +587,24 @@ module Clear::Model
     # Get the last row from the collection query.
     # if not found, return `nil`
     def last(fetch_columns = false) : T?
-      order_by("#{T.pkey}", :asc) if T.pkey || order_bys.empty?
+      clone = dup
 
-      arr = order_bys.dup # Save current order by
-
-      begin
-        new_order = arr.map do |x|
-          Clear::SQL::Query::OrderBy::Record.new(x.op, (x.dir == :asc ? :desc : :asc), nil)
-        end
-
-        clear_order_bys.order_by(new_order)
-
-        limit(1).fetch do |hash|
-          return Clear::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
-        end
-
-        nil
-      ensure
-        # reset the order by in case we want to reuse the query
-        clear_order_bys.order_by(order_bys)
+      if clone.order_bys.empty?
+        key = {Clear::SQL.escape(T.table), Clear::SQL.escape(T.pkey)}.join(".")
+        clone.order_by(key, :asc)
       end
+
+      clone.reverse_order_by.limit(1).fetch do |hash|
+        return Clear::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
+      end
+
+      nil
+    end
+
+    # Get the last row from the collection query.
+    # if not found, throw an error
+    def last!(fetch_columns = false) : T
+      last(fetch_columns) || raise Clear::SQL::RecordNotFoundError.new
     end
 
     # Delete all the rows which would have been returned by this collection.
