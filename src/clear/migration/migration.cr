@@ -105,7 +105,7 @@ module Clear::Migration
     abstract def change(dir)
 
     # This will apply the migration in a given direction (up or down)
-    def apply(dir : Direction = Clear::Migration::Direction::Up)
+    def apply(dir : Direction = Clear::Migration::Direction::UP)
       Clear::Migration::Manager.instance.ensure_ready
 
       Clear::SQL.transaction do
