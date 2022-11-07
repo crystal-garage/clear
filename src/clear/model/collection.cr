@@ -148,7 +148,7 @@ require "../sql/select_query"
 # ```
 # class MyModel
 #   include Clear::Model
-#   with_serial_pkey "my_primary_key"
+#   primary_key "my_primary_key"
 # end
 # ```
 #
