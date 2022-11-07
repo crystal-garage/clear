@@ -502,14 +502,6 @@ module ModelSpec
       end
     end
 
-    it "can create a model by generating an uuid primary key" do
-      temporary do
-        reinit_example_models
-        m = ModelWithUUID.create!
-        m.id.should_not eq Nil
-      end
-    end
-
     it "can create a model with a predefined uuid primary key" do
       temporary do
         reinit_example_models
