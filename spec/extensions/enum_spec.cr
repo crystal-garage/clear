@@ -3,7 +3,7 @@ require "../spec_helper"
 module EnumSpec
   extend self
 
-  Clear.enum GenderType, "male", "female", "two_part"
+  Clear.enum GenderType, "male", "female", "both"
   Clear.enum ClientType, "company", "non_profit", "personnal" do
     def pay_vat?
       self == Personnal
@@ -58,8 +58,6 @@ module EnumSpec
 
         User.query.first!.gender.should eq "male"
         User.query.offset(1).first!.gender.should eq "female"
-
-        GenderType::TwoPart # < CamelCase ?
 
         User.query.where { gender == GenderType::Female }.count.should eq 1
         User.query.where { gender == "male" }.count.should eq 1
