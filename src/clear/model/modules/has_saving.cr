@@ -126,7 +126,7 @@ module Clear::Model::HasSaving
   end
 
   # Performs `save` call, but instead of returning `false` if validation failed,
-  # raise `Clear::Model::InvalidModelError` exception
+  # raise `Clear::Model::InvalidError` exception
   def save!(on_conflict : (Clear::SQL::InsertQuery ->)? = nil)
     raise Clear::Model::ReadOnlyError.new(self) if self.class.read_only?
 
