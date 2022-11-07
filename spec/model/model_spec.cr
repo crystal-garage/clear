@@ -837,7 +837,7 @@ module ModelSpec
           reinit_example_models
 
           u1_body = {first_name: "George", last_name: "Dream", middle_name: "Sapnap"}
-          u1 = User.create_from_json(u1_body.to_json)
+          User.create_from_json(u1_body.to_json)
 
           usr = User.query.where { first_name == "George" }.select("first_name, 'example' as custom_field").first!(fetch_columns: true)
           usr["custom_field"].should eq "example"
@@ -847,6 +847,32 @@ module ModelSpec
           }.to_json
 
           json.should eq %({"custom_field":"example"})
+        end
+      end
+    end
+
+    describe "BigDecimal / Numeric column in Migration" do
+      it "should create a new model with BigDecimal fields" do
+        temporary do
+          reinit_example_models
+
+          data = BigDecimalData.new({num1: 42.0123, num2: "42_42_42_24.0123_456_789", num3: "-102938719.2083710928371092837019283701982370918237"})
+          data.num1.should eq(BigDecimal.new(BigInt.new(420123), 4))
+          data.num2.should eq(BigDecimal.new(BigInt.new(424242240123456789), 10))
+          data.num3.should eq(BigDecimal.new(BigInt.new("-1029387192083710928371092837019283701982370918237".to_big_i), 40))
+
+          data.save!
+
+          data.num1.should eq(BigDecimal.new(BigInt.new(420123), 4))
+          data.num2.should eq(42424224.01234568)
+          data.num3.should eq(BigDecimal.new(BigInt.new("-1029387192083710928371092837019283701982370918237".to_big_i), 40).trunc)
+
+          # Clear::SQL::Error:numeric field overflow
+          data.num4 = BigDecimal.new(BigInt.new("-1029387192083710928371092837019283701982370918237".to_big_i), 40)
+
+          expect_raises(Clear::SQL::Error) do
+            data.save!
+          end
         end
       end
     end

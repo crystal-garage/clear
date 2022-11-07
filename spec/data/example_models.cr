@@ -115,6 +115,16 @@ class ModelWithUUID
   self.table = "model_with_uuid"
 end
 
+class BigDecimalData
+  include Clear::Model
+
+  column id : Int32, primary: true, presence: false
+  column num1 : BigDecimal?
+  column num2 : BigDecimal?
+  column num3 : BigDecimal?
+  column num4 : BigDecimal?
+end
+
 class ModelSpecMigration123
   include Clear::Migration
 
@@ -179,7 +189,15 @@ class ModelSpecMigration123
       t.timestamps
     end
 
-    create_table("model_with_uuid", id: :uuid) do |_|
+    create_table("model_with_uuid", id: :uuid) { |_| }
+
+    create_table :big_decimal_data do |t|
+      t.column "num1", "bigdecimal", index: true
+      t.column "num2", "numeric(18, 8)"
+      t.column "num3", "numeric(9)"
+      t.column "num4", "numeric(8)"
+
+      t.timestamps
     end
   end
 end
