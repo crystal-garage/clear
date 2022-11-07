@@ -81,6 +81,10 @@ class User
   has_many categories : Category, through: :posts,
     own_key: :user_id, foreign_key: :category_id
 
+  has_many relationships : Relationship, foreign_key: "master_id"
+  has_many dependencies : User, through: Relationship, foreign_key: "dependency_id", own_key: "master_id"
+  has_many dependents : User, through: Relationship, foreign_key: "master_id", own_key: "dependency_id"
+
   timestamps
 
   # Random virtual method
@@ -91,6 +95,15 @@ class User
   def full_name
     {self.first_name, self.last_name}.join(" ")
   end
+end
+
+class Relationship
+  include Clear::Model
+
+  primary_key
+
+  belongs_to master : User, foreign_key: "master_id"
+  belongs_to dependency : User, foreign_key: "dependency_id"
 end
 
 class ModelWithUUID
@@ -128,6 +141,13 @@ class ModelSpecMigration123
       t.column "notification_preferences", "jsonb", index: "gin", default: "'{}'"
 
       t.timestamps
+    end
+
+    create_table "relationships" do |t|
+      t.references to: "users", name: "master_id", on_delete: "cascade", null: false, primary: true
+      t.references to: "users", name: "dependency_id", on_delete: "cascade", null: false, primary: true
+
+      t.index ["master_id", "dependency_id"], using: :btree, unique: true
     end
 
     create_table "posts" do |t|

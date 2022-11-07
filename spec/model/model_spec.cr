@@ -539,6 +539,55 @@ module ModelSpec
       end
     end
 
+    context "with self-reference and has_many through" do
+      it "can assign self-reference has_many through" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create!({first_name: "John"})
+          user2 = User.create!({first_name: "Jane"})
+
+          user1.dependencies << user2
+
+          user1.dependencies.count.should eq(1)
+          user2.dependents.count.should eq(1)
+        end
+      end
+
+      it "can create self-reference has_many through" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create!({first_name: "John"})
+          user2 = User.create!({first_name: "Jane"})
+
+          Relationship.create!({master: user1, dependency: user2})
+
+          user1.dependencies.count.should eq(1)
+          user2.dependents.count.should eq(1)
+        end
+      end
+
+      it "can unlink self-reference has_many through" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create!({first_name: "John"})
+          user2 = User.create!({first_name: "Jane"})
+
+          user1.dependencies << user2
+
+          user1.dependencies.count.should eq(1)
+          user2.dependents.count.should eq(1)
+
+          user1.dependencies.unlink(User.query.find!({first_name: "Jane"}))
+
+          user1.dependencies.count.should eq(0)
+          user2.dependents.count.should eq(0)
+        end
+      end
+    end
+
     context "with has_many through relation" do
       it "can query has_many through" do
         temporary do
