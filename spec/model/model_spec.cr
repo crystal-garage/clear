@@ -502,15 +502,6 @@ module ModelSpec
       end
     end
 
-    it "can create a model with a predefined uuid primary key" do
-      temporary do
-        reinit_example_models
-        some_uuid = UUID.new("5ca27508-f2ce-441b-b2cf-41134793e7a1")
-        m = ModelWithUUID.create!({id: some_uuid})
-        m.id.should eq some_uuid
-      end
-    end
-
     it "can load a column of type Array" do
       temporary do
         reinit_example_models
