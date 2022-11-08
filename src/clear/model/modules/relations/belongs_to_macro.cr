@@ -14,7 +14,7 @@ module Clear::Model::Relations::BelongsToMacro
     column {{foreign_key.id}} : {{key_type}}, primary: {{primary}}, presence: {{nilable}}
     getter _cached_{{method_name}} : {{relation_type}}?
 
-    protected def invalidate_caches
+    protected def invalidate_caching
       previous_def
 
       @_cached_{{method_name}} = nil

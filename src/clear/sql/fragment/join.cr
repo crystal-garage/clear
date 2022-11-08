@@ -8,33 +8,29 @@ module Clear::SQL
             full_outer: "FULL OUTER JOIN",
             cross:      "CROSS JOIN"}
 
-    getter type : String
-    getter from : Selectable
-    getter condition : Clear::Expression::Node?
-    getter lateral : Bool
+    property type : String
+    property from : Selectable
+    property condition : Clear::Expression::Node?
+    property lateral : Bool
 
-    def initialize(@from, @condition = nil, @lateral = false, type : Symbol = :inner)
-      @type = TYPE.fetch(type) { raise Clear::ErrorMessages.query_building_error("Type of join unknown: `#{type}`") }
+    def initialize(@from, @condition = nil, @lateral = false, type : Symbolic = :inner)
+      @type = if type.is_a?(Symbol)
+                TYPE[type] || raise Clear::ErrorMessages.query_building_error("Type of join unknown: `#{type}`")
+              else
+                type
+              end
     end
 
     def to_sql
-      from = @from
-
-      from = case from
-             when SQL::SelectBuilder
-               "(#{from.to_sql})"
-             else
-               from.to_s
-             end
-
-      if c = @condition
+      c = condition
+      if c
         [type,
          lateral ? "LATERAL" : nil,
-         from,
+         SQL.sel_str(from),
          "ON",
          c.resolve].compact.join(" ")
       else
-        [type, lateral ? "LATERAL" : nil, SQL.sel_str(from)].compact.join(" ")
+        {type, lateral ? "LATERAL" : nil, SQL.sel_str(from)}.join(" ")
       end
     end
   end

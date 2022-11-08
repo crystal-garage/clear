@@ -30,7 +30,7 @@ module ScopeSpec
 
   def self.reinit
     reinit_migration_manager
-    ScopeSpecMigration621253.new.apply
+    ScopeSpecMigration621253.new.apply(Clear::Migration::Direction::UP)
   end
 
   describe "Clear::Model::HasScope" do

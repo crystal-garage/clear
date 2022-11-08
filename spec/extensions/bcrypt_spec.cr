@@ -26,7 +26,7 @@ module BCryptSpec
 
   def self.reinit!
     reinit_migration_manager
-    EncryptedPasswordMigration57632.new.apply
+    EncryptedPasswordMigration57632.new.apply(Clear::Migration::Direction::UP)
   end
 
   describe "Clear::Migration::CreateEnum" do

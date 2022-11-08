@@ -10,13 +10,8 @@ module Clear::SQL
   class RecordNotFoundError < Error; end
 
   # Rollback the transaction or the last savepoint.
-  class RollbackError < Error
-    getter savepoint_id : String?
+  class RollbackError < Error; end
 
-    def initialize(@savepoint_id = nil)
-    end
-  end
-
-  # Like rollback, but used with savepoint, it will revert completely the transaction
+  # Like rollback, but used into savepoint, it will revert completely the transaction
   class CancelTransactionError < Error; end
 end

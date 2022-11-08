@@ -1,4 +1,6 @@
-module TimeConverterSpec
+require "../spec_helper"
+
+module ConverterSpec
   describe "Clear::Model::Converter::TimeConverter" do
     it "converts nil" do
       converter = Clear::Model::Converter::TimeConverter
@@ -46,29 +48,43 @@ module TimeConverterSpec
       converter.to_column(example_date).should eq(time_obj)
     end
   end
-  describe "Clear::Model::Converter::BigDecimal" do
-    converter = Clear::Model::Converter::BigDecimalConverter
+  describe "Clear::Model::Converter::BoolConverter" do
+    it "convert from boolean" do
+      converter = Clear::Model::Converter::BoolConverter
+      converter.to_column(1).should eq(true)
+      converter.to_column(-1).should eq(true)
+      converter.to_column(0).should eq(false)
+      converter.to_column(0.0).should eq(false)
+      converter.to_column(2).should eq(true)
+      converter.to_column(1.0).should eq(true)
 
-    it "converts to column" do
-      converter.to_column(BigDecimal.new(42.0123))
-        .should eq(BigDecimal.new(BigInt.new(420123), 4))
+      converter.to_column(true).should eq(true)
+      converter.to_column(false).should eq(false)
 
-      converter.to_column(BigDecimal.new("42_42_42_24.0123_456_789"))
-        .should eq(BigDecimal.new(BigInt.new(424242240123456789), 10))
+      converter.to_column("f").should eq(false)
+      converter.to_column("t").should eq(true)
+      converter.to_column("false").should eq(false)
+      converter.to_column("true").should eq(true)
 
-      converter.to_column(BigDecimal.new("-0.1029387192083710928371092837019283701982370918237"))
-        .should eq(BigDecimal.new(BigInt.new("-1029387192083710928371092837019283701982370918237".to_big_i), 49))
+      converter.to_column(nil).should eq(nil)
+
+      # Anything else than string or number is true
+      converter.to_column([] of String).should eq(true)
     end
 
-    it "converts to db" do
-      converter.to_db(BigDecimal.new(42.0123))
-        .should eq(BigDecimal.new(BigInt.new(420123), 4))
+    it "transform boolean to 't' and 'f'" do
+      converter = Clear::Model::Converter::BoolConverter
+      converter.to_db(true).should eq("t")
+      converter.to_db(false).should eq("f")
+      # To ensure we can use the converter with Bool? type.
+      converter.to_db(nil).should eq(nil)
+    end
 
-      converter.to_db(BigDecimal.new("42_42_42_24.0123_456_789"))
-        .should eq(BigDecimal.new(BigInt.new(424242240123456789), 10))
-
-      converter.to_db(BigDecimal.new("-0.1029387192083710928371092837019283701982370918237"))
-        .should eq(BigDecimal.new(BigInt.new("-1029387192083710928371092837019283701982370918237".to_big_i), 49))
+    it "converts from uuid" do
+      converter = Clear::Model::Converter::UUIDConverter
+      some_uuid = UUID.random
+      converter.to_db(some_uuid).should eq(some_uuid.to_s)
+      converter.to_db(nil).should eq(nil)
     end
   end
 end

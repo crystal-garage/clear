@@ -23,7 +23,7 @@ module ModelDifferentColumnNameSpec
 
   def self.reinit
     reinit_migration_manager
-    ModelDifferentColumnNameSpecMigration8273.new.apply
+    ModelDifferentColumnNameSpecMigration8273.new.apply(Clear::Migration::Direction::UP)
   end
 
   describe "Clear::Model" do

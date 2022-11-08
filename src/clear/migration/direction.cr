@@ -21,33 +21,39 @@
 # ```
 #
 module Clear::Migration
-  enum Direction
-    Up
-    Down
+  struct Direction
+    UP   = Direction.new(true)
+    DOWN = Direction.new(false)
+
+    @dir : Bool
+
+    # :nodoc:
+    protected def initialize(@dir)
+    end
 
     # Run the block given in parameter if the direction is a upstream
     def up(&block)
-      yield if self == Up
+      yield if @dir
     end
 
     # Return true whether the migration is a upstream
     def up?
-      self == Up
+      @dir
     end
 
     # Run the block given in parameter if the direction is a rollback
     def down(&block)
-      yield if down?
+      yield unless @dir
     end
 
     # Return true whether the migration is a rollback
     def down?
-      self == Down
+      !@dir
     end
 
     # :nodoc:
     def to_s
-      self ? "Direction.Up" : "Direction.Down"
+      @dir ? "Direction::Up" : "Direction::Down"
     end
 
     # :nodoc:

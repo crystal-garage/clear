@@ -3,7 +3,7 @@ class <%= opts["model_class"] %>
 
   self.table = "<%= opts["model_table"] %>"
 
-  primary_key
+  with_serial_pkey
 
   <%- opts["model_fields"].split("|").reject(&.empty?).each do |f| -%>
   <%- name, type = f.split(":").map(&.underscore) -%>

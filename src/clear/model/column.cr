@@ -99,8 +99,12 @@ class Clear::Model::Column(T, C)
   # Set the value of the column to the value `x`. If `x` is not equal to the old value, then the column `changed?`
   # flag is set to `true`.
   def value=(x : T)
-    @changed = (@old_value != x)
-    @value = x
+    if @value == UNKNOWN || x != @value
+      @value = x
+      @changed = (@old_value != @value)
+    end
+
+    @value
   end
 
   # Return `true` if the value is an union of a Type with Nilable, `false` otherwise.
@@ -155,7 +159,6 @@ class Clear::Model::Column(T, C)
   # Reset `changed?` flag to `false`. See `Column(T)#dirty!` for the counter part.
   def clear_change_flag
     @changed = false
-    @old_value = @value
     self
   end
 end

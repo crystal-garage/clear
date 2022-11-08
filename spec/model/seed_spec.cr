@@ -23,7 +23,7 @@ module SeedSpec
 
   def self.reinit
     reinit_migration_manager
-    SeedModelMigration96842.new.apply
+    SeedModelMigration96842.new.apply(Clear::Migration::Direction::UP)
   end
 
   Clear.seed do

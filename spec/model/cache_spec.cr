@@ -1,36 +1,21 @@
 require "../spec_helper"
-require "../data/example_models"
-
-# Monkey patch of QueryCache
-# For adding statistics
-# during spec
-class Clear::Model::QueryCache
-  class_getter cache_hitted : Int32 = 0
-
-  def hit(relation_name, relation_value, klass : T.class) : Array(T) forall T
-    @@cache_hitted += 1
-    previous_def
-  end
-
-  def self.reset_counter
-    @@cache_hitted = 0
-  end
-end
+require "./cache_schema"
 
 module CacheSpec
   def self.reinit
-    reinit_example_models
+    Clear::Migration::Manager.instance.reinit!
+    MigrateSpec10.new.apply(Clear::Migration::Direction::UP)
 
-    User.create! id: 101, first_name: "User 1"
-    User.create! id: 102, first_name: "User 2"
+    User.create [{id: 101, name: "User 1"}]
+    User.create [{id: 102, name: "User 2"}]
 
-    Category.create! id: 201, name: "Test"
-    Category.create! id: 202, name: "Test 2"
+    Category.create [{id: 201, name: "Test"}]
+    Category.create [{id: 202, name: "Test 2"}]
 
-    Post.create! id: 301, title: "post 301", published: true, user_id: 101, category_id: 201, content: "Lorem ipsum"
-    Post.create! id: 302, title: "post 302", published: true, user_id: 102, category_id: 201, content: "Lorem ipsum"
-    Post.create! id: 303, title: "post 303", published: true, user_id: 102, category_id: 202, content: "Lorem ipsum"
-    Post.create! id: 304, title: "post 304", published: true, user_id: 101, category_id: 202, content: "Lorem ipsum"
+    Post.create [{id: 301, published: true, user_id: 101, category_id: 201, content: "Lorem ipsum"}]
+    Post.create [{id: 302, published: true, user_id: 102, category_id: 201, content: "Lorem ipsum"}]
+    Post.create [{id: 303, published: true, user_id: 102, category_id: 202, content: "Lorem ipsum"}]
+    Post.create [{id: 304, published: true, user_id: 101, category_id: 202, content: "Lorem ipsum"}]
   end
 
   describe "Clear::Model" do
@@ -76,7 +61,7 @@ module CacheSpec
           end
           Clear::Model::QueryCache.cache_hitted.should eq(4) # Number of posts
 
-          Category.query.with_users(&.order_by("users.id", :asc)).order_by("id", :asc).each do |c|
+          Category.query.with_users(&.order_by("users.id", "asc")).order_by("id", "asc").each do |c|
             c.users.each do |user|
               c.id.not_nil!
               user.id.not_nil!

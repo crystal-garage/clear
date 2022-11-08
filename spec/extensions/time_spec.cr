@@ -16,7 +16,7 @@ module IntervalSpec
 
   def self.reinit!
     reinit_migration_manager
-    IntervalMigration78392.new.apply
+    IntervalMigration78392.new.apply(Clear::Migration::Direction::UP)
   end
 
   class IntervalModel

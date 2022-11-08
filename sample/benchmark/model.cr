@@ -23,7 +23,7 @@ class BenchmarkModel
 
   self.table = "benchmark"
 
-  primary_key
+  with_serial_pkey
 
   column y : Int32
 end

@@ -5,8 +5,8 @@ module NestedQuerySpec
     include Clear::Migration
 
     def change(dir)
-      create_table "topics" do |t|
-        t.column "topicable_id", "bigint", index: true
+      create_table "tags" do |t|
+        t.column "taggable_id", "bigint", index: true
         t.column "name", "string"
       end
 
@@ -22,8 +22,8 @@ module NestedQuerySpec
       <<-SQL
         INSERT INTO videos VALUES   (1,    'Video Title');
         INSERT INTO releases VALUES (1, 1, 'Video Release');
-        INSERT INTO topics VALUES     (1, 1, 'foo');
-        INSERT INTO topics VALUES     (2, 1, 'bar');
+        INSERT INTO tags VALUES     (1, 1, 'foo');
+        INSERT INTO tags VALUES     (2, 1, 'bar');
       SQL
         .split(";").each do |qry|
         execute(qry)
@@ -31,17 +31,17 @@ module NestedQuerySpec
     end
   end
 
-  class Topic
+  class Tag
     include Clear::Model
 
-    self.table = "topics"
+    self.table = "tags"
 
     primary_key
 
     column name : String
-    column topicable_id : Int64
+    column taggable_id : Int64
 
-    belongs_to video : Video, foreign_key: :topicable_id
+    belongs_to video : Video, foreign_key: :taggable_id
   end
 
   class Video
@@ -53,7 +53,7 @@ module NestedQuerySpec
 
     column name : String
 
-    has_many topics : Topic, foreign_key: "topicable_id"
+    has_many tags : Tag, foreign_key: "taggable_id"
   end
 
   class Release
@@ -72,14 +72,15 @@ module NestedQuerySpec
 
   def self.reinit
     reinit_migration_manager
-    NestedQuerySpecMigration9991.new.apply
+    NestedQuerySpecMigration9991.new.apply(Clear::Migration::Direction::UP)
   end
 
   it "nests the query" do
     temporary do
       reinit
 
-      Release.query.with_video(&.with_topics).to_a
+      Release.query
+        .with_video(&.with_tags).to_a
     end
   end
 end

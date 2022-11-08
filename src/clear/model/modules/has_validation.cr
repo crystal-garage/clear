@@ -41,10 +41,10 @@ module Clear::Model::HasValidation
     # Can be overwritten
   end
 
-  # Check whether the model is valid. If not, raise `InvalidError`.
+  # Check whether the model is valid. If not, raise `InvalidModelError`.
   # Return the model itself
   def valid!
-    raise InvalidError.new(self) unless valid?
+    raise InvalidModelError.new("Model is invalid: #{print_errors}") unless valid?
     self
   end
 

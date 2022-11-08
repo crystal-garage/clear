@@ -43,7 +43,7 @@ module MigrationSpec
       it "can apply migration" do
         temporary do
           Clear::Migration::Manager.instance.reinit!
-          Migration1.new.apply
+          Migration1.new.apply(Clear::Migration::Direction::UP)
 
           Clear::Reflection::Table.public.where { table_name == "test" }.empty?.should eq false
 
@@ -55,19 +55,19 @@ module MigrationSpec
 
           table.indexes.size.should eq 6
 
-          Migration2.new.apply
+          Migration2.new.apply(Clear::Migration::Direction::UP)
           columns = table.columns
           columns.dup.where { column_name == "middle_name" }.empty?.should eq false
           table.indexes.size.should eq 7
 
           # Revert the last migration
-          Migration2.new.apply(Clear::Migration::Direction::Down)
+          Migration2.new.apply(Clear::Migration::Direction::DOWN)
           columns = table.columns
           columns.dup.where { column_name == "middle_name" }.empty?.should eq true
           table.indexes.size.should eq 6
 
           # Revert the table migration
-          Migration1.new.apply(Clear::Migration::Direction::Down)
+          Migration1.new.apply(Clear::Migration::Direction::DOWN)
           Clear::Reflection::Table.public.where { table_name == "test" }.empty?.should eq true
         end
       end

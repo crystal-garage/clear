@@ -91,7 +91,7 @@ require "../sql/select_query"
 # By default, Clear map theses columns types:
 #
 # - `String` => `text`
-# - `Numbers` (any from 8 to 64 bits, float, double, big number, big float, big decimal) => `int, large int, numeric(arbitrary precision number) etc... (depends of your choice)`
+# - `Numbers` (any from 8 to 64 bits, float, double, big number, big float) => `int, large int etc... (depends of your choice)`
 # - `Bool` => `text or bool`
 # - `Time` => `timestamp without timezone or text`
 # - `JSON::Any` => `json and jsonb`
@@ -148,7 +148,7 @@ require "../sql/select_query"
 # ```
 # class MyModel
 #   include Clear::Model
-#   primary_key "my_primary_key"
+#   with_serial_pkey "my_primary_key"
 # end
 # ```
 #
@@ -175,7 +175,6 @@ module Clear::Model
     # Redefinition of the fields,
     # because of a bug in the compiler
     # https://github.com/crystal-lang/crystal/issues/5281
-    # :nodoc:
     @limit : Int64?
     @offset : Int64?
     @lock : String?
@@ -199,9 +198,8 @@ module Clear::Model
     # :nodoc:
     def initialize(
       @distinct_value = nil,
-      @cte = {} of String => Clear::SQL::Query::CTE::Record,
+      @cte = {} of String => Clear::SQL::SelectBuilder | String,
       @columns = [] of SQL::Column,
-      @forced_columns = [] of SQL::Column,
       @froms = [] of SQL::From,
       @joins = [] of SQL::Join,
       @wheres = [] of Clear::Expression::Node,
@@ -213,7 +211,6 @@ module Clear::Model
       @offset = nil,
       @lock = nil,
       @before_query_triggers = [] of -> Nil,
-      # collection specific parameters ---v
       @tags = {} of String => Clear::SQL::Any,
       @cache = Clear::Model::QueryCache.new,
       @cached_result = nil
@@ -239,11 +236,6 @@ module Clear::Model
       T
     end
 
-    # :ditto:
-    def self.item_class
-      T
-    end
-
     # :nodoc:
     # Set a query cache on this Collection. Fetching and enumerate will use the cache instead of calling the SQL.
     def cached(cache : Clear::Model::QueryCache)
@@ -252,7 +244,7 @@ module Clear::Model
     end
 
     # :nodoc:
-    def with_cached_result(r : Array(T)?)
+    def with_cached_result(r : Array(T))
       @cached_result = r
       self
     end
@@ -281,29 +273,19 @@ module Clear::Model
     end
 
     # :nodoc:
-    def tags(hash : Hash(String, Clear::SQL::Any))
-      @tags.merge!(hash)
+    def tags(x : NamedTuple)
+      @tags.merge!(x.to_h)
+      self
+    end
+
+    # :nodoc:
+    def tags(x : Hash(String, X)) forall X
+      @tags.merge!(x.to_h)
       self
     end
 
     def tags
       @tags
-    end
-
-    # :nodoc:
-    # redefine where with tuple as argument which add tags
-    def where(**tuple)
-      hash = tuple.to_h.transform_keys &.to_s
-
-      any_hash = {} of String => Clear::SQL::Any
-
-      # remove terms which are not real value but conditions like range or array
-      hash.each { |k, v|
-        any_hash[k] = v if v.is_a?(Clear::SQL::Any)
-      }
-
-      tags(any_hash)
-      super(**tuple)
     end
 
     # :nodoc:
@@ -462,19 +444,24 @@ module Clear::Model
       o
     end
 
-    # Basically a fancy way to write `OFFSET x LIMIT 1`
+    # Basically a custom way to write `OFFSET x LIMIT 1`
     def [](off, fetch_columns = false) : T
-      self[off, fetch_columns]? || raise Clear::SQL::RecordNotFoundError.new
+      self[off, fetch_columns] || raise Clear::SQL::RecordNotFoundError.new
     end
 
-    # Basically a fancy way to write `OFFSET x LIMIT 1`
+    # Basically a custom way to write `OFFSET x LIMIT 1`
     def []?(off, fetch_columns = false) : T?
       self.offset(off).first(fetch_columns)
     end
 
     # Get a range of models
-    def [](range : Range(Number, Number), fetch_columns = false) : Array(T)
-      self.offset(range.begin).limit(range.end - range.begin).to_a(fetch_columns)
+    def [](range : Range(Int64), fetch_columns = false) : Array(T)
+      self[range, fetch_columns]
+    end
+
+    # Get a range of models
+    def []?(range : Range(Int64), fetch_columns = false) : Array(T)
+      self.offset(range.start).limit(range.end - range.start).to_a(fetch_columns)
     end
 
     # A convenient way to write `where{ condition }.first`
@@ -499,32 +486,17 @@ module Clear::Model
       where(tuple).first!(fetch_columns)
     end
 
-    # Returns a model using primary key equality
-    # Returns `nil` if not found.
-    def find(x) : T?
-      where { var(T.table, T.pkey) == x }.first
-    end
-
-    # Returns a model using primary key equality.
-    # Raises error if the model is not found.
-    def find!(x) : T
-      find(x) || raise Clear::SQL::RecordNotFoundError.new
-    end
-
-    def find_or_build(**tuple) : T
-      find_or_build(**tuple) { }
-    end
-
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
-    def find_or_build(**tuple, &block : T -> Nil) : T
-      where(tuple) unless tuple.size == 0
-      r = first
+    def find_or_build(tuple : NamedTuple, &block : T -> Nil) : T
+      r = where(tuple).first
 
       return r if r
 
-      str_hash = @tags.dup
+      str_hash = {} of String => Clear::SQL::Any
+
       tuple.map { |k, v| str_hash[k.to_s] = v }
+      str_hash.merge!(@tags)
 
       r = Clear::Model::Factory.build(T, str_hash)
       yield(r)
@@ -535,22 +507,9 @@ module Clear::Model
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
     # Just after building, save the object.
-    def find_or_create(**tuple) : T
-      r = find_or_build(**tuple)
-
-      r.save!
-      r
-    end
-
-    # Try to fetch a row. If not found, build a new object and setup
-    # the fields like setup in the condition tuple.
-    # Just after building, save the object.
-    def find_or_create(**tuple, &block : T -> Nil) : T
-      r = find_or_build(**tuple) do |mdl|
-        yield(mdl)
-      end
-
-      r.save!
+    def find_or_create(tuple : NamedTuple, &block : T -> Nil) : T
+      r = find_or_build(tuple, &block)
+      r.save
       r
     end
 
@@ -563,38 +522,9 @@ module Clear::Model
     # Get the first row from the collection query.
     # if not found, return `nil`
     def first(fetch_columns = false) : T?
-      clone = dup
+      order_by(Clear::SQL.escape("#{T.pkey}"), "ASC") if T.pkey || order_bys.empty?
 
-      if clone.order_bys.empty?
-        key = {Clear::SQL.escape(T.table), Clear::SQL.escape(T.pkey)}.join(".")
-        clone.order_by(key, :asc)
-      end
-
-      clone.limit(1).fetch do |hash|
-        return Clear::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
-      end
-
-      nil
-    end
-
-    # Redefinition of `join_impl` to avoid ambiguity on the column
-    # name if no specific column have been selected.
-    protected def join_impl(name, type, lateral, clear_expr)
-      self.set_default_table_wildcard(Clear::SQL.escape(T.table))
-      super(name, type, lateral, clear_expr)
-    end
-
-    # Get the last row from the collection query.
-    # if not found, return `nil`
-    def last(fetch_columns = false) : T?
-      clone = dup
-
-      if clone.order_bys.empty?
-        key = {Clear::SQL.escape(T.table), Clear::SQL.escape(T.pkey)}.join(".")
-        clone.order_by(key, :asc)
-      end
-
-      clone.reverse_order_by.limit(1).fetch do |hash|
+      limit(1).fetch do |hash|
         return Clear::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
       end
 
@@ -607,11 +537,36 @@ module Clear::Model
       last(fetch_columns) || raise Clear::SQL::RecordNotFoundError.new
     end
 
-    # Delete all the rows which would have been returned by this collection.
-    # Is equivalent to `collection.to_delete.execute`
-    def delete_all : self
-      to_delete.execute
-      change! # because we want to clear the caches in case we do something with the collection later
+    # Redefinition of `join_impl` to avoid ambiguity on the column
+    # name if no specific column have been selected.
+    protected def join_impl(name, type, lateral, clear_expr)
+      self.set_default_table_wildcard(Clear::SQL.escape(T.table))
+      super(name, type, lateral, clear_expr)
+    end
+
+    # Get the last row from the collection query.
+    # if not found, return `nil`
+    def last(fetch_columns = false) : T?
+      order_by("#{T.pkey}", "ASC") if T.pkey || order_bys.empty?
+
+      arr = order_bys.dup # Save current order by
+
+      begin
+        new_order = arr.map do |x|
+          Clear::SQL::Query::OrderBy::Record.new(x.op, (x.dir == :asc ? :desc : :asc), nil)
+        end
+
+        clear_order_bys.order_by(new_order)
+
+        limit(1).fetch do |hash|
+          return Clear::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
+        end
+
+        nil
+      ensure
+        # reset the order by in case we want to reuse the query
+        clear_order_bys.order_by(order_bys)
+      end
     end
   end
 end

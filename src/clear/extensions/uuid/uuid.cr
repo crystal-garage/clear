@@ -1,5 +1,5 @@
 struct UUID
-  def to_json(json : JSON::Builder)
+  def to_json(json)
     json.string(to_s)
   end
 end
