@@ -5,6 +5,7 @@ require "db"
 
 require "./errors"
 require "./logger"
+require "./transaction"
 
 # Add a field to DB::Database to handle
 #   the state of transaction of a specific
@@ -57,6 +58,7 @@ module Clear
                 Nil
 
     include Clear::SQL::Logger
+    include Clear::SQL::Transaction
     extend self
 
     alias Symbolic = String | Symbol
@@ -122,43 +124,6 @@ module Clear
     end
 
     @@savepoint_uid : UInt64 = 0_u64
-
-    # Create an unstackable transaction
-    #
-    # Example:
-    # ```
-    # Clear::SQL.transaction do
-    #   # do something
-    #   Clear::SQL.transaction do # Technically, this block do nothing, since we already are in transaction
-    #     rollback                # < Rollback the up-most `transaction` block.
-    #   end
-    # end
-    # ```
-    # see #with_savepoint to use a stackable version using savepoints.
-    #
-    def transaction(connection = "default", &block)
-      Clear::SQL::ConnectionPool.with_connection(connection) do |cnx|
-        has_rollback = false
-
-        if cnx._clear_in_transaction?
-          return yield(cnx) # In case we already are in transaction, we just ignore
-        else
-          cnx._clear_in_transaction = true
-          execute("BEGIN")
-          begin
-            return yield(cnx)
-          rescue e
-            has_rollback = true
-            is_rollback_error = e.is_a?(RollbackError) || e.is_a?(CancelTransactionError)
-            execute("ROLLBACK --" + (is_rollback_error ? "normal" : "program error")) rescue nil
-            raise e unless is_rollback_error
-          ensure
-            cnx._clear_in_transaction = false
-            execute("COMMIT") unless has_rollback
-          end
-        end
-      end
-    end
 
     # Create a transaction, but this one is stackable
     # using savepoints.
