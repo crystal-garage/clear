@@ -1,186 +1,12 @@
 require "../spec_helper"
+require "../data/example_models"
 
 module ModelSpec
-  class Tag
-    include Clear::Model
-
-    column id : Int32, primary: true, presence: false
-
-    column name : String
-
-    has_many posts : Post, through: :model_post_tags, foreign_key: :post_id, own_key: :tag_id
-
-    self.table = "model_tags"
-  end
-
-  class Channel
-    include Clear::Model
-    self.table = "channels"
-
-    column id : Int64, primary: true, presence: false
-    column createdby_id : Int64
-
-    column name : String
-    column description : String
-    column avatarsvg_uri : String
-
-    timestamps
-  end
-
-  class Category
-    include Clear::Model
-
-    column id : Int32, primary: true, presence: false
-
-    column name : String
-
-    has_many posts : Post
-    has_many users : User, through: :model_posts, foreign_key: :post_id, own_key: :category_id
-
-    timestamps
-
-    self.table = "model_categories"
-  end
-
-  class Post
-    include Clear::Model
-
-    column id : Int32, primary: true, presence: false
-
-    column title : String
-
-    column tags : Array(String), presence: false
-    column flags : Array(Int64), presence: false, column_name: "flags_other_column_name"
-
-    def validate
-      ensure_than(title, "is not empty", &.size.>(0))
-    end
-
-    has_many tag_relations : Tag, through: :model_post_tags, foreign_key: :tag_id, own_key: :post_id
-
-    belongs_to user : User, key_type: Int32?
-    belongs_to category : Category, key_type: Int32?
-
-    self.table = "model_posts"
-  end
-
-  class UserInfo
-    include Clear::Model
-
-    column id : Int32, primary: true, presence: false
-
-    belongs_to user : User, key_type: Int32?
-    column registration_number : Int64
-
-    self.table = "model_user_infos"
-  end
-
-  class User
-    include Clear::Model
-
-    column id : Int32, primary: true, presence: false
-
-    column first_name : String
-    column last_name : String?
-    column middle_name : String?
-    column active : Bool?
-
-    column notification_preferences : JSON::Any, presence: false
-
-    has_many posts : Post, foreign_key: "user_id"
-    has_one info : UserInfo?, foreign_key: "user_id"
-    has_many categories : Category, through: :model_posts,
-      own_key: :user_id, foreign_key: :category_id
-
-    timestamps
-
-    # Random virtual method
-    def full_name=(x)
-      self.first_name, self.last_name = x.split(" ")
-    end
-
-    def full_name
-      {self.first_name, self.last_name}.join(" ")
-    end
-
-    self.table = "model_users"
-  end
-
-  class ModelWithUUID
-    include Clear::Model
-
-    primary_key :id, type: :uuid
-
-    self.table = "model_with_uuid"
-  end
-
-  class ModelSpecMigration123
-    include Clear::Migration
-
-    def change(dir)
-      create_table "model_categories" do |t|
-        t.column "name", "string"
-
-        t.timestamps
-      end
-
-      create_table "model_tags", id: :serial do |t|
-        t.column "name", "string", unique: true, null: false
-      end
-
-      create_table "model_users" do |t|
-        t.column "first_name", "string"
-        t.column "last_name", "string"
-
-        t.column "active", "bool", null: true
-
-        t.column "middle_name", type: "varchar(32)"
-
-        t.column "notification_preferences", "jsonb", index: "gin", default: "'{}'"
-
-        t.timestamps
-      end
-
-      create_table "model_posts" do |t|
-        t.column "title", "string", index: true
-
-        t.column "tags", "string", array: true, index: "gin", default: "ARRAY['post', 'arr 2']"
-        t.column "flags_other_column_name", "bigint", array: true, index: "gin", default: "'{}'::bigint[]"
-
-        t.references to: "model_users", name: "user_id", on_delete: "cascade"
-        t.references to: "model_categories", name: "category_id", null: true, on_delete: "set null"
-      end
-
-      create_table "model_post_tags", id: false do |t|
-        t.references to: "model_tags", name: "tag_id", on_delete: "cascade", null: false, primary: true
-        t.references to: "model_posts", name: "post_id", on_delete: "cascade", null: false, primary: true
-
-        t.index ["tag_id", "post_id"], using: :btree
-      end
-
-      create_table "model_user_infos" do |t|
-        t.references to: "model_users", name: "user_id", on_delete: "cascade", null: true
-
-        t.column "registration_number", "int64", index: true
-
-        t.timestamps
-      end
-
-      create_table("model_with_uuid", id: :uuid) do |_|
-      end
-    end
-  end
-
-  def self.reinit
-    reinit_migration_manager
-    ModelSpecMigration123.new.apply(Clear::Migration::Direction::UP)
-  end
-
   describe "Clear::Model" do
     context "fields management" do
       it "can load from tuple" do
         temporary do
-          reinit
+          reinit_example_models
           u = User.new({id: 123})
           u.id.should eq 123
           u.persisted?.should be_false
@@ -189,7 +15,7 @@ module ModelSpec
 
       it "can load link string <-> varchar" do
         temporary do
-          reinit
+          reinit_example_models
           User.create!(id: 1, first_name: "John", middle_name: "William")
 
           User.query.each do |u|
@@ -200,7 +26,7 @@ module ModelSpec
 
       it "can pluck" do
         temporary do
-          reinit
+          reinit_example_models
           User.create!(id: 1, first_name: "John", middle_name: "William")
           User.create!(id: 2, first_name: "Hans", middle_name: "Zimmer")
 
@@ -214,7 +40,7 @@ module ModelSpec
 
       it "can detect persistence" do
         temporary do
-          reinit
+          reinit_example_models
           u = User.new({id: 1}, persisted: true)
           u.persisted?.should be_true
         end
@@ -222,7 +48,7 @@ module ModelSpec
 
       it "can detect change in fields" do
         temporary do
-          reinit
+          reinit_example_models
           u = User.new({id: 1})
           u.id = 2
           u.update_h.should eq({"id" => 2})
@@ -233,7 +59,7 @@ module ModelSpec
 
       it "can deal with boolean nullable" do # Specific bug with converter already fixed
         temporary do
-          reinit
+          reinit_example_models
           u = User.new({id: 1, first_name: "x", active: nil})
           u.save!
           u2 = User.query.first!
@@ -243,7 +69,7 @@ module ModelSpec
 
       it "should not try to update the model if there's nothing to update" do
         temporary do
-          reinit
+          reinit_example_models
           u = User.new({id: 1, first_name: "x"})
           u.save!
           u.id = 2
@@ -256,7 +82,7 @@ module ModelSpec
 
       it "can save the model" do
         temporary do
-          reinit
+          reinit_example_models
           u = User.new({id: 1, first_name: "x"})
           u.notification_preferences = JSON.parse("{}")
           u.id = 2 # Force the change!
@@ -267,7 +93,7 @@ module ModelSpec
 
       it "can update the model" do
         temporary do
-          reinit
+          reinit_example_models
 
           u = User.create!({id: 1, first_name: "x"})
           u.update!(first_name: "Malcom")
@@ -278,7 +104,7 @@ module ModelSpec
 
       it "can reload the model" do
         temporary do
-          reinit
+          reinit_example_models
 
           u = User.create!({id: 1, first_name: "x"})
 
@@ -305,7 +131,7 @@ module ModelSpec
 
       it "can import a number of models" do
         temporary do
-          reinit
+          reinit_example_models
           u = User.new({id: 1, first_name: "x"})
           u2 = User.new({id: 2, first_name: "y"})
           u3 = User.new({id: 3, first_name: "z"})
@@ -323,7 +149,7 @@ module ModelSpec
 
       it "can save with conflict resolution" do
         temporary do
-          reinit
+          reinit_example_models
           u = User.new({id: 1, first_name: "John"})
           u.save! # Create a new user
 
@@ -334,7 +160,7 @@ module ModelSpec
         end
 
         temporary do
-          reinit
+          reinit_example_models
 
           u = User.new({id: 1, first_name: "John"})
           u.save! # Create a new user
@@ -343,7 +169,7 @@ module ModelSpec
           u2.save! { |qry|
             qry.on_conflict("(id)").do_update { |up|
               up.set("first_name = excluded.first_name")
-                .where { model_users.id == excluded.id }
+                .where { users.id == excluded.id }
             }
           }
 
@@ -354,7 +180,7 @@ module ModelSpec
 
       it "save in good order the belongs_to models" do
         temporary do
-          reinit
+          reinit_example_models
           u = User.new
           p = Post.new({title: "some post"})
           p.user = u
@@ -371,7 +197,7 @@ module ModelSpec
 
       it "save in good order the belongs_to models2" do
         temporary do
-          reinit
+          reinit_example_models
 
           u = User.new({first_name: "John"})
           post = Post.new({user: u, title: "some post"})
@@ -385,7 +211,7 @@ module ModelSpec
 
       it "does not set persisted on failed insert" do
         temporary do
-          reinit
+          reinit_example_models
           # There's no user_id = 999
           user_info = UserInfo.new({registration_number: 123, user_id: 999})
 
@@ -397,7 +223,7 @@ module ModelSpec
         end
 
         temporary do
-          reinit
+          reinit_example_models
 
           User.create!({id: 999, first_name: "Test"})
           user_info = UserInfo.new({registration_number: 123, user_id: 999})
@@ -409,7 +235,7 @@ module ModelSpec
 
       it "can save persisted model" do
         temporary do
-          reinit
+          reinit_example_models
           u = User.new
           u.persisted?.should eq false
           u.first_name = "hello"
@@ -423,7 +249,7 @@ module ModelSpec
 
       it "can use set to setup multiple fields at once" do
         temporary do
-          reinit
+          reinit_example_models
 
           # Set from tuple
           u = User.new
@@ -453,7 +279,7 @@ module ModelSpec
 
       it "can load models" do
         temporary do
-          reinit
+          reinit_example_models
           User.create
           User.query.each do |u|
             u.id.should_not eq nil
@@ -463,7 +289,7 @@ module ModelSpec
 
       it "can read through cursor" do
         temporary do
-          reinit
+          reinit_example_models
           User.create
           User.query.each_with_cursor(batch: 50) do |u|
             u.id.should_not eq nil
@@ -473,7 +299,7 @@ module ModelSpec
 
       it "can fetch computed column" do
         temporary do
-          reinit
+          reinit_example_models
           User.create({first_name: "a", last_name: "b"})
 
           u = User.query.select({full_name: "first_name || ' ' || last_name"}).first!(fetch_columns: true)
@@ -483,7 +309,7 @@ module ModelSpec
 
       it "can create a model using virtual fields" do
         temporary do
-          reinit
+          reinit_example_models
           User.create!(full_name: "Hello World")
 
           u = User.query.first!
@@ -494,7 +320,7 @@ module ModelSpec
 
       it "define constraints on has_many to build object" do
         temporary do
-          reinit
+          reinit_example_models
           User.create({first_name: "x"})
           u = User.query.first!
           p = User.query.first!.posts.build
@@ -507,7 +333,7 @@ module ModelSpec
         now = Time.local
 
         temporary do
-          reinit
+          reinit_example_models
 
           u = User.new
 
@@ -525,7 +351,7 @@ module ModelSpec
 
       it "can count using offset and limit" do
         temporary do
-          reinit
+          reinit_example_models
 
           9.times do |x|
             User.create!({first_name: "user#{x}"})
@@ -538,7 +364,7 @@ module ModelSpec
 
       it "can count using group_by" do
         temporary do
-          reinit
+          reinit_example_models
           9.times do |x|
             User.create!({first_name: "user#{x}", last_name: "Doe"})
           end
@@ -549,7 +375,7 @@ module ModelSpec
 
       it "can find_or_create" do
         temporary do
-          reinit
+          reinit_example_models
 
           u = User.query.find_or_create({last_name: "Henry"}) do |user|
             user.first_name = "Thierry"
@@ -571,7 +397,7 @@ module ModelSpec
 
       it "raises a RecordNotFoundError for an empty find!" do
         temporary do
-          reinit
+          reinit_example_models
 
           expect_raises(Clear::SQL::RecordNotFoundError) do
             User.find!(1)
@@ -581,7 +407,7 @@ module ModelSpec
 
       it "can set back a field to nil" do
         temporary do
-          reinit
+          reinit_example_models
 
           u = User.create({first_name: "Rudolf"})
 
@@ -594,7 +420,7 @@ module ModelSpec
 
       it "can read and write jsonb" do
         temporary do
-          reinit
+          reinit_example_models
           u = User.new
 
           u.first_name = "Yacine"
@@ -613,7 +439,7 @@ module ModelSpec
 
       it "can query the last model" do
         temporary do
-          reinit
+          reinit_example_models
           User.create({first_name: "Yacine"})
           User.create({first_name: "Joan"})
           User.create({first_name: "Mary"})
@@ -626,7 +452,7 @@ module ModelSpec
 
       it "raises a RecordNotFoundError without first" do
         temporary do
-          reinit
+          reinit_example_models
 
           expect_raises(Clear::SQL::RecordNotFoundError) do
             User.query.first!
@@ -636,7 +462,7 @@ module ModelSpec
 
       it "raises a RecordNotFoundError without last" do
         temporary do
-          reinit
+          reinit_example_models
 
           expect_raises(Clear::SQL::RecordNotFoundError) do
             User.query.last!
@@ -646,7 +472,7 @@ module ModelSpec
 
       it "can delete a model" do
         temporary do
-          reinit
+          reinit_example_models
 
           User.create({first_name: "Malcom", last_name: "X"})
 
@@ -666,7 +492,7 @@ module ModelSpec
 
       it "can touch model" do
         temporary do
-          reinit
+          reinit_example_models
 
           c = Category.create!({name: "Nature"})
           updated_at = c.updated_at
@@ -676,26 +502,9 @@ module ModelSpec
       end
     end
 
-    it "can create a model by generating an uuid primary key" do
-      temporary do
-        reinit
-        m = ModelWithUUID.create!
-        m.id.should_not eq Nil
-      end
-    end
-
-    it "can create a model with a predefined uuid primary key" do
-      temporary do
-        reinit
-        some_uuid = UUID.new("5ca27508-f2ce-441b-b2cf-41134793e7a1")
-        m = ModelWithUUID.create!({id: some_uuid})
-        m.id.should eq some_uuid
-      end
-    end
-
     it "can load a column of type Array" do
       temporary do
-        reinit
+        reinit_example_models
 
         u = User.create!({first_name: "John"})
         p = Post.create!({title: "A post", user_id: u.id})
@@ -713,10 +522,67 @@ module ModelSpec
       end
     end
 
+    context "with self-reference and has_many through" do
+      it "can assign self-reference has_many through" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create!({first_name: "John"})
+          user2 = User.create!({first_name: "Jane"})
+
+          user1.dependencies << user2
+
+          user1.dependencies.count.should eq(1)
+          user2.dependents.count.should eq(1)
+
+          dependencies_first_names = [] of String
+          user1.dependencies.each { |u| dependencies_first_names << u.first_name }
+          dependencies_first_names.should eq(["Jane"])
+
+          dependents_first_names = [] of String
+          user2.dependents.each { |u| dependents_first_names << u.first_name }
+          dependents_first_names.should eq(["John"])
+        end
+      end
+
+      it "can create self-reference has_many through" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create!({first_name: "John"})
+          user2 = User.create!({first_name: "Jane"})
+
+          Relationship.create!({master: user1, dependency: user2})
+
+          user1.dependencies.count.should eq(1)
+          user2.dependents.count.should eq(1)
+        end
+      end
+
+      it "can unlink self-reference has_many through" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create!({first_name: "John"})
+          user2 = User.create!({first_name: "Jane"})
+
+          user1.dependencies << user2
+
+          user1.dependencies.count.should eq(1)
+          user2.dependents.count.should eq(1)
+
+          user1.dependencies.unlink(User.query.find!({first_name: "Jane"}))
+
+          user1.dependencies.count.should eq(0)
+          user2.dependents.count.should eq(0)
+        end
+      end
+    end
+
     context "with has_many through relation" do
       it "can query has_many through" do
         temporary do
-          reinit
+          reinit_example_models
 
           u = User.create!({first_name: "John"})
 
@@ -727,11 +593,11 @@ module ModelSpec
           Post.create!({title: "Post about Dogs", user_id: u.id, category_id: c.id})
 
           # Categories should return 1, as we remove duplicate
-          u.categories.to_sql.should eq "SELECT DISTINCT ON (\"model_categories\".\"id\") \"model_categories\".* " +
-                                        "FROM \"model_categories\" " +
-                                        "INNER JOIN \"model_posts\" ON " +
-                                        "(\"model_posts\".\"category_id\" = \"model_categories\".\"id\") " +
-                                        "WHERE (\"model_posts\".\"user_id\" = 1)"
+          u.categories.to_sql.should eq "SELECT DISTINCT ON (\"categories\".\"id\") \"categories\".* " +
+                                        "FROM \"categories\" " +
+                                        "INNER JOIN \"posts\" ON " +
+                                        "(\"posts\".\"category_id\" = \"categories\".\"id\") " +
+                                        "WHERE (\"posts\".\"user_id\" = 1)"
 
           # Test addition in has_many relation
           u.posts << Post.new({title: "a title", category_id: c.id})
@@ -753,7 +619,7 @@ module ModelSpec
 
       it "can unlink has_many through" do
         temporary do
-          reinit
+          reinit_example_models
 
           u = User.create!({first_name: "John"})
           c = Category.create!({name: "Nature"})
@@ -772,29 +638,29 @@ module ModelSpec
     context "with join" do
       it "resolves by default ambiguous columns in joins" do
         temporary do
-          reinit
+          reinit_example_models
 
           u = User.create!({first_name: "Join User"})
 
           Post.create!({title: "A Post", user_id: u.id})
 
-          Post.query.join(:model_users) { model_posts.user_id == model_users.id }.to_sql
-            .should eq "SELECT \"model_posts\".* FROM \"model_posts\" INNER JOIN \"model_users\" " +
-                       "ON (\"model_posts\".\"user_id\" = \"model_users\".\"id\")"
+          Post.query.join(:users) { posts.user_id == users.id }.to_sql
+            .should eq "SELECT \"posts\".* FROM \"posts\" INNER JOIN \"users\" " +
+                       "ON (\"posts\".\"user_id\" = \"users\".\"id\")"
         end
       end
 
       it "resolve ambiguous columns in with_* methods" do
         temporary do
-          reinit
+          reinit_example_models
           u = User.create!({first_name: "Join User"})
           Post.create!({title: "A Post", user_id: u.id})
 
-          user_with_a_post_minimum = User.query.distinct.join(:model_posts) { model_posts.user_id == model_users.id }
+          user_with_a_post_minimum = User.query.distinct.join(:posts) { posts.user_id == users.id }
 
           user_with_a_post_minimum.to_sql.should eq \
-            "SELECT DISTINCT \"model_users\".* FROM \"model_users\" INNER JOIN " +
-            "\"model_posts\" ON (\"model_posts\".\"user_id\" = \"model_users\".\"id\")"
+            "SELECT DISTINCT \"users\".* FROM \"users\" INNER JOIN " +
+            "\"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\")"
 
           user_with_a_post_minimum.with_posts.each { } # Should just execute
         end
@@ -802,17 +668,17 @@ module ModelSpec
 
       it "should wildcard with default model only if no select is made (before OR after)" do
         temporary do
-          reinit
+          reinit_example_models
           u = User.create!({first_name: "Join User"})
           Post.create!({title: "A Post", user_id: u.id})
 
           user_with_a_post_minimum = User.query.distinct
-            .join(:model_posts) { model_posts.user_id == model_users.id }
+            .join(:posts) { posts.user_id == users.id }
             .select(:first_name, :last_name)
 
           user_with_a_post_minimum.to_sql.should eq \
-            "SELECT DISTINCT \"first_name\", \"last_name\" FROM \"model_users\" INNER JOIN " +
-            "\"model_posts\" ON (\"model_posts\".\"user_id\" = \"model_users\".\"id\")"
+            "SELECT DISTINCT \"first_name\", \"last_name\" FROM \"users\" INNER JOIN " +
+            "\"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\")"
 
           user_with_a_post_minimum.with_posts.each { } # Should just execute
         end
@@ -825,7 +691,7 @@ module ModelSpec
 
       it "can pull the next 5 users from page 2" do
         temporary do
-          reinit
+          reinit_example_models
 
           15.times do |x|
             User.create!({first_name: "user#{x}"})
@@ -839,7 +705,7 @@ module ModelSpec
 
       it "can export to json" do
         temporary do
-          reinit
+          reinit_example_models
           u = User.new({first_name: "Hello", last_name: "World"})
           u.to_json.should eq %({"first_name":"Hello","last_name":"World"})
 
@@ -850,7 +716,7 @@ module ModelSpec
 
       it "can paginate with where clause" do
         temporary do
-          reinit
+          reinit_example_models
           last_names = ["smith", "jones"]
           15.times do |x|
             last_name = last_names[x % 2]?
@@ -863,5 +729,135 @@ module ModelSpec
         end
       end
     end
+
+    # describe "Clear::Model::JSONDeserialize" do
+    #   it "can create a model json IO" do
+    #     user_body = {first_name: "foo"}
+    #     io = IO::Memory.new user_body.to_json
+    #     user = User.from_json(io)
+    #     user.first_name.should eq user_body["first_name"]
+    #   end
+
+    #   it "can create a new model instance from json" do
+    #     user_body = {first_name: "Steve"}
+    #     user = User.from_json(user_body.to_json)
+    #     user.first_name.should eq(user_body["first_name"])
+    #   end
+
+    #   it "sets fields from json" do
+    #     user_body = {first_name: "Steve"}
+    #     update_body = {first_name: "stevo"}
+    #     user = User.new(user_body)
+    #     user.set_from_json(update_body.to_json)
+    #     user.first_name.should eq update_body["first_name"]
+    #   end
+
+    #   it "sets nillable fields to nil" do
+    #     user = User.new({first_name: "Foo", last_name: "Bar"})
+    #     user.set_from_json({last_name: nil}.to_json)
+    #     user.last_name.should be_nil
+    #   end
+
+    #   it "does not set unnillable fields to nil" do
+    #     user_body = {first_name: "Foo"}
+    #     user = User.new(user_body)
+    #     user.set_from_json({first_name: nil}.to_json)
+    #     user.first_name.should eq user_body["first_name"]
+    #   end
+
+    #   it "create and update a model from json" do
+    #     temporary do
+    #       reinit_example_models
+
+    #       u1_body = {first_name: "George"}
+    #       u1 = User.create_from_json(u1_body.to_json)
+    #       u1.first_name.should eq u1_body["first_name"]
+
+    #       u2_body = {first_name: "Eliza"}
+    #       u2 = User.create_from_json!(u2_body.to_json)
+    #       u2.first_name.should eq(u2_body["first_name"])
+
+    #       u3_body = {first_name: "Angelica"}
+    #       u3 = u2.update_from_json(u3_body.to_json)
+    #       u3.first_name.should eq(u3_body["first_name"])
+
+    #       u4_body = {first_name: "Aaron"}
+    #       u4 = u3.update_from_json!(u4_body.to_json)
+    #       u4.first_name.should eq(u4_body["first_name"])
+    #     end
+    #   end
+    # end
+
+    # describe "Clear::Model::HasColumns mass_assign" do
+    #   it "should do mass_assignment" do
+    #     temporary do
+    #       reinit_example_models
+
+    #       u1_body = {first_name: "George", last_name: "Dream", middle_name: "Sapnap"}
+    #       u1 = User.create_from_json(u1_body.to_json, trusted: true)
+    #       u1.first_name.should eq u1_body["first_name"]
+    #       u1.last_name.should eq u1_body["last_name"]
+    #       u1.middle_name.should eq u1_body["middle_name"]
+    #     end
+    #   end
+
+    #   it "should not do mass_assignment" do
+    #     temporary do
+    #       reinit_example_models
+
+    #       u1_body = {first_name: "George", last_name: "Dream", middle_name: "Sapnap"}
+    #       u1 = User.create_from_json(u1_body.to_json)
+    #       u1.first_name.should eq u1_body["first_name"]
+    #       u1.last_name.should eq u1_body["last_name"]
+    #       u1.middle_name.should be_nil
+    #     end
+    #   end
+    # end
+
+    # describe "Access to custom fields" do
+    #   it "should be able to access custom fields" do
+    #     temporary do
+    #       reinit_example_models
+
+    #       u1_body = {first_name: "George", last_name: "Dream", middle_name: "Sapnap"}
+    #       User.create_from_json(u1_body.to_json)
+
+    #       usr = User.query.where { first_name == "George" }.select("first_name, 'example' as custom_field").first!(fetch_columns: true)
+    #       usr["custom_field"].should eq "example"
+
+    #       json = {
+    #         custom_field: usr["custom_field"],
+    #       }.to_json
+
+    #       json.should eq %({"custom_field":"example"})
+    #     end
+    #   end
+    # end
+
+    # describe "BigDecimal / Numeric column in Migration" do
+    #   it "should create a new model with BigDecimal fields" do
+    #     temporary do
+    #       reinit_example_models
+
+    #       data = BigDecimalData.new({num1: 42.0123, num2: "42_42_42_24.0123_456_789", num3: "-102938719.2083710928371092837019283701982370918237"})
+    #       data.num1.should eq(BigDecimal.new(BigInt.new(420123), 4))
+    #       data.num2.should eq(BigDecimal.new(BigInt.new(424242240123456789), 10))
+    #       data.num3.should eq(BigDecimal.new(BigInt.new("-1029387192083710928371092837019283701982370918237".to_big_i), 40))
+
+    #       data.save!
+
+    #       data.num1.should eq(BigDecimal.new(BigInt.new(420123), 4))
+    #       data.num2.should eq(42424224.01234568)
+    #       data.num3.should eq(BigDecimal.new(BigInt.new("-1029387192083710928371092837019283701982370918237".to_big_i), 40).trunc)
+
+    #       # Clear::SQL::Error:numeric field overflow
+    #       data.num4 = BigDecimal.new(BigInt.new("-1029387192083710928371092837019283701982370918237".to_big_i), 40)
+
+    #       expect_raises(Clear::SQL::Error) do
+    #         data.save!
+    #       end
+    #     end
+    #   end
+    # end
   end
 end

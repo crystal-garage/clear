@@ -47,7 +47,6 @@ module CollectionSpec
         reinit_example_models
 
         user = User.create! first_name: "user"
-        p! user.id
         post1 = Post.create! title: "title 1", user_id: user.id
         post2 = Post.create! title: "title 2", user_id: user.id
 
