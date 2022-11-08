@@ -47,6 +47,7 @@ module CollectionSpec
         reinit_example_models
 
         user = User.create! first_name: "user"
+
         post1 = Post.create! title: "title 1", user_id: user.id
         post2 = Post.create! title: "title 2", user_id: user.id
 
@@ -131,7 +132,7 @@ module CollectionSpec
         User.query.first!.first_name.should eq("user 0")
         User.query.order_by({id: :desc}).first!.first_name.should eq("user 9")
 
-        Clear::SQL.truncate(User, cascade: true)
+        Clear::SQL.truncate("users", cascade: true)
 
         expect_raises(Clear::SQL::RecordNotFoundError) do
           User.query.first!
@@ -152,7 +153,7 @@ module CollectionSpec
         User.query.last!.first_name.should eq("user 9")
         User.query.order_by({id: :desc}).last!.first_name.should eq("user 0")
 
-        Clear::SQL.truncate("users", cascade: true)
+        Clear::SQL.truncate(User, cascade: true)
 
         expect_raises(Clear::SQL::RecordNotFoundError) do
           User.query.last!
