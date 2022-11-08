@@ -87,10 +87,10 @@ module CollectionSpec
         User.query.where(last_name: "now_it_exists").count.should eq(1)
 
         # with @tags metadata of the collection it should infer the where clause
-        # usr = User.query.where(first_name: "Sarah", last_name: "Connor").find_or_create
-        # usr.persisted?.should be_true
-        # usr.first_name.should eq("Sarah")
-        # usr.last_name.should eq("Connor")
+        usr = User.query.where(first_name: "Sarah", last_name: "Connor").find_or_create
+        usr.persisted?.should be_true
+        usr.first_name.should eq("Sarah")
+        usr.last_name.should eq("Connor")
       end
     end
 
