@@ -117,13 +117,13 @@ class Clear::Migration::Manager
     end
 
     if operations.empty?
-      Log.debug { "Nothing to do." }
+      Log.info { "Nothing to do." }
       return
     end
 
-    Log.debug { "Migrations will be applied (in this order):" }
+    Log.info { "Migrations will be applied (in this order):" }
     operations.each do |(uid, d)|
-      Log.debug { "#{d.up? ? "[ UP ]" : "[DOWN]"} #{uid} - #{find(uid).class.name}" }
+      Log.info { "#{d.up? ? "[ UP ]" : "[DOWN]"} #{uid} - #{find(uid).class.name}" }
     end
 
     operations.each do |(uid, d)|
@@ -141,6 +141,8 @@ class Clear::Migration::Manager
   def apply_all
     ensure_ready
 
+    Clear::View.apply(:drop)
+
     list_of_migrations = @migrations.sort { |a, b| a.uid <=> b.uid }
     list_of_migrations.reject! { |x| @migrations_up.includes?(x.uid) }
 
@@ -148,6 +150,8 @@ class Clear::Migration::Manager
       migration.apply
       @migrations_up.add(migration.uid)
     end
+
+    Clear::View.apply(:create)
   end
 
   #
@@ -220,9 +224,7 @@ class Clear::Migration::Manager
 
     Clear::SQL.select("*")
       .from("__clear_metadatas")
-      .where({metatype: "migration"}).to_a.map { |m|
-      @migrations_up.add(Int64.new(m["value"].as(String)))
-    }
+      .where(metatype: "migration").map { |m| @migrations_up.add(Int64.new(m["value"].as(String))) }
   end
 
   def refresh
@@ -258,7 +260,10 @@ class Clear::Migration::Manager
   # Print out the status ( up | down ) of all migrations found by the manager.
   def print_status : String
     ensure_ready
-    @migrations.sort { |a, b| a.as(Clear::Migration).uid <=> b.as(Clear::Migration).uid }.join("\n") do |m|
+
+    @migrations.sort do |a, b|
+      a.as(Clear::Migration).uid <=> b.as(Clear::Migration).uid
+    end.join("\n") do |m|
       active = @migrations_up.includes?(m.uid)
       "[#{active ? "✓".colorize.green : "✗".colorize.red}] #{m.uid} - #{m.class.name}"
     end
