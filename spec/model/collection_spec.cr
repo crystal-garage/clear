@@ -162,18 +162,18 @@ module CollectionSpec
       end
     end
 
-    # it "delete_all" do
-    #   temporary do
-    #     reinit_example_models
+    it "delete_all" do
+      temporary do
+        reinit_example_models
 
-    #     10.times do |x|
-    #       User.create! first_name: "user #{x}"
-    #     end
+        10.times do |x|
+          User.create! first_name: "user #{x}"
+        end
 
-    #     User.query.count.should eq(10)
-    #     User.query.where { id <= 5 }.delete_all
-    #     User.query.count.should eq(5)
-    #   end
-    # end
+        User.query.count.should eq(10)
+        User.query.where { id <= 5 }.delete_all
+        User.query.count.should eq(5)
+      end
+    end
   end
 end
