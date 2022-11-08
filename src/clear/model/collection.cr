@@ -148,7 +148,7 @@ require "../sql/select_query"
 # ```
 # class MyModel
 #   include Clear::Model
-#   with_serial_pkey "my_primary_key"
+#   primary_key "my_primary_key"
 # end
 # ```
 #
@@ -286,6 +286,22 @@ module Clear::Model
 
     def tags
       @tags
+    end
+
+    # :nodoc:
+    # redefine where with tuple as argument which add tags
+    def where(**tuple)
+      hash = tuple.to_h.transform_keys &.to_s
+
+      any_hash = {} of String => Clear::SQL::Any
+
+      # remove terms which are not real value but conditions like range or array
+      hash.each { |k, v|
+        any_hash[k] = v if v.is_a?(Clear::SQL::Any)
+      }
+
+      tags(any_hash)
+      super(**tuple)
     end
 
     # :nodoc:
@@ -444,24 +460,19 @@ module Clear::Model
       o
     end
 
-    # Basically a custom way to write `OFFSET x LIMIT 1`
+    # Basically a fancy way to write `OFFSET x LIMIT 1`
     def [](off, fetch_columns = false) : T
-      self[off, fetch_columns] || raise Clear::SQL::RecordNotFoundError.new
+      self[off, fetch_columns]? || raise Clear::SQL::RecordNotFoundError.new
     end
 
-    # Basically a custom way to write `OFFSET x LIMIT 1`
+    # Basically a fancy way to write `OFFSET x LIMIT 1`
     def []?(off, fetch_columns = false) : T?
       self.offset(off).first(fetch_columns)
     end
 
     # Get a range of models
-    def [](range : Range(Int64), fetch_columns = false) : Array(T)
-      self[range, fetch_columns]
-    end
-
-    # Get a range of models
-    def []?(range : Range(Int64), fetch_columns = false) : Array(T)
-      self.offset(range.start).limit(range.end - range.start).to_a(fetch_columns)
+    def [](range : Range(Number, Number), fetch_columns = false) : Array(T)
+      self.offset(range.begin).limit(range.end - range.begin).to_a(fetch_columns)
     end
 
     # A convenient way to write `where{ condition }.first`
@@ -486,17 +497,20 @@ module Clear::Model
       where(tuple).first!(fetch_columns)
     end
 
+    def find_or_build(**tuple) : T
+      find_or_build(**tuple) { }
+    end
+
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
-    def find_or_build(tuple : NamedTuple, &block : T -> Nil) : T
-      r = where(tuple).first
+    def find_or_build(**tuple, &block : T -> Nil) : T
+      where(tuple) unless tuple.size == 0
+      r = first
 
       return r if r
 
-      str_hash = {} of String => Clear::SQL::Any
-
+      str_hash = @tags.dup
       tuple.map { |k, v| str_hash[k.to_s] = v }
-      str_hash.merge!(@tags)
 
       r = Clear::Model::Factory.build(T, str_hash)
       yield(r)
@@ -507,9 +521,22 @@ module Clear::Model
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
     # Just after building, save the object.
-    def find_or_create(tuple : NamedTuple, &block : T -> Nil) : T
-      r = find_or_build(tuple, &block)
-      r.save
+    def find_or_create(**tuple) : T
+      r = find_or_build(**tuple)
+
+      r.save!
+      r
+    end
+
+    # Try to fetch a row. If not found, build a new object and setup
+    # the fields like setup in the condition tuple.
+    # Just after building, save the object.
+    def find_or_create(**tuple, &block : T -> Nil) : T
+      r = find_or_build(**tuple) do |mdl|
+        yield(mdl)
+      end
+
+      r.save!
       r
     end
 
@@ -522,7 +549,7 @@ module Clear::Model
     # Get the first row from the collection query.
     # if not found, return `nil`
     def first(fetch_columns = false) : T?
-      order_by(Clear::SQL.escape("#{T.pkey}"), "ASC") if T.pkey || order_bys.empty?
+      order_by(Clear::SQL.escape("#{T.pkey}"), :asc) if T.pkey || order_bys.empty?
 
       limit(1).fetch do |hash|
         return Clear::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
@@ -547,7 +574,7 @@ module Clear::Model
     # Get the last row from the collection query.
     # if not found, return `nil`
     def last(fetch_columns = false) : T?
-      order_by("#{T.pkey}", "ASC") if T.pkey || order_bys.empty?
+      order_by("#{T.pkey}", :asc) if T.pkey || order_bys.empty?
 
       arr = order_bys.dup # Save current order by
 
@@ -567,6 +594,13 @@ module Clear::Model
         # reset the order by in case we want to reuse the query
         clear_order_bys.order_by(order_bys)
       end
+    end
+
+    # Delete all the rows which would have been returned by this collection.
+    # Is equivalent to `collection.to_delete.execute`
+    def delete_all : self
+      to_delete.execute
+      change! # because we want to clear the caches in case we do something with the collection later
     end
   end
 end

@@ -30,9 +30,9 @@ module Clear::SQL::Query::Select
 
   # Add DISTINCT to the SELECT part of the query
   #
-  # - If on is blank (empty string, default), will call a simple `SELECT DISTINCT ...`
-  # - If on is nil, will remove the distinct (see `undistinct`)
-  # - If on is a non empty string, will call `SELECT DISTINCT ON (on) ...`
+  # - If `on` is blank (empty string, default), will call a simple `SELECT DISTINCT ...`
+  # - If `on` is nil, will remove the distinct (see `clear_distinct`)
+  # - If `on` is a non empty string, will call `SELECT DISTINCT ON (on) ...`
   #
   def distinct(on : String? = "")
     @distinct_value = on
@@ -40,7 +40,7 @@ module Clear::SQL::Query::Select
   end
 
   # Remove distinct
-  def undistinct
+  def clear_distinct
     distinct nil
   end
 

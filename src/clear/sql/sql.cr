@@ -5,6 +5,7 @@ require "db"
 
 require "./errors"
 require "./logger"
+require "./transaction"
 
 # Add a field to DB::Database to handle
 #   the state of transaction of a specific
@@ -50,13 +51,14 @@ module Clear
                 Array(PG::Float64Array) | Array(PG::Int16Array) | Array(PG::Int32Array) |
                 Array(PG::Int64Array) | Array(PG::StringArray) | Array(PG::TimeArray) |
                 Array(PG::UUIDArray) | Array(PG::NumericArray) |
-                Bool | Char | Float32 | Float64 | Int8 | Int16 | Int32 | Int64 | JSON::Any | JSON::PullParser | PG::Geo::Box | PG::Geo::Circle |
+                Bool | Char | Float32 | Float64 | Int8 | Int16 | Int32 | Int64 | BigDecimal | JSON::Any | JSON::PullParser | PG::Geo::Box | PG::Geo::Circle |
                 PG::Geo::Line | PG::Geo::LineSegment | PG::Geo::Path | PG::Geo::Point |
                 PG::Geo::Polygon | PG::Numeric | PG::Interval | Slice(UInt8) | String | Time |
                 UInt8 | UInt16 | UInt32 | UInt64 | Clear::Expression::UnsafeSql | UUID |
                 Nil
 
     include Clear::SQL::Logger
+    include Clear::SQL::Transaction
     extend self
 
     alias Symbolic = String | Symbol
@@ -123,43 +125,6 @@ module Clear
 
     @@savepoint_uid : UInt64 = 0_u64
 
-    # Create an unstackable transaction
-    #
-    # Example:
-    # ```
-    # Clear::SQL.transaction do
-    #   # do something
-    #   Clear::SQL.transaction do # Technically, this block do nothing, since we already are in transaction
-    #     rollback                # < Rollback the up-most `transaction` block.
-    #   end
-    # end
-    # ```
-    # see #with_savepoint to use a stackable version using savepoints.
-    #
-    def transaction(connection = "default", &block)
-      Clear::SQL::ConnectionPool.with_connection(connection) do |cnx|
-        has_rollback = false
-
-        if cnx._clear_in_transaction?
-          return yield(cnx) # In case we already are in transaction, we just ignore
-        else
-          cnx._clear_in_transaction = true
-          execute("BEGIN")
-          begin
-            return yield(cnx)
-          rescue e
-            has_rollback = true
-            is_rollback_error = e.is_a?(RollbackError) || e.is_a?(CancelTransactionError)
-            execute("ROLLBACK --" + (is_rollback_error ? "normal" : "program error")) rescue nil
-            raise e unless is_rollback_error
-          ensure
-            cnx._clear_in_transaction = false
-            execute("COMMIT") unless has_rollback
-          end
-        end
-      end
-    end
-
     # Create a transaction, but this one is stackable
     # using savepoints.
     #
@@ -183,38 +148,6 @@ module Clear
           execute(connection_name, "ROLLBACK TO SAVEPOINT #{sp_name}") if cnx._clear_in_transaction?
         end
       end
-    end
-
-    # Truncate a table or a model
-    #
-    # ```
-    # User.query.count          # => 200
-    # Clear::SQL.truncate(User) # equivalent to Clear::SQL.truncate(User.table, connection_name: User.connection)
-    # User.query.count          # => 0
-    # ```
-    #
-    # SEE https://www.postgresql.org/docs/current/sql-truncate.html
-    # for more information.
-    #
-    # - `restart_sequence` set to true will append `RESTART IDENTITY` to the query
-    # - `cascade` set to true will append `CASCADE` to the query
-    # - `truncate_inherited` set to false will append `ONLY` to the query
-    # - `connection_name` will be: `Model.connection` or `default` unless optionally defined.
-    def self.truncate(tablename : T.class | String, restart_sequence = false, cascade = false, truncate_inherited = true, connection_name : String? = nil) forall T
-      if (tablename.is_a?(String))
-        connection_name ||= "default"
-      else
-        connection_name ||= tablename.connection
-        tablename ||= tablename.table
-      end
-
-      only = truncate_inherited ? "" : " ONLY "
-      restart_sequence = restart_sequence ? " RESTART IDENTITY " : ""
-      cascade = cascade ? " CASCADE " : ""
-
-      execute(connection_name,
-        {"TRUNCATE TABLE ", only, Clear::SQL.escape(tablename), restart_sequence, cascade}.join
-      )
     end
 
     # Raise a rollback, in case of transaction
@@ -250,17 +183,18 @@ module Clear
     end
 
     # Start an INSERT INTO table query
-    def insert_into(table)
-      Clear::SQL::InsertQuery.new(table)
-    end
-
-    # Start an INSERT INTO table query
     #
     # ```
-    # Clear::SQL.insert_into("table", id: 1, name: "hello")
+    # Clear::SQL.insert_into("table", {id: 1, name: "hello"}, {id: 2, name: "World"})
     # ```
-    def insert_into(table, *args)
+    def insert_into(table : Symbolic, *args)
       Clear::SQL::InsertQuery.new(table).values(*args)
+    end
+
+    # Prepare a new INSERT INTO table query
+    # :ditto:
+    def insert_into(table : Symbolic)
+      Clear::SQL::InsertQuery.new(table)
     end
 
     # Create a new INSERT query

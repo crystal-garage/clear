@@ -60,6 +60,8 @@
 #
 ###
 module Clear::Migration
+  Log = ::Log.for("clear.migration")
+
   include Clear::ErrorMessages
 
   abstract def uid : Int64
@@ -72,8 +74,9 @@ module Clear::Migration
       "string" => "text",
       "int32"  => "int",
 
-      "int64" => "bigint",
-      "long"  => "bigint",
+      "int64"      => "bigint",
+      "long"       => "bigint",
+      "bigdecimal" => "numeric",
 
       "datetime" => "timestamp without time zone",
     }
@@ -102,11 +105,15 @@ module Clear::Migration
     abstract def change(dir)
 
     # This will apply the migration in a given direction (up or down)
-    def apply(dir : Direction)
+    def apply(dir : Direction = Clear::Migration::Direction::Up)
       Clear::Migration::Manager.instance.ensure_ready
 
       Clear::SQL.transaction do
         Log.info { "[#{dir}] #{self.class.name}" }
+
+        # In case the migration is called twice (e.g. in Spec?)
+        # ensure the operations are clean-up before trying again
+        @operations.clear
 
         change(dir)
 
