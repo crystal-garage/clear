@@ -814,25 +814,25 @@ module ModelSpec
       end
     end
 
-    # describe "Access to custom fields" do
-    #   it "should be able to access custom fields" do
-    #     temporary do
-    #       reinit_example_models
+    describe "Access to custom fields" do
+      it "should be able to access custom fields" do
+        temporary do
+          reinit_example_models
 
-    #       u1_body = {first_name: "George", last_name: "Dream", middle_name: "Sapnap"}
-    #       User.create_from_json(u1_body.to_json)
+          u1_body = {first_name: "George", last_name: "Dream", middle_name: "Sapnap"}
+          User.create_from_json(u1_body.to_json)
 
-    #       usr = User.query.where { first_name == "George" }.select("first_name, 'example' as custom_field").first!(fetch_columns: true)
-    #       usr["custom_field"].should eq "example"
+          usr = User.query.where { first_name == "George" }.select("first_name, 'example' as custom_field").first!(fetch_columns: true)
+          usr["custom_field"].should eq "example"
 
-    #       json = {
-    #         custom_field: usr["custom_field"],
-    #       }.to_json
+          json = {
+            custom_field: usr["custom_field"],
+          }.to_json
 
-    #       json.should eq %({"custom_field":"example"})
-    #     end
-    #   end
-    # end
+          json.should eq %({"custom_field":"example"})
+        end
+      end
+    end
 
     describe "BigDecimal / Numeric column in Migration" do
       it "should create a new model with BigDecimal fields" do
