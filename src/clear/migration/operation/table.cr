@@ -169,6 +169,8 @@ module Clear::Migration
                "integer"
              when "int64", "long"
                "bigint"
+             when "bigdecimal", "numeric"
+               "numeric"
              when "datetime"
                "timestamp without time zone"
              else

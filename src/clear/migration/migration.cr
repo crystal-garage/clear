@@ -74,6 +74,7 @@ module Clear::Migration
 
       "int64" => "bigint",
       "long"  => "bigint",
+      "bigdecimal" => "numeric",
 
       "datetime" => "timestamp without time zone",
     }
