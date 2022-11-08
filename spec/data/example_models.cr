@@ -124,16 +124,16 @@ class BigDecimalData
   column num4 : BigDecimal?
 end
 
-# class ModelWithinAnotherSchema
-#   include Clear::Model
+class ModelWithinAnotherSchema
+  include Clear::Model
 
-#   self.schema = "another_schema"
-#   self.table = "model_within_another_schemas"
+  self.schema = "another_schema"
+  self.table = "model_within_another_schemas"
 
-#   primary_key
+  primary_key
 
-#   column title : String?
-# end
+  column title : String?
+end
 
 class ModelSpecMigration123
   include Clear::Migration
@@ -199,11 +199,11 @@ class ModelSpecMigration123
       t.timestamps
     end
 
-    # dir.up { execute "CREATE SCHEMA another_schema" }
+    dir.up { execute "CREATE SCHEMA another_schema" }
 
-    # create_table "model_within_another_schemas", schema: "another_schema" do |t|
-    #   t.column "title", "string", null: true
-    # end
+    create_table "model_within_another_schemas", schema: "another_schema" do |t|
+      t.column "title", "string", null: true
+    end
 
     create_table("model_with_uuid", id: :uuid) { }
 
@@ -220,5 +220,5 @@ end
 
 def self.reinit_example_models
   reinit_migration_manager
-  ModelSpecMigration123.new.apply((Clear::Migration::Direction::UP))
+  ModelSpecMigration123.new.apply
 end

@@ -218,17 +218,18 @@ module Clear
     end
 
     # Start an INSERT INTO table query
-    def insert_into(table)
-      Clear::SQL::InsertQuery.new(table)
-    end
-
-    # Start an INSERT INTO table query
     #
     # ```
-    # Clear::SQL.insert_into("table", id: 1, name: "hello")
+    # Clear::SQL.insert_into("table", {id: 1, name: "hello"}, {id: 2, name: "World"})
     # ```
-    def insert_into(table, *args)
+    def insert_into(table : Symbolic, *args)
       Clear::SQL::InsertQuery.new(table).values(*args)
+    end
+
+    # Prepare a new INSERT INTO table query
+    # :ditto:
+    def insert_into(table : Symbolic)
+      Clear::SQL::InsertQuery.new(table)
     end
 
     # Create a new INSERT query
