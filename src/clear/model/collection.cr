@@ -481,17 +481,20 @@ module Clear::Model
       where(tuple).first!(fetch_columns)
     end
 
+    def find_or_build(**tuple) : T
+      find_or_build(**tuple) { }
+    end
+
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
-    def find_or_build(tuple : NamedTuple, &block : T -> Nil) : T
-      r = where(tuple).first
+    def find_or_build(**tuple, &block : T -> Nil) : T
+      where(tuple) unless tuple.size == 0
+      r = first
 
       return r if r
 
-      str_hash = {} of String => Clear::SQL::Any
-
+      str_hash = @tags.dup
       tuple.map { |k, v| str_hash[k.to_s] = v }
-      str_hash.merge!(@tags)
 
       r = Clear::Model::Factory.build(T, str_hash)
       yield(r)
@@ -502,9 +505,22 @@ module Clear::Model
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
     # Just after building, save the object.
-    def find_or_create(tuple : NamedTuple, &block : T -> Nil) : T
-      r = find_or_build(tuple, &block)
-      r.save
+    def find_or_create(**tuple) : T
+      r = find_or_build(**tuple)
+
+      r.save!
+      r
+    end
+
+    # Try to fetch a row. If not found, build a new object and setup
+    # the fields like setup in the condition tuple.
+    # Just after building, save the object.
+    def find_or_create(**tuple, &block : T -> Nil) : T
+      r = find_or_build(**tuple) do |mdl|
+        yield(mdl)
+      end
+
+      r.save!
       r
     end
 

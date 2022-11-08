@@ -72,7 +72,7 @@ module CollectionSpec
 
         # already existing stuff
         User.query.where(first_name: "user 1").count.should eq(1)
-        rec = User.query.find_or_create({first_name: "user 1"}) do
+        rec = User.query.find_or_create(first_name: "user 1") do
           raise "Should not initialize the model"
         end
 
@@ -80,7 +80,7 @@ module CollectionSpec
         User.query.where(first_name: "user 1").count.should eq(1)
 
         User.query.where(first_name: "not_exist").count.should eq(0)
-        rec = User.query.find_or_create({first_name: "not_exist"}) do |usr|
+        rec = User.query.find_or_create(first_name: "not_exist") do |usr|
           usr.last_name = "now_it_exists"
         end
         rec.persisted?.should be_true
@@ -105,7 +105,7 @@ module CollectionSpec
 
         # already existing stuff
         User.query.where(first_name: "user 1").count.should eq(1)
-        rec = User.query.find_or_build({first_name: "user 1"}) do
+        rec = User.query.find_or_build(first_name: "user 1") do
           raise "Should not initialize the model"
         end
 
