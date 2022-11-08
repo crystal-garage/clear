@@ -131,7 +131,7 @@ module CollectionSpec
         User.query.first!.first_name.should eq("user 0")
         User.query.order_by({id: :desc}).first!.first_name.should eq("user 9")
 
-        Clear::SQL.truncate("users", cascade: true)
+        Clear::SQL.truncate(User, cascade: true)
 
         expect_raises(Clear::SQL::RecordNotFoundError) do
           User.query.first!
