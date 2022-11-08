@@ -61,7 +61,7 @@ class Clear::Expression
   #   and defining the method `to_sql`.
   module Literal
     abstract def to_sql
-    abstract def to_json(x)
+    abstract def to_json(json : JSON::Builder)
   end
 
   # Wrap an unsafe string. Useful to cancel-out the
@@ -83,7 +83,7 @@ class Clear::Expression
       @value
     end
 
-    def to_json(x = nil)
+    def to_json(json = nil)
       @value
     end
   end
@@ -295,10 +295,10 @@ class Clear::Expression
   # ```
   #
   def self.raw(__template : String, **tuple)
-    __template.gsub(/\:[a-zA-Z0-9_]+/) do |question_mark|
+    __template.gsub(/(^|[^:])\:([a-zA-Z0-9_]+)/) do |_, match|
       begin
-        sym = question_mark[1..-1]
-        Clear::Expression[tuple[sym]]
+        sym = match[2]
+        match[1] + Clear::Expression[tuple[sym]]
       rescue e : KeyError
         raise Clear::ErrorMessages.query_building_error(e.message)
       end

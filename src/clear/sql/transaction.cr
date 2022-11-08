@@ -26,7 +26,7 @@ module Clear::SQL::Transaction
 
   # Check whether the current pair of fiber/connection is in transaction
   # block or not.
-  def in_transaction?(connection = "default")
+  def in_transaction?(connection : String = "default")
     Clear::SQL::ConnectionPool.with_connection(connection, &._clear_in_transaction?)
   end
 
@@ -43,7 +43,7 @@ module Clear::SQL::Transaction
   # ```
   # see #with_savepoint to use a stackable version using savepoints.
   #
-  def transaction(connection = "default", level : Level = Level::Serializable, &block)
+  def transaction(connection : String = "default", level : Level = Level::Serializable, &block)
     Clear::SQL::ConnectionPool.with_connection(connection) do |cnx|
       has_rollback = false
 
@@ -61,12 +61,17 @@ module Clear::SQL::Transaction
           raise e unless is_rollback_error
         ensure
           cnx._clear_in_transaction = false
+
+          callbacks = @@commit_callbacks.delete(cnx)
+
           unless has_rollback
             execute("COMMIT")
-            @@commit_callbacks[cnx].each(&.call(cnx))
-          end
 
-          @@commit_callbacks.delete(cnx)
+            # Remove the list from the global hash, and execute after the commits
+            # this should prevent the proc to be called twice in case of usage
+            # of a new Clear transaction into the `after_commit` block.
+            callbacks.try &.each &.call(cnx)
+          end
         end
       end
     end
@@ -88,7 +93,7 @@ module Clear::SQL::Transaction
   #
   # In case the transaction fail and eventually rollback, the code won't be called.
   #
-  def after_commit(connection = "default", &block : DB::Connection -> Nil)
+  def after_commit(connection : String = "default", &block : DB::Connection -> Nil)
     Clear::SQL::ConnectionPool.with_connection(connection) do |cnx|
       if cnx._clear_in_transaction?
         @@commit_callbacks[cnx] <<= block
@@ -110,7 +115,7 @@ module Clear::SQL::Transaction
   #   end
   # end
   # ```
-  def with_savepoint(sp_name = nil, connection_name = "default", &block)
+  def with_savepoint(sp_name : Symbolic? = nil, connection_name : String = "default", &block)
     transaction do |cnx|
       sp_name ||= "sp_#{@@savepoint_uid += 1}"
       execute(connection_name, "SAVEPOINT #{sp_name}")

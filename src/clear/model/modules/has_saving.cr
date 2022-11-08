@@ -99,17 +99,31 @@ module Clear::Model::HasSaving
 
           unless h.empty?
             with_triggers(:update) do
-              Clear::SQL.update(self.class.table).set(update_h).where { var("#{self.class.pkey}") == pkey }.execute(@@connection)
+              Clear::SQL.update(self.class.full_table_name).set(update_h).where { var("#{self.class.pkey}") == pkey }.execute(@@connection)
             end
           end
         else
           with_triggers(:create) do
-            query = Clear::SQL.insert_into(self.class.table, to_h).returning("*")
-            on_conflict.call(query) if on_conflict
-            hash = query.execute(@@connection)
+            execute_insert = ->{
+              query = Clear::SQL.insert_into(self.class.full_table_name, to_h).returning("*")
+              on_conflict.try &.call(query)
+              hash = query.execute(@@connection)
 
-            self.reset(hash)
-            @persisted = true
+              self.reset(hash)
+              @persisted = true
+            }
+
+            if has_trigger?(:commit, :before) || has_trigger?(:commit, :after)
+              Clear::SQL.transaction do
+                Clear::SQL.after_commit {
+                  trigger_before_events(:commit)
+                  trigger_after_events(:commit)
+                }
+                execute_insert.call
+              end
+            else
+              execute_insert.call
+            end
           end
         end
 
@@ -126,7 +140,7 @@ module Clear::Model::HasSaving
   end
 
   # Performs `save` call, but instead of returning `false` if validation failed,
-  # raise `Clear::Model::InvalidModelError` exception
+  # raise `Clear::Model::InvalidError` exception
   def save!(on_conflict : (Clear::SQL::InsertQuery ->)? = nil)
     raise Clear::Model::ReadOnlyError.new(self) if self.class.read_only?
 
@@ -167,7 +181,7 @@ module Clear::Model::HasSaving
   def reload : self
     set(self.class.query.where { var("#{self.class.pkey}") == pkey }.fetch_first!)
 
-    invalidate_caching
+    invalidate_caches
 
     @attributes.clear
     clear_change_flags
@@ -184,7 +198,9 @@ module Clear::Model::HasSaving
     return false unless persisted?
 
     with_triggers(:delete) do
-      Clear::SQL::DeleteQuery.new.from(self.class.table).where { var("#{self.class.pkey}") == pkey }.execute(@@connection)
+      Clear::SQL::DeleteQuery.new.from(self.class.full_table_name).where {
+        var("#{self.class.pkey}") == pkey
+      }.execute(@@connection)
 
       @persisted = false
       clear_change_flags

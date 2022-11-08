@@ -41,14 +41,15 @@ class Clear::SQL::InsertQuery
   end
 
   def fetch(connection_name : String = "default", &block : Hash(String, ::Clear::SQL::Any) -> Nil)
-    Clear::SQL.log_query to_sql do
-      h = {} of String => ::Clear::SQL::Any
+    h = {} of String => ::Clear::SQL::Any
 
-      Clear::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
-        cnx.query(to_sql) do |rs|
-          fetch_result_set(h, rs) { |x| yield(x) }
-        end
-      end
+    Clear::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
+      sql = to_sql
+      rs = Clear::SQL.log_query(sql) { cnx.query(sql) }
+
+      fetch_result_set(h, rs) { |x| yield(x) }
+    ensure
+      rs.try &.close
     end
   end
 
@@ -97,10 +98,10 @@ class Clear::SQL::InsertQuery
     @keys = row.keys.to_a.map(&.as(Symbolic))
 
     case v = @values
-    when SelectBuilder
-      raise "Cannot insert both from SELECT query and from data"
     when Array(Array(Inserable))
       v << row.values.to_a.map(&.as(Inserable))
+    else # when SelectBuilder
+      raise "Cannot insert both from SELECT query and from data"
     end
 
     change!
@@ -110,10 +111,10 @@ class Clear::SQL::InsertQuery
     @keys = row.keys.to_a.map(&.as(Symbolic))
 
     case v = @values
-    when SelectBuilder
-      raise "Cannot insert both from SELECT query and from data"
     when Array(Array(Inserable))
       v << row.values.to_a.map(&.as(Inserable))
+    else # when SelectBuilder
+      raise "Cannot insert both from SELECT query and from data"
     end
 
     change!
@@ -172,9 +173,7 @@ class Clear::SQL::InsertQuery
   end
 
   protected def print_keys
-    return if @keys.empty?
-
-    "(" + @keys.join(", ") { |x| Clear::SQL.escape(x.to_s) } + ")"
+    !@keys.empty? ? "(" + @keys.join(", ") { |x| Clear::SQL.escape(x.to_s) } + ")" : nil
   end
 
   protected def print_values
@@ -189,7 +188,7 @@ class Clear::SQL::InsertQuery
   def to_sql
     raise QueryBuildingError.new "You must provide a `into` clause" unless table = @table
 
-    table = Clear::SQL.escape(table.to_s)
+    table = table.is_a?(Symbol) ? Clear::SQL.escape(table) : table
 
     o = [print_ctes, "INSERT INTO", table, print_keys]
     v = @values

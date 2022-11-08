@@ -3,12 +3,6 @@ require "uuid"
 module Clear::Model::HasSerialPkey
   PKEY_TYPE = {} of Nil => Nil
 
-  @[Deprecated]
-  macro with_serial_pkey(name = "id", type = :bigserial)
-    {% puts "[DEPRECATION WARNING] Please use `primary_key` instead. In future version of Clear, `with_serial_pkey` will be removed (declared in `#{@type}`).".id %}
-    primary_key({{name}}, {{type}})
-  end
-
   # Macro used to define serializable primary keys.
   # Currently support `bigserial`, `serial` and `uuid`.
   #

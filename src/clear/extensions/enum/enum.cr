@@ -12,16 +12,16 @@ module Clear
     protected def initialize(@value)
     end
 
-    def to_s
+    def to_s : String
       @value.to_s
     end
 
-    def to_sql
+    def to_sql : String
       @value.to_sql
     end
 
-    def to_json(x)
-      x.string(@value)
+    def to_json(json : JSON::Builder)
+      json.string(@value)
     end
 
     def ==(x)

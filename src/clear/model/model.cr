@@ -20,6 +20,7 @@ module Clear::Model
   include Clear::Model::ClassMethods
   include Clear::Model::HasFactory
   include Clear::Model::Initializer
+  include Clear::Model::JSONDeserialize
 
   getter cache : Clear::Model::QueryCache?
 
@@ -64,9 +65,9 @@ module Clear::Model
       reset(t)
     end
 
-    # Force to clean-up the caches for the relations
-    # connected to this model.
-    def invalidate_caching : self
+    # Invalidate local-to-relation cache and eager-loading cache.
+    # Useful to forcefully query again when calling relation defined method
+    def invalidate_caches : self
       @cache = nil
       self
     end
