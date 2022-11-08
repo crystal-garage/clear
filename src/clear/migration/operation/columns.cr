@@ -1,17 +1,37 @@
 module Clear::Migration
   class AddColumn < Operation
+    # ALTER TABLE {TABLENAME}
+    # ADD {COLUMNNAME} {TYPE} {NULL|NOT NULL}
+    # CONSTRAINT {CONSTRAINT_NAME} DEFAULT {DEFAULT_VALUE}
+    # WITH VALUES
+
     @table : String
     @column : String
     @datatype : String
 
-    def initialize(@table, @column, @datatype)
+    @constraint : String?
+    @default : String?
+    @nullable : Bool
+
+    @with_values : Bool
+
+    def initialize(@table, @column, datatype, @nullable = false, @constraint = nil, @default = nil, @with_values = false)
+      @datatype = Clear::Migration::Helper.datatype(datatype.to_s)
     end
 
-    def up
-      ["ALTER TABLE #{@table} ADD #{@column} #{@datatype}"]
+    def up : Array(String)
+      constraint = @constraint
+      default = @default
+      with_values = @with_values
+
+      [[
+        "ALTER TABLE", @table, "ADD", @column, @datatype, @nullable ? "NULL" : "NOT NULL",
+        constraint ? "CONSTRAINT #{constraint}" : nil, default ? "DEFAULT #{default}" : nil,
+        with_values ? "WITH VALUES" : nil,
+      ].compact.join(" ")]
     end
 
-    def down
+    def down : Array(String)
       ["ALTER TABLE #{@table} DROP #{@column}"]
     end
   end
@@ -21,14 +41,15 @@ module Clear::Migration
     @column : String
     @datatype : String?
 
-    def initialize(@table, @column, @datatype = nil)
+    def initialize(@table, @column, datatype = nil)
+      @datatype = Clear::Migration::Helper.datatype(datatype)
     end
 
-    def up
+    def up : Array(String)
       ["ALTER TABLE #{@table} DROP #{@column}"]
     end
 
-    def down
+    def down : Array(String)
       raise IrreversibleMigration.new(
         "Cannot revert column drop, because datatype is unknown"
       ) if @datatype.nil?
@@ -46,12 +67,12 @@ module Clear::Migration
     @new_column_name : String?
     @new_column_type : String?
 
-    def initialize(@table, @column_name, @column_type, new_column_name, new_column_type)
+    def initialize(@table, @column_name, column_type, new_column_name, new_column_type)
       @new_column_name ||= @column_name
-      @new_column_type ||= @column_type
+      @new_column_type ||= Clear::Migration::Helper.datatype(column_type)
     end
 
-    def up
+    def up : Array(String)
       o = [] of String
       if @old_column_name && @new_column_name && @old_column_name != @new_column_name
         o << "ALTER TABLE #{@table} RENAME COLUMN #{@old_column_name} TO #{@new_column_name};"
@@ -64,7 +85,7 @@ module Clear::Migration
       o
     end
 
-    def down
+    def down : Array(String)
       o = [] of String
       if @old_column_name && @new_column_name && @old_column_name != @new_column_name
         o << "ALTER TABLE #{@table} RENAME COLUMN #{@new_column_name} TO #{@old_column_name};"
@@ -80,8 +101,9 @@ end
 
 module Clear::Migration::Helper
   # Add a column to a specific table
-  def add_column(table, column, datatype)
-    self.add_operation(Clear::Migration::AddColumn.new(table, column, datatype))
+  def add_column(table, column, datatype, nullable = false, constraint = nil, default = nil, with_values = false)
+    self.add_operation(Clear::Migration::AddColumn.new(table, column, datatype,
+      nullable, constraint, default, with_values))
   end
 
   def rename_column(table, from, to)

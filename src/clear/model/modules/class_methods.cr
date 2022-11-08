@@ -52,16 +52,17 @@ module Clear::Model::ClassMethods
       # ```
       class_property schema : Clear::SQL::Symbolic? = nil
 
-      # :nodoc:
-      # Returns the composition of schema + table
-      def self.esc_schema_table
+      # returns the fully qualified and escaped name for this table.
+      # add schema if schema is different from 'public' (default schema)
+      #
+      # ex: "schema"."table"
+      def self.full_table_name
         if s = schema
           {schema, table}.map{ |x| Clear::SQL.escape(x.to_s) }.join(".")
         else
           # Default schema
           Clear::SQL.escape(table)
         end
-
       end
 
       # Returns the name of the `pkey` field
@@ -94,7 +95,7 @@ module Clear::Model::ClassMethods
 
       # Return a new empty query `SELECT * FROM [my_model_table]`. Can be refined after that.
       def self.query
-        Collection.new.use_connection(connection).from(self.esc_schema_table)
+        Collection.new.use_connection(connection).from(self.full_table_name)
       end
 
       # Returns a model using primary key equality
@@ -137,6 +138,18 @@ module Clear::Model::ClassMethods
       def self.create!(**args) : self
         mdl = build(**args)
         mdl.save!
+        mdl
+      end
+
+      def self.create!(a : Hash) : self
+        mdl = self.new(a)
+        mdl.save!
+        mdl
+      end
+
+      def self.create(x : Hash) : self
+        mdl = self.new(a)
+        mdl.save
         mdl
       end
 

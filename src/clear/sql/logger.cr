@@ -1,8 +1,10 @@
 require "colorize"
-require "logger"
+require "log"
 require "benchmark"
 
 module Clear::SQL::Logger
+  class_property colorize : Bool = STDOUT.tty? && STDERR.tty?
+
   private SQL_KEYWORDS = Set(String).new(%w(
     ADD ALL ALTER ANALYSE ANALYZE AND ANY ARRAY AS ASC ASYMMETRIC
     BEGIN BOTH BY CASE CAST CHECK COLLATE COLUMN COMMIT CONSTRAINT COUNT CREATE CROSS
@@ -18,7 +20,9 @@ module Clear::SQL::Logger
   ))
 
   def self.colorize_query(qry : String)
-    o = qry.to_s.split(/([a-zA-Z0-9_]+)/).map do |word|
+    return qry unless @@colorize
+
+    o = qry.to_s.split(/([a-zA-Z0-9_]+)/).join do |word|
       if SQL_KEYWORDS.includes?(word.upcase)
         word.colorize.bold.blue.to_s
       elsif word =~ /\d+/
@@ -26,42 +30,44 @@ module Clear::SQL::Logger
       else
         word.colorize.white
       end
-    end.join("")
-    o.gsub(/(--.*)$/) { |x| x.colorize.dark_gray }
+    end
+    o.gsub(/(--.*)$/, &.colorize.dark_gray)
   end
 
-  def self.display_mn_sec(x) : String
+  def self.display_mn_sec(x : Float64) : String
     mn = x.to_i / 60
     sc = x.to_i % 60
 
     {mn > 9 ? mn : "0#{mn}", sc > 9 ? sc : "0#{sc}"}.join("mn") + "s"
   end
 
-  def self.display_time(x) : String
+  def self.display_time(x : Float64) : String
     if (x > 60)
       display_mn_sec(x)
     elsif (x > 1)
       ("%.2f" % x) + "s"
     elsif (x > 0.001)
-      (1_000*x).to_i.to_s + "ms"
+      (1_000 * x).to_i.to_s + "ms"
     else
-      (1_000_000*x).to_i.to_s + "µs"
+      (1_000_000 * x).to_i.to_s + "µs"
     end
   end
 
-  def log_query(sql, &block)
+  # Log a specific query, wait for it to return
+  def log_query(sql : String, &block)
     start_time = Time.monotonic
 
     o = yield
     elapsed_time = Time.monotonic - start_time
 
-    Clear.logger.debug(("[" + Clear::SQL::Logger.display_time(elapsed_time.to_f).colorize.bold.white.to_s + "] #{SQL::Logger.colorize_query(sql)}"))
+    Log.debug {
+      "[" + Clear::SQL::Logger.display_time(elapsed_time.to_f).colorize.bold.white.to_s + "] #{SQL::Logger.colorize_query(sql)}"
+    }
 
     o
   rescue e
     raise Clear::SQL::Error.new(
-      message:
-        [e.message,"Error caught, last query was:", Clear::SQL::Logger.colorize_query(sql)].compact.join("\n"),
+      message: [e.message, "Error caught, last query was:", Clear::SQL::Logger.colorize_query(sql)].compact.join("\n"),
       cause: e
     )
   end

@@ -9,10 +9,10 @@ require "./tsvector"
 #
 # Let's assume we have a blog and want to implement full text search over title and content:
 #
-# ```crystal
+# ```
 # create_table "posts" do |t|
-#   t.string "title", nullable: false
-#   t.string "content", nullable: false
+#   t.column :title, :string, null: false
+#   t.column :content, :string, null: false
 #
 #   t.full_text_searchable on: [{"title", 'A'}, {"content", 'C'}]
 # end
@@ -25,7 +25,7 @@ require "./tsvector"
 #
 # Now, let's build some models:
 #
-# ```crystal
+# ```
 #
 #   model Post
 #     include Clear::Model
@@ -40,13 +40,13 @@ require "./tsvector"
 # ```
 #
 # Search is now easily done
-# ```crystal
+# ```
 # Post.query.search("poney") # Return all the articles !
 # ```
 #
 # Obviously, search call can be chained:
 #
-# ```crystal
+# ```
 # user = User.find! { email == "some_email@example.com" }
 # Post.query.from_user(user).search("orm")
 # ```
@@ -57,7 +57,7 @@ require "./tsvector"
 #
 # Select the catalog to use to build the tsquery. By default, `pg_catalog.english` is used.
 #
-# ```crystal
+# ```
 # # in your migration:
 # t.full_text_searchable on: [{"title", 'A'}, {"content", 'C'}], catalog: "pg_catalog.french"
 #
@@ -76,7 +76,7 @@ require "./tsvector"
 #
 # The field created in the database, which will contains your ts vector. Default is `full_text_vector`.
 #
-# ```crystal
+# ```
 # # in your migration
 # t.full_text_searchable on: [{"title", 'A'}, {"content", 'C'}], dest_field: "tsv"
 #
@@ -89,7 +89,8 @@ module Clear::Model::FullTextSearchable
     column( {{through.id}} : Clear::TSVector, presence: false)
 
     scope "{{scope_name.id}}" do |str|
-      where{ op({{through.id}}, to_tsquery({{catalog}},
+      table = self.item_class.table
+      where{ op( var(table, "{{through.id}}"), to_tsquery({{catalog}},
         Clear::Model::FullTextSearchable.to_tsq(str)), "@@") }
     end
   end
@@ -127,7 +128,7 @@ module Clear::Model::FullTextSearchable
         end
       when ' '
         if quote_char.nil?
-          if currtoken.any?
+          unless currtoken.empty?
             arr_tokens << {modifier, currtoken.join}
             currtoken.clear
           end
@@ -159,7 +160,7 @@ module Clear::Model::FullTextSearchable
       last_char = c
     end
 
-    if currtoken.any?
+    unless currtoken.empty?
       arr_tokens << {modifier, currtoken.join}
     end
 
@@ -179,12 +180,12 @@ module Clear::Model::FullTextSearchable
     text = text.gsub(/\+/, " ")
     tokens = split_to_exp(text)
 
-    tokens.map do |(modifier, value)|
+    tokens.join(" & ") do |(modifier, value)|
       if modifier == :-
         "!" + Clear::Expression[value]
       else
         Clear::Expression[value]
       end
-    end.join(" & ")
+    end
   end
 end

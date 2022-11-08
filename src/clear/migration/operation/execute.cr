@@ -2,28 +2,16 @@ require "./operation"
 
 module Clear::Migration
   class Execute < Operation
-    @up : String?
-    @down : String?
-    @irreversible : Bool
-
-    def initialize(@up = nil, @down = nil, @irreversible = false)
+    def initialize(@sql : String, @irreversible : Bool? = false)
     end
 
-    def up
-      if @up
-        [@up]
-      else
-        [] of String
-      end
+    def up : Array(String)
+      [@sql].compact
     end
 
-    def down
-      if @down
-        [@down]
-      else
-        irreversible! if @irreversible
-        [] of String
-      end
+    def down : Array(String)
+      irreversible! if @irreversible
+      [@sql].compact
     end
   end
 end

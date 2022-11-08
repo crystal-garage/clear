@@ -40,16 +40,16 @@ class Clear::SQL::InsertQuery
   def into(@table : Symbol | String)
   end
 
-  def fetch(connection_name : String = "default", &block : Hash(String, ::Clear::SQL::Any) -> Void)
-    Clear::SQL.log_query to_sql do
-      h = {} of String => ::Clear::SQL::Any
+  def fetch(connection_name : String = "default", &block : Hash(String, ::Clear::SQL::Any) -> Nil)
+    h = {} of String => ::Clear::SQL::Any
 
-      Clear::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
-        cnx.query(to_sql) do |rs|
-          fetch_result_set(h, rs) { |x| yield(x) }
-        end
-      end
+    Clear::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
+      sql = to_sql
+      rs = Clear::SQL.log_query(sql) { cnx.query(sql) }
 
+      fetch_result_set(h, rs) { |x| yield(x) }
+    ensure
+      rs.try &.close
     end
   end
 
@@ -98,10 +98,10 @@ class Clear::SQL::InsertQuery
     @keys = row.keys.to_a.map(&.as(Symbolic))
 
     case v = @values
-    when SelectBuilder
-      raise "Cannot insert both from SELECT query and from data"
     when Array(Array(Inserable))
       v << row.values.to_a.map(&.as(Inserable))
+    else # when SelectBuilder
+      raise "Cannot insert both from SELECT query and from data"
     end
 
     change!
@@ -111,10 +111,10 @@ class Clear::SQL::InsertQuery
     @keys = row.keys.to_a.map(&.as(Symbolic))
 
     case v = @values
-    when SelectBuilder
-      raise "Cannot insert both from SELECT query and from data"
     when Array(Array(Inserable))
       v << row.values.to_a.map(&.as(Inserable))
+    else # when SelectBuilder
+      raise "Cannot insert both from SELECT query and from data"
     end
 
     change!
@@ -151,7 +151,7 @@ class Clear::SQL::InsertQuery
 
   # Insert into ... (...) SELECT
   def values(select_query : SelectBuilder)
-    if @values.is_a?(Array) && @values.as(Array).any?
+    if @values.is_a?(Array) && !@values.as(Array).empty?
       raise QueryBuildingError.new "Cannot insert both from SELECT and from data"
     end
 
@@ -173,7 +173,7 @@ class Clear::SQL::InsertQuery
   end
 
   protected def print_keys
-    @keys.any? ? "(" + @keys.map { |x| Clear::SQL.escape(x.to_s) }.join(", ") + ")" : nil
+    !@keys.empty? ? "(" + @keys.join(", ") { |x| Clear::SQL.escape(x.to_s) } + ")" : nil
   end
 
   protected def print_values
@@ -181,14 +181,14 @@ class Clear::SQL::InsertQuery
     v.map_with_index { |row, idx|
       raise QueryBuildingError.new "No value to insert (at row ##{idx})" if row.empty?
 
-      "(" + row.map { |x| Clear::Expression[x] }.join(", ") + ")"
+      "(" + row.join(", ") { |x| Clear::Expression[x] } + ")"
     }.join(",\n")
   end
 
   def to_sql
     raise QueryBuildingError.new "You must provide a `into` clause" unless table = @table
 
-    table = Clear::SQL.escape(table.to_s)
+    table = table.is_a?(Symbol) ? Clear::SQL.escape(table) : table
 
     o = [print_ctes, "INSERT INTO", table, print_keys]
     v = @values

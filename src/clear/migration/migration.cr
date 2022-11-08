@@ -60,6 +60,8 @@
 #
 ###
 module Clear::Migration
+  Log = ::Log.for("clear.migration")
+
   include Clear::ErrorMessages
 
   abstract def uid : Int64
@@ -68,12 +70,31 @@ module Clear::Migration
   class IrreversibleMigration < Exception; end
 
   module Helper
+    TYPE_MAPPING = {
+      "string" => "text",
+      "int32"  => "int",
+
+      "int64"      => "bigint",
+      "long"       => "bigint",
+      "bigdecimal" => "numeric",
+
+      "datetime" => "timestamp without time zone",
+    }
+
+    # Replace some common type to their equivalent in postgresql
+    # if the type is not found in the correspondance table, then return
+    # itself
+    def self.datatype(type : String)
+      ts = type
+      TYPE_MAPPING[type]? || ts
+    end
+
     def irreversible!
       raise IrreversibleMigration.new(migration_irreversible(self.class.name))
     end
 
-    def execute(up : String? = nil, down : String? = nil)
-      @operations << Clear::Migration::Execute.new( up, down )
+    def execute(sql : String)
+      @operations << Clear::Migration::Execute.new(sql)
     end
 
     def add_operation(op : Operation)
@@ -84,42 +105,42 @@ module Clear::Migration
     abstract def change(dir)
 
     # This will apply the migration in a given direction (up or down)
-    def apply(dir : Direction)
-    Clear::Migration::Manager.instance.ensure_ready
+    def apply(dir : Direction = Clear::Migration::Direction::Up)
+      Clear::Migration::Manager.instance.ensure_ready
 
-    Clear::SQL.transaction do
-      Clear.logger.info("[#{dir.to_s}] #{self.class.name}")
+      Clear::SQL.transaction do
+        Log.info { "[#{dir}] #{self.class.name}" }
 
-      change(dir)
+        # In case the migration is called twice (e.g. in Spec?)
+        # ensure the operations are clean-up before trying again
+        @operations.clear
 
-      dir.up do
-        @operations.each { |op|
-          op.up.each { |x| Clear::SQL.execute(x.as(String)) }
-        }
+        change(dir)
 
-        SQL.insert("__clear_metadatas", {metatype: "migration", value: uid.to_s}).execute
+        dir.up do
+          @operations.each { |op|
+            op.up.each { |x| Clear::SQL.execute(x.as(String)) }
+          }
+
+          SQL.insert("__clear_metadatas", {metatype: "migration", value: uid.to_s}).execute
+        end
+
+        dir.down do
+          @operations.reverse_each { |op|
+            op.down.each { |x| Clear::SQL.execute(x.as(String)) }
+          }
+
+          SQL.delete("__clear_metadatas").where({metatype: "migration", value: uid.to_s}).execute
+        end
+
+        self
       end
-
-      dir.down do
-        @operations.reverse_each { |op|
-          op.down.each { |x| Clear::SQL.execute(x.as(String)) }
-        }
-
-        SQL.delete("default", "__clear_metadatas").where({metatype: "migration", value: uid.to_s}).execute
-      end
-
-      self
     end
-
-  end
-
   end
 
   include Helper
 
-
   macro included
-
     @operations : Array(Operation) = [] of Operation
 
     #
@@ -162,9 +183,11 @@ end
 # and will be removed when the bug is fixed
 class DummyMigration
   include Clear::Migration
-  def uid
+
+  def uid : Int64
     -0x01_i64
   end
+
   def change(dir)
     # Nothing
   end

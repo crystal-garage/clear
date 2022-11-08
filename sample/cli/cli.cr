@@ -1,7 +1,6 @@
 require "../../src/clear"
 
 def initdb
-  Clear.logger.level = ::Logger::INFO
   Clear::SQL.init("postgres://postgres@localhost/clear_spec")
 end
 
@@ -32,6 +31,10 @@ class ApplyChange2
     dir.up { puts "2:up" }
     dir.down { puts "2:down" }
   end
+end
+
+Clear.seed do
+  puts "This is a seed"
 end
 
 Clear.with_cli do

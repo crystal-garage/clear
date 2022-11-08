@@ -1,4 +1,3 @@
-
 module Clear::Migration
   class CreateEnum < Operation
     @name : String
@@ -7,11 +6,11 @@ module Clear::Migration
     def initialize(@name, @values)
     end
 
-    def up
+    def up : Array(String)
       ["CREATE TYPE #{@name} AS ENUM (#{Clear::Expression[@values].join(", ")})"]
     end
 
-    def down
+    def down : Array(String)
       ["DROP TYPE #{@name}"]
     end
   end
@@ -23,27 +22,26 @@ module Clear::Migration
     def initialize(@name, @values)
     end
 
-    def up
+    def up : Array(String)
       ["DROP TYPE #{@name}"]
     end
 
-    def down
+    def down : Array(String)
       if values = @values
         ["CREATE TYPE #{@name} AS ENUM (#{Clear::Expression[values].join(", ")})"]
       else
         irreversible!
       end
     end
-
   end
 
   module Clear::Migration::Helper
     def create_enum(name, arr : Enumerable(T)) forall T
-      self.add_operation(CreateEnum.new(name.to_s, arr.map(&.to_s) ))
+      self.add_operation(CreateEnum.new(name.to_s, arr.map(&.to_s)))
     end
 
-    def drop_enum(name, arr : Enumerable(T)? = nil ) forall T
-      self.add_operation( DropEnum.new(name.to_s, arr.try &.map(&.to_s)) )
+    def drop_enum(name, arr : Enumerable(T)? = nil) forall T
+      self.add_operation(DropEnum.new(name.to_s, arr.try &.map(&.to_s)))
     end
 
     def create_enum(name, e)

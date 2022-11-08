@@ -25,14 +25,14 @@ class Clear::CLI::Generator
       if name
         name_underscore = name.underscore
         class_name = name.camelcase
-        migration_uid = Time.now.to_unix.to_s.rjust(10, '0')
+        migration_uid = Time.local.to_unix.to_s.rjust(10, '0')
 
         g["migration_uid"] = migration_uid
         g["class_name"] = class_name
 
         migration_file = "#{migration_uid}_#{name_underscore}.cr"
 
-        if Dir[File.join(g.target_directory, "src/db/migrations/*_#{name_underscore}.cr")].any?
+        unless Dir[File.join(g.target_directory, "src/db/migrations/*_#{name_underscore}.cr")].empty?
           puts "A migration file `xxxx_#{name_underscore}.cr` already exists"
           exit 1
         end

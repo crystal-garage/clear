@@ -8,7 +8,13 @@ class Clear::Model::Converter::TimeConverter
     when Time
       x.to_local
     else
-      Time.parse_local(x.to_s, "%F %X.%L")
+      time = x.to_s
+      case time
+      when /[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]+/ # 2020-02-22 09:11:42.476953
+        Time.parse_local(x.to_s, "%F %X.%L")
+      else
+        Time::Format::RFC_3339.parse(time)
+      end
     end
   end
 

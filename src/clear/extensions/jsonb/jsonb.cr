@@ -5,7 +5,7 @@
 #
 # Functions can be used calling or including Clear::SQL::JSONB methods as helper methods:
 #
-# ```crystal
+# ```
 # class MyClass
 #   include Clear::SQL::JSONB
 #
@@ -20,7 +20,7 @@
 #
 # ### Filter by jsonb
 #
-# ```crystal
+# ```
 # Product.query.where { (attributes.jsonb("category") == "Book") & (attributes.jsonb("author.name") == "Philip K. Dick") }
 # # ^-- Will produce optimized for gin index jsonb filter query:
 # # WHERE attributes @> '{"category": "Book", "author": {"name": "Philip K. Dick"} }'::jsonb
@@ -46,7 +46,7 @@ module Clear::SQL::JSONB
   # Do any of these array strings exist as top-level keys?
   #
   def jsonb_any_exists?(field, keys : Array(String))
-    {field, "array[" + keys.map { |x| Clear::SQL.sanitize(x) }.join(",") + "]"}.join(" ?| ")
+    {field, "array[" + keys.join(",") { |x| Clear::SQL.sanitize(x) } + "]"}.join(" ?| ")
   end
 
   # Does the string exist as a top-level key within the JSON value?
@@ -57,7 +57,7 @@ module Clear::SQL::JSONB
   # jsonb `?&` operator
   # Do all of these array strings exist as top-level keys?
   def jsonb_all_exists?(field, keys : Array(String))
-    {field, "array[" + keys.map { |x| Clear::SQL.sanitize(x) }.join(",") + "]"}.join(" ?& ")
+    {field, "array[" + keys.join(",") { |x| Clear::SQL.sanitize(x) } + "]"}.join(" ?& ")
   end
 
   # :nodoc:
@@ -107,7 +107,7 @@ module Clear::SQL::JSONB
 
   # Test equality using the `@>` operator
   #
-  # ```crystal
+  # ```
   # jsonb_eq("data.sub.key", "value")
   # ```
   #
@@ -124,14 +124,17 @@ module Clear::SQL::JSONB
 
   def jsonb_resolve(field, arr : Array(String), cast = nil) : String
     return field if arr.empty?
+
     o = ([field] + Clear::Expression[arr]).join("->")
-    o += "::#{cast}" if cast
+
+    o = "(#{o})::#{cast}" if cast
+
     o
   end
 
   # Return text selector for the field/key :
   #
-  # ```crystal
+  # ```
   # jsonb_text("data", "sub.key").like("user%")
   # # => "data->'sub'->>'key' LIKE 'user%'"
   # ```

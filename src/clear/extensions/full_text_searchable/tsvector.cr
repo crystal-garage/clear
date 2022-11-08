@@ -44,13 +44,13 @@ class Clear::TSVector
     lexems[key]?
   end
 
-  def to_db
-    @lexems.values.map do |v|
+  def to_sql
+    @lexems.values.join(" ") do |v|
       {
         Clear::Expression[v.value],
-        v.positions.map { |p| {p.position, p.weight}.join }.join(","),
+        v.positions.join(",") { |p| {p.position, p.weight}.join },
       }.join(":")
-    end.join(" ")
+    end
   end
 
   def initialize(io)
@@ -87,11 +87,7 @@ class Clear::TSVector
     end
 
     def self.to_db(x : TSVector?)
-      if (x)
-        x.to_db
-      else
-        nil
-      end
+      x.try &.to_sql
     end
   end
 end

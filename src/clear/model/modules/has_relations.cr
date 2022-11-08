@@ -10,7 +10,6 @@ require "./relations/*"
 #   has_many posts
 # ```
 module Clear::Model::HasRelations
-
   macro included # In Clear::Model
     macro included # In RealModel
       # :nodoc:
@@ -49,7 +48,7 @@ module Clear::Model::HasRelations
 
         foreign_key: foreign_key,
         primary_key: primary_key,
-        no_cache: no_cache
+        no_cache:    no_cache,
       }
     %}
   end
@@ -62,36 +61,34 @@ module Clear::Model::HasRelations
   #
   # Example:
   #
-  # ```crystal
-  #   class User
-  #     include Clear::Model
-  #     #...
-  #     has_many posts : Post, foreign_key: "author_id"
-  #  end
+  # ```
+  # class User
+  #   include Clear::Model
+  #   # ...
+  #   has_many posts : Post, foreign_key: "author_id"
+  # end
   # ```
   macro has_many(name, through = nil, foreign_key = nil, own_key = nil, primary_key = nil, no_cache = false, polymorphic = false, foreign_key_type = nil)
     {%
       if through != nil
-
         through = through.id if through.is_a?(SymbolLiteral) || through.is_a?(StringLiteral)
 
-        own_key     = own_key.id if own_key.is_a?(SymbolLiteral) || own_key.is_a?(StringLiteral)
+        own_key = own_key.id if own_key.is_a?(SymbolLiteral) || own_key.is_a?(StringLiteral)
         foreign_key = foreign_key.id if foreign_key.is_a?(SymbolLiteral) || foreign_key.is_a?(StringLiteral)
         foreign_key_type = foreign_key_type.id if foreign_key_type.is_a?(SymbolLiteral) || foreign_key_type.is_a?(StringLiteral)
 
         RELATIONS[name.var.id] = {
           relation_type: :has_many_through,
-          type: name.type,
+          type:          name.type,
 
           through: through,
           own_key: own_key,
 
-          foreign_key: foreign_key,
+          foreign_key:      foreign_key,
           foreign_key_type: foreign_key_type,
 
-          polymorphic: polymorphic
+          polymorphic: polymorphic,
         }
-
       else
         foreign_key = foreign_key.id if foreign_key.is_a?(SymbolLiteral) || foreign_key.is_a?(StringLiteral)
         primary_key = primary_key.id if primary_key.is_a?(SymbolLiteral) || primary_key.is_a?(StringLiteral)
@@ -99,19 +96,18 @@ module Clear::Model::HasRelations
 
         RELATIONS[name.var.id] = {
           relation_type: :has_many,
-          type: name.type,
+          type:          name.type,
 
-          foreign_key: foreign_key,
-          primary_key: primary_key,
+          foreign_key:      foreign_key,
+          primary_key:      primary_key,
           foreign_key_type: foreign_key_type,
 
-          no_cache: no_cache,
-          polymorphic: polymorphic
+          no_cache:    no_cache,
+          polymorphic: polymorphic,
         }
       end
     %}
   end
-
 
   # ```
   # class Model
@@ -121,37 +117,37 @@ module Clear::Model::HasRelations
   # ```
   macro belongs_to(name, foreign_key = nil, no_cache = false, primary = false, key_type = Int64)
     {%
-    foreign_key = foreign_key.id if foreign_key.is_a?(SymbolLiteral) || foreign_key.is_a?(StringLiteral)
+      foreign_key = foreign_key.id if foreign_key.is_a?(SymbolLiteral) || foreign_key.is_a?(StringLiteral)
 
-    nilable = false
+      nilable = false
 
-    if name.type.is_a?(Union)
-      # We cannot use here call `resolve` as some of the references
-      # might not yet have been defined
-      types = name.type.types.map{ |x| "#{x.id}" }
-      # So we check for the nil type if it exists
-      nilable = types.includes?("Nil")
+      if name.type.is_a?(Union)
+        # We cannot use here call `resolve` as some of the references
+        # might not yet have been defined
+        types = name.type.types.map { |x| "#{x.id}" }
+        # So we check for the nil type if it exists
+        nilable = types.includes?("Nil")
 
-      type = name.type.types.first
-    else
-      type = name.type
-    end
-
-    if nilable
-      unless key_type.resolve.nilable?
-        key_type = "#{key_type.id}?".id
+        type = name.type.types.first
+      else
+        type = name.type
       end
-    end
 
-    RELATIONS[name.var.id] = {
-      relation_type: :belongs_to,
-      type: type,
-      foreign_key: foreign_key,
-      nilable: nilable,
-      primary: primary,
-      no_cache: no_cache,
-      key_type: key_type
-    }
+      if nilable
+        unless key_type.resolve.nilable?
+          key_type = "#{key_type.id}?".id
+        end
+      end
+
+      RELATIONS[name.var.id] = {
+        relation_type: :belongs_to,
+        type:          type,
+        foreign_key:   foreign_key,
+        nilable:       nilable,
+        primary:       primary,
+        no_cache:      no_cache,
+        key_type:      key_type,
+      }
     %}
   end
 
@@ -169,7 +165,7 @@ module Clear::Model::HasRelations
       {% elsif settings[:relation_type] == :has_many_through %}
         Relations::HasManyThroughMacro.generate({{@type}}, {{name}}, {{settings[:type]}}, {{settings[:through]}},
           {{settings[:own_key]}}, {{settings[:foreign_key]}})
-      {% elsif settings[:relation_type] ==  :has_one %}
+      {% elsif settings[:relation_type] == :has_one %}
         Relations::HasOneMacro.generate({{@type}}, {{name}}, {{settings[:type]}}, {{settings[:foreign_key]}},
           {{settings[:primary_key]}})
       {% else %}
@@ -178,6 +174,4 @@ module Clear::Model::HasRelations
     {% end %}
     {% end %}
   end
-
-
 end

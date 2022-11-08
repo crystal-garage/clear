@@ -4,13 +4,13 @@ require "ecr"
 class Clear::CLI::Generator < Admiral::Command
   include Clear::CLI::Command
 
-  record Record, name : String, desc : String, callback : Array(String) -> Void
+  record Record, name : String, desc : String, callback : Array(String) -> Nil
 
   define_help description: "Generate code automatically"
 
   class_getter generators = {} of String => Record
 
-  def self.add(name, desc, &block : Array(String) -> Void)
+  def self.add(name, desc, &block : Array(String) -> Nil)
     @@generators[name] = Record.new(name, desc, block)
   end
 
@@ -37,8 +37,7 @@ end
 require "./generators/**"
 
 # require "ecr"
-
-# record Clear::CLI::Generator, name : String, desc : String, callback : Array(String) -> Void
+# record Clear::CLI::Generator, name : String, desc : String, callback : Array(String) -> Nil
 
 # class Clear::CLI::GeneratorCommand < Clear::CLI::Command
 #   def get_help_string
@@ -55,7 +54,7 @@ require "./generators/**"
 
 #   @@generators = {} of String => Clear::CLI::Generator
 
-#   def self.add(name, desc, &block : Array(String) -> Void)
+#   def self.add(name, desc, &block : Array(String) -> Nil)
 #     @@generators[name] = Generator.new(name, desc, block)
 #   end
 

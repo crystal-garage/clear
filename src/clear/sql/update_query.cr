@@ -23,6 +23,7 @@ class Clear::SQL::UpdateQuery
     h = {} of String => Updatable
     row.each { |k, v| h[k.to_s] = v }
     set(h)
+
     change!
   end
 
@@ -42,25 +43,24 @@ class Clear::SQL::UpdateQuery
 
   # :nodoc:
   protected def print_value(row : Hash(String, Updatable)) : String
-    row.map { |k, v| [Clear::SQL.escape(k.to_s), Clear::Expression[v]].join(" = ") }.join(", ")
+    row.join(", ") { |k, v| [Clear::SQL.escape(k.to_s), Clear::Expression[v]].join(" = ") }
   end
 
   # :nodoc:
   protected def print_values : String
-    @values.map do |x|
+    @values.join(", ") do |x|
       case x
       when String
         x
       when Hash(String, Updatable)
         print_value(x)
-      when Nil
+      else
         "NULL"
       end
-    end.join(", ")
+    end
   end
 
   def to_sql
-    # raise Clear::ErrorMessages.query_building_error("Update Query must have a table clause.") if @table.nil?
     table = @table.is_a?(Symbol) ? SQL.escape(@table.to_s) : @table
 
     [print_ctes, "UPDATE", table, "SET", print_values, print_wheres].compact.join(" ")

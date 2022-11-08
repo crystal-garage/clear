@@ -4,13 +4,13 @@ require "./node"
 #
 # Example:
 #
-# ```crystal
+# ```
 # value.in?(1..5)
 # ```
 #
 # will render:
 #
-# ```crystal
+# ```
 # value >= 1 AND value < 5
 # ```
 #
@@ -19,7 +19,7 @@ require "./node"
 class Clear::Expression::Node::InRange < Clear::Expression::Node
   def initialize(@target : Node, @range : Range(String, String), @exclusive = false); end
 
-  def resolve
+  def resolve : String
     rt = @target.resolve
     final_op = @exclusive ? " < " : " <= "
 

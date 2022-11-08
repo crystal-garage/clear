@@ -8,17 +8,22 @@ class ::Crypto::Bcrypt::Password
 end
 
 def initdb
-  system("echo \"DROP DATABASE IF EXISTS clear_spec;\" | psql -U postgres 2>&1 1>/dev/null")
-  system("echo \"CREATE DATABASE clear_spec;\" | psql -U postgres 2>&1 1>/dev/null")
+  pg.exec("DROP DATABASE IF EXISTS clear_spec;")
+  pg.exec("CREATE DATABASE clear_spec;")
 
-  system("echo \"DROP DATABASE IF EXISTS clear_secondary_spec;\" | psql -U postgres 2>&1 1>/dev/null")
-  system("echo \"CREATE DATABASE clear_secondary_spec;\" | psql -U postgres 2>&1 1>/dev/null")
-  system("echo \"CREATE TABLE models_post_stats (id serial PRIMARY KEY, post_id INTEGER);\" | psql -U postgres clear_secondary_spec 2>&1 1>/dev/null")
+  pg.exec("DROP DATABASE IF EXISTS clear_secondary_spec;")
+  pg.exec("CREATE DATABASE clear_secondary_spec;")
 
-  Clear::SQL.init("postgres://postgres@localhost/clear_spec", connection_pool_size: 5)
-  Clear::SQL.init("secondary", "postgres://postgres@localhost/clear_secondary_spec", connection_pool_size: 5)
+  clear_secondary_spec_db.exec(
+    <<-SQL
+      CREATE TABLE models_post_stats (id serial PRIMARY KEY, post_id INTEGER);
+    SQL
+  )
 
-  Clear.logger.level = {% if flag?(:quiet) %} ::Logger::ERROR {% else %} Clear.logger.level = ::Logger::DEBUG {% end %}
+  Clear::SQL.init("postgres://#{postgres_user}:#{postgres_password}@#{postgres_host}/clear_spec")
+  Clear::SQL.init("secondary", "postgres://#{postgres_user}:#{postgres_password}@#{postgres_host}/clear_secondary_spec")
+
+  {% if flag?(:quiet) %} Log.setup(:error) {% else %} Log.setup(:debug) {% end %}
 end
 
 def reinit_migration_manager
@@ -30,6 +35,30 @@ def temporary(&block)
     yield
     Clear::SQL.rollback
   end
+end
+
+def postgres_user
+  ENV["POSTGRES_USER"]? || "postgres"
+end
+
+def postgres_password
+  ENV["POSTGRES_PASSWORD"]? || ""
+end
+
+def postgres_host
+  ENV["POSTGRES_HOST"]? || "localhost"
+end
+
+def postgres_db
+  ENV["POSTGRES_DB"]? || "postgres"
+end
+
+def pg
+  DB.open("postgres://#{postgres_user}:#{postgres_password}@#{postgres_host}/#{postgres_db}")
+end
+
+def clear_secondary_spec_db
+  DB.open("postgres://#{postgres_user}:#{postgres_password}@#{postgres_host}/clear_secondary_spec")
 end
 
 initdb

@@ -12,16 +12,16 @@ module Clear
     protected def initialize(@value)
     end
 
-    def to_s
+    def to_s : String
       @value.to_s
     end
 
-    def to_sql
+    def to_sql : String
       @value.to_sql
     end
 
-    def to_json(x = nil)
-      @value
+    def to_json(json : JSON::Builder)
+      json.string(@value)
     end
 
     def ==(x)
@@ -50,14 +50,14 @@ module Clear
   #
   # Let's say you need to define an enum for genders:
   #
-  # ```crystal
+  # ```
   # # Define the enum
   # Clear.enum MyApp::Gender, "male", "female" # , ...
   # ```
   #
   # In migration, we tell Postgres about the enum:
   #
-  # ```crystal
+  # ```
   # create_enum :gender, MyApp::Gender # < Create the new type `gender` in the database
   #
   # create_table :users do |t|
@@ -68,7 +68,7 @@ module Clear
   #
   # Finally in your model, simply add the enum as column:
   #
-  # ```crystal
+  # ```
   # class User
   #   include Clear::Model
   #   # ...
@@ -79,36 +79,36 @@ module Clear
   #
   # Now, you can assign the enum:
   #
-  # ```crystal
-  #   u = User.new
-  #   u.gender = MyApp::Gender::Male
+  # ```
+  # u = User.new
+  # u.gender = MyApp::Gender::Male
   # ```
   #
   # You can dynamically check and build the enumeration values:
   #
-  # ```crystal
-  #   MyApp::Gender.authorized_values # < return ["male", "female"]
-  #   MyApp::Gender.all               # < return [MyApp::Gender::Male, MyApp::Gender::Female]
+  # ```
+  # MyApp::Gender.authorized_values # < return ["male", "female"]
+  # MyApp::Gender.all               # < return [MyApp::Gender::Male, MyApp::Gender::Female]
   #
-  #   MyApp::Gender.from_string("male")    # < return MyApp::Gender::Male
-  #   MyApp::Gender.from_string("unknown") # < throw Clear::IllegalEnumValueError
+  # MyApp::Gender.from_string("male")    # < return MyApp::Gender::Male
+  # MyApp::Gender.from_string("unknown") # < throw Clear::IllegalEnumValueError
   #
-  #   MyApp::Gender.valid?("female")  # < Return true
-  #   MyApp::Gender.valid?("unknown") # < Return false
+  # MyApp::Gender.valid?("female")  # < Return true
+  # MyApp::Gender.valid?("unknown") # < Return false
   # ```
   #
   # However, you cannot write:
   #
-  # ```crystal
-  #   u = User.new
-  #   u.gender = "male"
+  # ```
+  # u = User.new
+  # u.gender = "male"
   # ```
   #
   # But instead:
   #
-  # ```crystal
-  #   u = User.new
-  #   u.gender = MyApp::Gender::Male
+  # ```
+  # u = User.new
+  # u.gender = MyApp::Gender::Male
   # ```
   macro enum(name, *values, &block)
     struct {{name.id}} < ::Clear::Enum

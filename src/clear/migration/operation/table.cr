@@ -12,13 +12,15 @@ module Clear::Migration
       foreign_fields : Array(String), on_delete : String, primary : Bool
 
     getter name : String
+    getter schema : String
+
     getter? is_create : Bool
 
     getter column_operations : Array(ColumnOperation) = [] of ColumnOperation
     getter index_operations : Array(IndexOperation) = [] of IndexOperation
     getter fkey_operations : Array(FkeyOperation) = [] of FkeyOperation
 
-    def initialize(@name, @is_create)
+    def initialize(@name, @schema, @is_create)
       raise "Not yet implemented" unless is_create?
     end
 
@@ -63,6 +65,10 @@ module Clear::Migration
       end
     end
 
+    def full_name
+      {Clear::SQL.escape(@schema), Clear::SQL.escape(@name)}.join(".")
+    end
+
     # Add or replace an index for this table.
     # Alias for `add_index`
     def index(field : String | Symbol, name = nil, using = nil, unique = false)
@@ -86,23 +92,29 @@ module Clear::Migration
     #
     # Return a safe index name from the condition string
     private def safe_index_name(str)
-      str.underscore.gsub(/[^a-zA-Z0-9_]/, "_").gsub(/_+/, "_")
+      str.underscore.gsub(/[^a-zA-Z0-9_]+/, "_")
     end
 
-    def up
+    def up : Array(String)
       columns_and_fkeys = print_columns + print_fkeys
 
       content = "(#{columns_and_fkeys.join(", ")})" unless columns_and_fkeys.empty?
 
-      [
-        (["CREATE TABLE", @name, content].reject(&.nil?).join(" ") if is_create?),
-      ] + print_indexes
+      arr = if is_create?
+              [
+                ["CREATE TABLE", full_name, content].compact.join(" "),
+              ]
+            else
+              # To implement later
+              [] of String
+            end
+      arr + print_indexes
     end
 
-    def down
+    def down : Array(String)
       [
-        (["DROP TABLE", @name].join(" ") if is_create?),
-      ]
+        (["DROP TABLE", full_name].join(" ") if is_create?),
+      ].compact
     end
 
     private def print_fkeys
@@ -150,24 +162,25 @@ module Clear::Migration
     # column type (ActiveRecord's style)
     macro method_missing(caller)
       {% raise "Migration: usage of Table##{caller.name} is deprecated.\n" +
-                "Tip: use instead `self.column(NAME, \"#{caller.name}\", ...)`" %}
+               "Tip: use instead `self.column(NAME, \"#{caller.name}\", ...)`" %}
     end
 
     def column(name, type, default = nil, null = true, primary = false,
-      index = false, unique = false, array = false )
-
+               index = false, unique = false, array = false)
       type = case type.to_s
-      when "string"
-        "text"
-      when "int32", "integer"
-        "integer"
-      when "int64", "long"
-        "bigint"
-      when "datetime"
-        "timestamp without time zone"
-      else
-        type.to_s
-      end
+             when "string"
+               "text"
+             when "int32", "integer"
+               "integer"
+             when "int64", "long"
+               "bigint"
+             when "bigdecimal", "numeric"
+               "numeric"
+             when "datetime"
+               "timestamp without time zone"
+             else
+               type.to_s
+             end
 
       self.add_column(name.to_s, type: type, default: default, null: null,
         primary: primary, index: index, unique: unique, array: array)
@@ -175,32 +188,41 @@ module Clear::Migration
   end
 
   class AddTable < Operation
-    @table : String
+    getter table : String
+    getter schema : String
 
-    def initialize(@table)
-
+    def initialize(@table, @schema)
     end
 
-    def up
+    def full_name
+      {Clear::SQL.escape(@schema), Clear::SQL.escape(@name)}.join(".")
+    end
+
+    def up : Array(String)
       ["CREATE TABLE #{@table}"]
     end
 
-    def down
+    def down : Array(String)
       ["DROP TABLE #{@table}"]
     end
   end
 
   class DropTable < Operation
-    @table : String
+    getter table : String
+    getter schema : String
 
-    def initialize(@table)
+    def initialize(@table, @schema)
     end
 
-    def up
+    def full_name
+      {Clear::SQL.escape(@schema), Clear::SQL.escape(@name)}.join(".")
+    end
+
+    def up : Array(String)
       ["DROP TABLE #{@table}"]
     end
 
-    def down
+    def down : Array(String)
       ["CREATE TABLE #{@table}"]
     end
   end
@@ -213,9 +235,9 @@ module Clear::Migration
     #
     # ```
     # create_table(:users) do |t|
-    #   t.string :first_name
-    #   t.string :last_name
-    #   t.email :email, unique: true
+    #   t.column :first_name, :string
+    #   t.column :last_name, :string
+    #   t.column :email, :string, unique: true
     #   t.timestamps
     # end
     # ```
@@ -225,17 +247,16 @@ module Clear::Migration
     #
     # ```
     # create_table(:users, id: false) do |t|
-    #   t.integer :user_id, primary: true # Use custom name for the primary key
-    #
-    #   t.string :first_name
-    #   t.string :last_name
-    #   t.email :email, unique: true
+    #   t.column :user_id, :integer, primary: true # Use custom name for the primary key
+    #   t.column :first_name, :string
+    #   t.column :last_name, :string
+    #   t.column :email, :string, unique: true
     #   t.timestamps
     # end
     # ```
     #
-    def create_table(name, id : Symbol | Bool = true, &block)
-      table = Table.new(name.to_s, is_create: true)
+    def create_table(name, id : Symbol | Bool = true, schema = "public", &block)
+      table = Table.new(name.to_s, schema.to_s, is_create: true)
       self.add_operation(table)
 
       case id
@@ -248,7 +269,7 @@ module Clear::Migration
       when false
       else
         raise "Unknown key type while try to create new table: `#{id}`. Candidates are :bigserial, :serial and :uuid" +
-          "Please proceed with `id: false` and add the column manually"
+              "Please proceed with `id: false` and add the column manually"
       end
 
       yield(table)

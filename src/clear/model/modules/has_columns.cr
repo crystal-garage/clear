@@ -23,7 +23,7 @@ module Clear::Model::HasColumns
   # to the given value, while the `changed?` flag remains false.
   # If you call save on a persisted model, the reset columns won't be
   # commited in the UPDATE query.
-  def reset( **t : **T ) forall T
+  def reset(**t : **T) forall T
     # Dev note:
     # ---------
     # The current implementation of reset is overriden on finalize (see below).
@@ -32,22 +32,21 @@ module Clear::Model::HasColumns
   end
 
   # See `reset(**t : **T)`
-  def reset( h : Hash(String, _) )
+  def reset(h : Hash(String, _))
   end
 
   # See `reset(**t : **T)`
-  def reset( h : Hash(Symbol, _) )
+  def reset(h : Hash(Symbol, _))
   end
-
 
   # Set one or multiple columns to a specific value
   # This two are equivalents:
   #
   # ```
-  #   model.set(a: 1)
-  #   model.a = 1
+  # model.set(a: 1)
+  # model.a = 1
   # ```
-  def set( ** t : **T ) forall T
+  def set(**t : **T) forall T
     # Dev note:
     # ---------
     # The current implementation of set is overriden on finalize (see below).
@@ -56,20 +55,19 @@ module Clear::Model::HasColumns
   end
 
   # See `set(**t : **T)`
-  def set( h : Hash(String, _) )
+  def set(h : Hash(String, _))
   end
 
   # See `set(**t : **T)`
-  def set( h : Hash(Symbol, _) )
+  def set(h : Hash(Symbol, _))
   end
-
 
   # Access to direct SQL attributes given by the request used to build the model.
   # Access is read only and updating the model columns will not apply change to theses columns.
   #
   # ```
-  #   model = Model.query.select("MIN(id) as min_id").first(fetch_columns: true)
-  #   id = model["min_id"].to_i32
+  # model = Model.query.select("MIN(id) as min_id").first(fetch_columns: true)
+  # id = model["min_id"].to_i32
   # ```
   def [](x) : ::Clear::SQL::Any
     attributes[x]
@@ -86,14 +84,14 @@ module Clear::Model::HasColumns
 
   # Returns the current hash of the modified values:
   #
-  #```
+  # ```
   # model = Model.query.first!
   # model.update_h # => {}
   # model.first_name = "hello"
   # model.update_h # => { "first_name" => "hello" }
   # model.save!
   # model.update_h # => {}
-  #```
+  # ```
   def update_h
     {} of String => ::Clear::SQL::Any
   end
@@ -106,7 +104,7 @@ module Clear::Model::HasColumns
   # ```
   # # Assuming our model has a primary key, a first name and last name and two timestamp columns:
   # model = Model.query.select("first_name, last_name").first!
-  # model.to_h # => { "first_name" => "Johnny", "last_name" => "Walker" }
+  # model.to_h             # => { "first_name" => "Johnny", "last_name" => "Walker" }
   # model.to_h(full: true) # => {"id" => nil, "first_name" => "Johnny", "last_name" => "Walker", "created_at" => nil, "updated_at" => nil}
   # ```
   def to_h(full = false)
@@ -144,7 +142,11 @@ module Clear::Model::HasColumns
   # During validation before saving, the presence will not be checked on this field
   #   and Clear will try to insert without the field value.
   #
-  macro column(name, primary = false, converter = nil, column_name = nil, presence = true)
+  # * `mass_assign : Bool (default = true)`: Use this option to turn on/ off mass assignment
+  #   when instantiating or updating a new model from json through `.from_json` methods from
+  #   the `Clear::Model::JSONDeserialize` module.
+  #
+  macro column(name, primary = false, converter = nil, column_name = nil, presence = true, mass_assign = true)
     {% _type = name.type %}
     {%
       unless converter
@@ -165,62 +167,76 @@ module Clear::Model::HasColumns
         else
           raise "Unknown: #{_type}, #{_type.class}"
         end
-      end %}
+      end
+    %}
 
-    {% COLUMNS[name.var] = {
-         type:      _type,
-         primary:   primary,
-         converter: converter,
-         column_name: "#{(column_name || name.var)}",
-         presence:  presence,
-       } %}
+    {%
+      db_column_name = column_name == nil ? name.var : column_name.id
+
+      COLUMNS["#{db_column_name.id}"] = {
+        type:                  _type,
+        primary:               primary,
+        converter:             converter,
+        db_column_name:        "#{db_column_name.id}",
+        crystal_variable_name: name.var,
+        presence:              presence,
+        mass_assign:           mass_assign,
+      }
+    %}
   end
 
   # :nodoc:
   # Used internally to gather the columns
   macro __generate_columns__
-    {% for name, settings in COLUMNS %}
+    {% for db_column_name, settings in COLUMNS %}
       {% type = settings[:type] %}
+
+      {% var_name = settings[:crystal_variable_name] %}
+      {% db_name = settings[:db_column_name] %}
+
       {% has_db_default = !settings[:presence] %}
       {% converter = Clear::Model::Converter::CONVERTERS[settings[:converter]] %}
       {% if converter == nil %}
-        {% raise "No converter found for `#{settings[:converter].id}`.\n"+
-                 "The type is probably not supported natively by Clear.\n"+
-                 "Please refer to the manual to create a custom converter." %}
+        {% raise "No converter found for `#{settings[:converter].id}`.\n" +
+                 "The type is probably not supported natively by Clear.\n" +
+                 "Please refer to the manual to create a custom converter.\n" +
+                 "If this errors appears when settings belongs_to relation, ensure than `foreign_key_type` is set to\n" +
+                 "not nilable type (e.g. Int32 instead of Int32?). Clear will use the nilable parameter of the model instead." %}
       {% end %}
-      @{{name}}_column : Clear::Model::Column({{type}}, {{converter}}) =
-        Clear::Model::Column({{type}}, {{converter}}).new("{{name}}",
+
+      @{{var_name}}_column : Clear::Model::Column({{type}}, {{converter}}) =
+        Clear::Model::Column({{type}}, {{converter}}).new({{db_name}},
         has_db_default: {{has_db_default}} )
 
-      # Returns the column object used to manage `{{name}}` field
+      # Returns the column object used to manage `{{var_name}}` field
       #
       # See `Clear::Model::Column`
-      def {{name}}_column : Clear::Model::Column({{type}}, {{converter}})
-        @{{name}}_column
+      def {{var_name}}_column : Clear::Model::Column({{type}}, {{converter}})
+        @{{var_name}}_column
       end
 
-      # Returns the value of `{{name}}` column or throw an exception if the column is not defined.
-      def {{name}} : {{type}}
-        @{{name}}_column.value
+      # Returns the value of `{{var_name}}` column or throw an exception if the column is not defined.
+      def {{var_name}} : {{type}}
+        @{{var_name}}_column.value
       end
 
-      # Setter for `{{name}}` column.
-      def {{name}}=(x : {{type}})
-        @{{name}}_column.value = x
+      # Setter for `{{var_name}}` column.
+      def {{var_name}}=(x : {{type}})
+        @{{var_name}}_column.value = x
       end
 
       {% if settings[:primary] %}
         # :nodoc:
-        class_property pkey : String = "{{name}}"
+        class_property pkey : String = "{{var_name}}"
 
         # :nodoc:
         def pkey
-          @{{name}}_column.value
+          @{{var_name}}_column.value
         end
 
         # :nodoc:
         def pkey_column
-          @{{name}}_column
+          @{{var_name}}_column
         end
       {% end %}
     {% end %}
@@ -229,18 +245,20 @@ module Clear::Model::HasColumns
     def reset( **t : **T ) forall T
       super
 
-      \{% for name, typ in T %}
-        \{% if !@type.has_method?("#{name}=") %}
-          \{% raise "No method #{@type}##{name}= while trying to set value of #{name}" %}
-        \{% end %}
+      {% verbatim do %}
 
-        \{% if settings = COLUMNS["#{name}".id] %}
-          @\{{name}}_column.reset_convert(t[:\{{name}}])
-        \{% else %}
-          self.\{{name}} = t[:\{{name}}]
-        \{% end %}
-      \{% end %}
+        {% for name, typ in T %}
 
+          {% if settings = COLUMNS["#{name}"] %}
+            @{{settings[:crystal_variable_name]}}_column.reset_convert(t[:{{name}}])
+          {% else %}
+            {% if !@type.has_method?("#{name}=") %}
+              {% raise "Cannot find the column `#{name}` of the model `#{@type}`" %}
+            {% end %}
+            self.{{name}} = t[:{{name}}]
+          {% end %}
+        {% end %}
+      {% end %}
       self
     end
 
@@ -252,11 +270,12 @@ module Clear::Model::HasColumns
     def reset( h : Hash(Symbol, _) )
       super
 
-      \{% for name, settings in COLUMNS %}
-        v = h.fetch(:\{{settings[:column_name]}}){ Column::UNKNOWN }
-        @\{{name}}_column.reset_convert(v) unless v.is_a?(Column::UnknownClass)
-      \{% end %}
-
+      {% verbatim do %}
+        {% for name, settings in COLUMNS %}
+          v = h.fetch(:\{{settings[:db_column_name]}}){ Clear::Model::Column::UNKNOWN }
+          @{{settings[:crystal_variable_name]}}_column.reset_convert(v) unless v.is_a?(Clear::Model::Column::UnknownClass)
+        {% end %}
+      {% end %}
       self
     end
 
@@ -264,10 +283,12 @@ module Clear::Model::HasColumns
     def reset( h : Hash(String, _) )
       super
 
-      \{% for name, settings in COLUMNS %}
-        v = h.fetch(\{{settings[:column_name]}}){ Column::UNKNOWN }
-        @\{{name}}_column.reset_convert(v) unless v.is_a?(Column::UnknownClass)
-      \{% end %}
+      {% verbatim do %}
+        {% for name, settings in COLUMNS %}
+          v = h.fetch({{settings[:db_column_name]}}){ Clear::Model::Column::UNKNOWN }
+          @{{settings[:crystal_variable_name]}}_column.reset_convert(v) unless v.is_a?(Clear::Model::Column::UnknownClass)
+        {% end %}
+      {% end %}
 
       self
     end
@@ -279,17 +300,18 @@ module Clear::Model::HasColumns
     def set( **t : **T ) forall T
       super
 
-      \{% for name, typ in T %}
-        \{% if !@type.has_method?("#{name}=") %}
-          \{% raise "No method #{@type}##{name}= while trying to set value of #{name}" %}
-        \{% end %}
-
-        \{% if settings = COLUMNS["#{name}".id] %}
-          @\{{name}}_column.set_convert(t[:\{{name}}])
-        \{% else %}
-          self.\{{name}} = t[:\{{name}}]
-        \{% end %}
-      \{% end %}
+      {% verbatim do %}
+        {% for name, typ in T %}
+          {% if settings = COLUMNS["#{name}".id] %}
+            @{{settings[:crystal_variable_name]}}_column.set_convert(t[:{{name}}])
+          {% else %}
+            {% if !@type.has_method?("#{name}=") %}
+              {% raise "No method #{@type}##{name}= while trying to set value of #{name}" %}
+            {% end %}
+            self.{{name}} = t[:{{name}}]
+          {% end %}
+        {% end %}
+      {% end %}
 
       self
     end
@@ -302,10 +324,12 @@ module Clear::Model::HasColumns
     def set( h : Hash(Symbol, _) )
       super
 
-      \{% for name, settings in COLUMNS %}
-        v = h.fetch(:\{{settings[:column_name]}}){ Column::UNKNOWN }
-        @\{{name}}_column.set_convert(v) unless v.is_a?(Column::UnknownClass)
-      \{% end %}
+      {% verbatim do %}
+        {% for name, settings in COLUMNS %}
+          v = h.fetch(:{{settings[:db_column_name]}}){ Clear::Model::Column::UNKNOWN }
+          @{{settings[:crystal_variable_name]}}_column.set_convert(v) unless v.is_a?(Clear::Model::Column::UnknownClass)
+        {% end %}
+      {% end %}
 
       self
     end
@@ -314,10 +338,12 @@ module Clear::Model::HasColumns
     def set( h : Hash(String, _) )
       super
 
-      \{% for name, settings in COLUMNS %}
-        v = h.fetch(\{{settings[:column_name]}}){ Column::UNKNOWN }
-        @\{{name}}_column.set_convert(v) unless v.is_a?(Column::UnknownClass)
-      \{% end %}
+      {% verbatim do %}
+        {% for name, settings in COLUMNS %}
+          v = h.fetch({{settings[:db_column_name]}}){ Clear::Model::Column::UNKNOWN }
+          @{{settings[:crystal_variable_name]}}_column.set_convert(v) unless v.is_a?(Clear::Model::Column::UnknownClass)
+        {% end %}
+      {% end %}
 
       self
     end
@@ -332,9 +358,9 @@ module Clear::Model::HasColumns
       o = super
 
       {% for name, settings in COLUMNS %}
-        if @{{name}}_column.defined? &&
-           @{{name}}_column.changed?
-          o[{{settings[:column_name]}}] = @{{name}}_column.to_sql_value
+        if @{{settings[:crystal_variable_name]}}_column.defined? &&
+           @{{settings[:crystal_variable_name]}}_column.changed?
+          o[{{settings[:db_column_name]}}] = @{{settings[:crystal_variable_name]}}_column.to_sql_value
         end
       {% end %}
 
@@ -357,8 +383,8 @@ module Clear::Model::HasColumns
 
       {% for name, settings in COLUMNS %}
         unless persisted?
-          if @{{name}}_column.failed_to_be_present?
-            add_error({{name.stringify}}, "must be present")
+          if @{{settings[:crystal_variable_name]}}_column.failed_to_be_present?
+            add_error({{settings[:crystal_variable_name].stringify}}, "must be present")
           end
         end
       {% end %}
@@ -372,7 +398,7 @@ module Clear::Model::HasColumns
     # Returns `self`
     def clear_change_flags
       {% for name, settings in COLUMNS %}
-        @{{name}}_column.clear_change_flag
+        @{{settings[:crystal_variable_name]}}_column.clear_change_flag
       {% end %}
 
       self
@@ -383,19 +409,35 @@ module Clear::Model::HasColumns
       out = super
 
       {% for name, settings in COLUMNS %}
-        if full || @{{name}}_column.defined?
-          out[{{settings[:column_name]}}] = @{{name}}_column.to_sql_value(nil)
+        if full || @{{settings[:crystal_variable_name]}}_column.defined?
+          out[{{settings[:db_column_name]}}] = @{{settings[:crystal_variable_name]}}_column.to_sql_value(nil)
         end
       {% end %}
 
       out
     end
 
+    def to_json(emit_nulls : Bool = false)
+      JSON.build{ |json| to_json(json, emit_nulls) }
+    end
+
+    def to_json(json, emit_nulls = false)
+      json.object do
+        {% for name, settings in COLUMNS %}
+        if emit_nulls || @{{settings[:crystal_variable_name]}}_column.defined?
+          json.field {{settings[:db_column_name]}} do
+            @{{settings[:crystal_variable_name]}}_column.value(nil).to_json(json)
+          end
+        end
+        {% end %}
+      end
+    end
+
     # Return `true` if the model is dirty (e.g. one or more fields
     #   have been changed.). Return `false` otherwise.
     def changed?
       {% for name, settings in COLUMNS %}
-          return true if @{{name}}_column.changed?
+          return true if @{{settings[:crystal_variable_name]}}_column.changed?
       {% end %}
 
       return false

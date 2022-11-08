@@ -18,9 +18,9 @@ module Clear::Model
   include Clear::Model::HasRelations
   include Clear::Model::HasScope
   include Clear::Model::ClassMethods
-  include Clear::Model::HasJson
   include Clear::Model::HasFactory
   include Clear::Model::Initializer
+  include Clear::Model::JSONDeserialize
 
   getter cache : Clear::Model::QueryCache?
 
@@ -63,6 +63,13 @@ module Clear::Model
 
     def initialize(t : NamedTuple, @persisted = false)
       reset(t)
+    end
+
+    # Invalidate local-to-relation cache and eager-loading cache.
+    # Useful to forcefully query again when calling relation defined method
+    def invalidate_caches : self
+      @cache = nil
+      self
     end
 
     # :nodoc:

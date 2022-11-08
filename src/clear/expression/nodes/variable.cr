@@ -4,7 +4,7 @@ require "./node"
 # A variable AST node.
 # It's what's created under the hood when you use a non-existent variable:
 #
-# ```crystal
+# ```
 # where { users.id != nil }
 #
 # will produce this tree:
@@ -26,7 +26,7 @@ class Clear::Expression::Node::Variable < Clear::Expression::Node
     {% end %}
   end
 
-  def resolve
+  def resolve : String
     parent = @parent
     if parent
       {parent.resolve, ".", Clear::SQL.escape(@name)}.join

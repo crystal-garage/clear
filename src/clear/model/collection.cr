@@ -3,7 +3,7 @@ require "../sql/select_query"
 # Model definition is made by adding the `Clear::Model` mixin in your class.
 # ## Simple Model
 #
-# ```crystal
+# ```
 # class MyModel
 #   include Clear::Model
 #
@@ -15,17 +15,17 @@ require "../sql/select_query"
 #
 # Now, you can play with your model:
 #
-# ```crystal
-#   row = MyModel.new # create an empty row
-#   row.my_column = "This is a content"
-#   row.save! # insert the new row in the database !
+# ```
+# row = MyModel.new # create an empty row
+# row.my_column = "This is a content"
+# row.save! # insert the new row in the database !
 # ```
 #
 # By convention, the table name will follow an underscore, plural version of your model: `my_models`.
 # A model into a module will prepend the module name before, so `Logistic::MyModel` will check for `logistic_my_models` in your database.
 # You can force a specific table name using:
 #
-# ```crystal
+# ```
 # class MyModel
 #   include Clear::Model
 #   self.table = "another_table_name"
@@ -42,23 +42,23 @@ require "../sql/select_query"
 #
 # For example, this code will compile:
 #
-# ```crystal
-#   row = MyModel.new # create an empty row
-#   puts row.my_column
+# ```
+# row = MyModel.new # create an empty row
+# puts row.my_column
 # ```
 #
 # However, it will throw a runtime exception `You cannot access to the field 'my_column' because it never has been initialized`
 #
 # Same way, trying to save the object will raise an error:
 #
-# ```crystal
-#   row.save # Will return false
-#   pp row.errors # Will tell you than `my_column` presence is mandatory.
+# ```
+# row.save      # Will return false
+# pp row.errors # Will tell you than `my_column` presence is mandatory.
 # ```
 #
 # Thanks to expressiveness of the Crystal language, we can handle presence validation by simply using the `Nilable` type in crystal:
 #
-# ```crystal
+# ```
 # class MyModel
 #   include Clear::Model
 #
@@ -76,7 +76,7 @@ require "../sql/select_query"
 #
 # Queries are fetchable using `each`:
 #
-# ```crystal
+# ```
 # MyModel.query.each do |model|
 #   # Do something with your model here.
 # end
@@ -91,7 +91,7 @@ require "../sql/select_query"
 # By default, Clear map theses columns types:
 #
 # - `String` => `text`
-# - `Numbers` (any from 8 to 64 bits, float, double, big number, big float) => `int, large int etc... (depends of your choice)`
+# - `Numbers` (any from 8 to 64 bits, float, double, big number, big float, big decimal) => `int, large int, numeric(arbitrary precision number) etc... (depends of your choice)`
 # - `Bool` => `text or bool`
 # - `Time` => `timestamp without timezone or text`
 # - `JSON::Any` => `json and jsonb`
@@ -110,7 +110,7 @@ require "../sql/select_query"
 #
 # To setup a primary key, you can add the modifier `primary: true` to the column:
 #
-# ```crystal
+# ```
 # class MyModel
 #   include Clear::Model
 #
@@ -122,7 +122,7 @@ require "../sql/select_query"
 # Note the flag `presence: false` added to the column. This tells Clear than presence checking on save is not mandatory. Usually this happens if you setup a default value in postgres. In the case of our primary key `id`, we use a serial auto-increment default value.
 # Therefore, saving the model without primary key will works. The id will be fetched after insertion:
 #
-# ```crystal
+# ```
 # m = MyModel
 # m.save!
 # m.id # Now the id value is setup.
@@ -134,10 +134,10 @@ require "../sql/select_query"
 #
 # ### Timestamps
 #
-# ```crystal
+# ```
 # class MyModel
 #   include Clear::Model
-#   timestamps #Will map the two columns 'created_at' and 'updated_at', and map some hooks to update their values.
+#   timestamps # Will map the two columns 'created_at' and 'updated_at', and map some hooks to update their values.
 # end
 # ```
 #
@@ -145,10 +145,10 @@ require "../sql/select_query"
 #
 # ### With Serial Pkey
 #
-# ```crystal
+# ```
 # class MyModel
 #   include Clear::Model
-#   with_serial_pkey "my_primary_key"
+#   primary_key "my_primary_key"
 # end
 # ```
 #
@@ -156,7 +156,6 @@ require "../sql/select_query"
 #
 # Argument is optional (default = id)
 module Clear::Model
-
   # `CollectionBase(T)` is the base class for collection of model.
   # Collection of model are a SQL `SELECT` query mapping & building system. They are Enumerable and are
   # `Clear::SQL::SelectBuilder` behavior; therefore, they can be used array-like and are working with low-level SQL
@@ -176,6 +175,7 @@ module Clear::Model
     # Redefinition of the fields,
     # because of a bug in the compiler
     # https://github.com/crystal-lang/crystal/issues/5281
+    # :nodoc:
     @limit : Int64?
     @offset : Int64?
     @lock : String?
@@ -199,8 +199,9 @@ module Clear::Model
     # :nodoc:
     def initialize(
       @distinct_value = nil,
-      @cte = {} of String => Clear::SQL::SelectBuilder | String,
+      @cte = {} of String => Clear::SQL::Query::CTE::Record,
       @columns = [] of SQL::Column,
+      @forced_columns = [] of SQL::Column,
       @froms = [] of SQL::From,
       @joins = [] of SQL::Join,
       @wheres = [] of Clear::Expression::Node,
@@ -211,16 +212,17 @@ module Clear::Model
       @limit = nil,
       @offset = nil,
       @lock = nil,
-      @before_query_triggers = [] of -> Void,
+      @before_query_triggers = [] of -> Nil,
+      # collection specific parameters ---v
       @tags = {} of String => Clear::SQL::Any,
       @cache = Clear::Model::QueryCache.new,
-      @cached_result = nil,
+      @cached_result = nil
     )
     end
 
     def dup
-      if @polymorphic
-        super.flag_as_polymorphic!(@polymorphic_key.not_nil!, @polymorphic_scope.not_nil!)
+      if @polymorphic && (polymorphic_key = @polymorphic_key) && (polymorphic_scope = @polymorphic_scope)
+        super.flag_as_polymorphic!(polymorphic_key, polymorphic_scope)
       else
         super
       end
@@ -232,6 +234,15 @@ module Clear::Model
       T.connection
     end
 
+    # Return the model class for this collection
+    def item_class
+      T
+    end
+
+    # :ditto:
+    def self.item_class
+      T
+    end
 
     # :nodoc:
     # Set a query cache on this Collection. Fetching and enumerate will use the cache instead of calling the SQL.
@@ -241,7 +252,7 @@ module Clear::Model
     end
 
     # :nodoc:
-    def with_cached_result(r : Array(T))
+    def with_cached_result(r : Array(T)?)
       @cached_result = r
       self
     end
@@ -251,7 +262,7 @@ module Clear::Model
     def flag_as_polymorphic!(@polymorphic_key, scope : Enumerable(String))
       @polymorphic = true
       polymorphic_scope = @polymorphic_scope = Set(String).new
-      scope.each{ |x| polymorphic_scope.add(x) }
+      scope.each { |x| polymorphic_scope.add(x) }
 
       self
     end
@@ -270,19 +281,29 @@ module Clear::Model
     end
 
     # :nodoc:
-    def tags(x : NamedTuple)
-      @tags.merge!(x.to_h)
-      self
-    end
-
-    # :nodoc:
-    def tags(x : Hash(String, X)) forall X
-      @tags.merge!(x.to_h)
+    def tags(hash : Hash(String, Clear::SQL::Any))
+      @tags.merge!(hash)
       self
     end
 
     def tags
       @tags
+    end
+
+    # :nodoc:
+    # redefine where with tuple as argument which add tags
+    def where(**tuple)
+      hash = tuple.to_h.transform_keys &.to_s
+
+      any_hash = {} of String => Clear::SQL::Any
+
+      # remove terms which are not real value but conditions like range or array
+      hash.each { |k, v|
+        any_hash[k] = v if v.is_a?(Clear::SQL::Any)
+      }
+
+      tags(any_hash)
+      super(**tuple)
     end
 
     # :nodoc:
@@ -369,7 +390,7 @@ module Clear::Model
     def any?
       cr = @cached_result
 
-      return cr.any? if cr
+      return !cr.empty? if cr
 
       clear_select.select("1").limit(1).fetch do |_|
         return true
@@ -425,7 +446,7 @@ module Clear::Model
       raise "Operation not permitted on this collection." unless unlink_operation
 
       unlink_operation.call(item)
-      @cached_result.try &.remove(item)
+      @cached_result.try &.delete(item)
 
       self
     end
@@ -441,24 +462,19 @@ module Clear::Model
       o
     end
 
-    # Basically a custom way to write `OFFSET x LIMIT 1`
+    # Basically a fancy way to write `OFFSET x LIMIT 1`
     def [](off, fetch_columns = false) : T
-      self[off, fetch_columns]?.not_nil!
+      self[off, fetch_columns]? || raise Clear::SQL::RecordNotFoundError.new
     end
 
-    # Basically a custom way to write `OFFSET x LIMIT 1`
+    # Basically a fancy way to write `OFFSET x LIMIT 1`
     def []?(off, fetch_columns = false) : T?
       self.offset(off).first(fetch_columns)
     end
 
     # Get a range of models
-    def [](range : Range(Int64), fetch_columns = false) : Array(T)
-      self[range, fetch_columns]?.not_nil
-    end
-
-    # Get a range of models
-    def []?(range : Range(Int64), fetch_columns = false) : Array(T)
-      self.offset(range.start).limit(range.end - range.start).to_a(fetch_columns)
+    def [](range : Range(Number, Number), fetch_columns = false) : Array(T)
+      self.offset(range.begin).limit(range.end - range.begin).to_a(fetch_columns)
     end
 
     # A convenient way to write `where{ condition }.first`
@@ -480,20 +496,35 @@ module Clear::Model
 
     # A convenient way to write `where{ condition }.first!`
     def find!(tuple : NamedTuple, fetch_columns = false) : T
-      where(tuple).first(fetch_columns).not_nil!
+      where(tuple).first!(fetch_columns)
+    end
+
+    # Returns a model using primary key equality
+    # Returns `nil` if not found.
+    def find(x) : T?
+      where { var(T.table, T.pkey) == x }.first
+    end
+
+    # Returns a model using primary key equality.
+    # Raises error if the model is not found.
+    def find!(x) : T
+      find(x) || raise Clear::SQL::RecordNotFoundError.new
+    end
+
+    def find_or_build(**tuple) : T
+      find_or_build(**tuple) { }
     end
 
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
-    def find_or_build(tuple : NamedTuple, &block : T -> Void) : T
-      r = where(tuple).first
+    def find_or_build(**tuple, &block : T -> Nil) : T
+      where(tuple) unless tuple.size == 0
+      r = first
 
       return r if r
 
-      str_hash = {} of String => Clear::SQL::Any
-
+      str_hash = @tags.dup
       tuple.map { |k, v| str_hash[k.to_s] = v }
-      str_hash.merge!(@tags)
 
       r = Clear::Model::Factory.build(T, str_hash)
       yield(r)
@@ -504,9 +535,22 @@ module Clear::Model
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
     # Just after building, save the object.
-    def find_or_create(tuple : NamedTuple, &block : T -> Void) : T
-      r = find_or_build(tuple, &block)
-      r.save
+    def find_or_create(**tuple) : T
+      r = find_or_build(**tuple)
+
+      r.save!
+      r
+    end
+
+    # Try to fetch a row. If not found, build a new object and setup
+    # the fields like setup in the condition tuple.
+    # Just after building, save the object.
+    def find_or_create(**tuple, &block : T -> Nil) : T
+      r = find_or_build(**tuple) do |mdl|
+        yield(mdl)
+      end
+
+      r.save!
       r
     end
 
@@ -519,9 +563,38 @@ module Clear::Model
     # Get the first row from the collection query.
     # if not found, return `nil`
     def first(fetch_columns = false) : T?
-      order_by(Clear::SQL.escape("#{T.pkey}"), "ASC") unless T.pkey.nil? || order_bys.any?
+      clone = dup
 
-      limit(1).fetch do |hash|
+      if clone.order_bys.empty?
+        key = {Clear::SQL.escape(T.table), Clear::SQL.escape(T.pkey)}.join(".")
+        clone.order_by(key, :asc)
+      end
+
+      clone.limit(1).fetch do |hash|
+        return Clear::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
+      end
+
+      nil
+    end
+
+    # Redefinition of `join_impl` to avoid ambiguity on the column
+    # name if no specific column have been selected.
+    protected def join_impl(name, type, lateral, clear_expr)
+      self.set_default_table_wildcard(Clear::SQL.escape(T.table))
+      super(name, type, lateral, clear_expr)
+    end
+
+    # Get the last row from the collection query.
+    # if not found, return `nil`
+    def last(fetch_columns = false) : T?
+      clone = dup
+
+      if clone.order_bys.empty?
+        key = {Clear::SQL.escape(T.table), Clear::SQL.escape(T.pkey)}.join(".")
+        clone.order_by(key, :asc)
+      end
+
+      clone.reverse_order_by.limit(1).fetch do |hash|
         return Clear::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
       end
 
@@ -531,42 +604,14 @@ module Clear::Model
     # Get the last row from the collection query.
     # if not found, throw an error
     def last!(fetch_columns = false) : T
-      last(fetch_columns).not_nil!
+      last(fetch_columns) || raise Clear::SQL::RecordNotFoundError.new
     end
 
-    # Redefinition of `join_impl` to avoid ambiguity on the column
-    # name if no specific column have been selected.
-    protected def join_impl(name, type, lateral, clear_expr)
-      if @columns.empty?
-        self.select("#{Clear::SQL.escape(T.table)}.*")
-      end
-
-      super(name, type, lateral, clear_expr)
-    end
-
-    # Get the last row from the collection query.
-    # if not found, return `nil`
-    def last(fetch_columns = false) : T?
-      order_by("#{T.pkey}", "ASC") unless T.pkey.nil? || order_bys.any?
-
-      arr = order_bys.dup # Save current order by
-
-      begin
-        new_order = arr.map do |x|
-          Clear::SQL::Query::OrderBy::Record.new(x.op, (x.dir == :asc ? :desc : :asc))
-        end
-
-        clear_order_bys.order_by(new_order)
-
-        limit(1).fetch do |hash|
-          return Clear::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
-        end
-
-        nil
-      ensure
-        # reset the order by in case we want to reuse the query
-        clear_order_bys.order_by(order_bys)
-      end
+    # Delete all the rows which would have been returned by this collection.
+    # Is equivalent to `collection.to_delete.execute`
+    def delete_all : self
+      to_delete.execute
+      change! # because we want to clear the caches in case we do something with the collection later
     end
   end
 end

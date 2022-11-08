@@ -1,4 +1,3 @@
-
 class Clear::Migration::FullTextSearchableOperation < Clear::Migration::Operation
   module Priority
     VERY_IMPORTANT = 'A'
@@ -33,12 +32,12 @@ class Clear::Migration::FullTextSearchableOperation < Clear::Migration::Operatio
   end
 
   private def print_concat_rules(use_new = true)
-    src_fields.map do |(field_name, field_priority)|
+    src_fields.join(" || ") do |(field_name, field_priority)|
       ensure_priority!(field_priority)
 
       "setweight(to_tsvector(#{Clear::Expression[catalog]}, coalesce(#{use_new && "new." || ""}#{field_name}, ''))," +
         " #{Clear::Expression[field_priority]})"
-    end.join(" || ")
+    end
   end
 
   private def print_trigger : Array(String)
@@ -72,11 +71,11 @@ class Clear::Migration::FullTextSearchableOperation < Clear::Migration::Operatio
     ["DROP FUNCTION #{function_name}()", "DROP TRIGGER #{trigger_name}"]
   end
 
-  def up
+  def up : Array(String)
     print_trigger + print_update_current_data
   end
 
-  def down
+  def down : Array(String)
     print_delete_trigger
   end
 end
@@ -90,8 +89,14 @@ module Clear::Migration::FullTextSearchableHelpers
     add_column(table, column_name, "tsvector")
     create_index(table, column_name, using: "gin")
     migration.add_operation(
-      Clear::Migration::FullTextSearchableOperation.new(table,
-        on, catalog, trigger_name, function_name, column_name)
+      Clear::Migration::FullTextSearchableOperation.new(
+        table,
+        on,
+        catalog,
+        trigger_name,
+        function_name,
+        column_name
+      )
     )
   end
 end
@@ -102,8 +107,16 @@ module Clear::Migration::FullTextSearchableTableHelpers
                            trigger_name = nil, function_name = nil)
     column(column_name, "tsvector", index: "gin")
 
-    migration.not_nil!.add_operation(Clear::Migration::FullTextSearchableOperation.new(self.name,
-      on, catalog, trigger_name, function_name, column_name))
+    migration.not_nil!.add_operation(
+      Clear::Migration::FullTextSearchableOperation.new(
+        self.name,
+        on,
+        catalog,
+        trigger_name,
+        function_name,
+        column_name
+      )
+    )
   end
 
   def full_text_searchable(on : String, column_name = "full_text_vector",
@@ -115,7 +128,7 @@ module Clear::Migration::FullTextSearchableTableHelpers
   def full_text_searchable(on : Array(String), column_name = "full_text_vector",
                            catalog = "pg_catalog.english",
                            trigger_name = nil, function_name = nil)
-    raise "cannot implement tsv_searchable because empty array was given" if on.empty?
+    raise "cannot implement tsv_searchable because empty array was given" if on.empty?
 
     fields = on.map { |name| {name, 'C'} }
 

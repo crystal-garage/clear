@@ -1,4 +1,5 @@
 require "../spec_helper"
+require "../data/example_models"
 
 module UUIDSpec
   class UUIDObjectMigration43293
@@ -38,7 +39,7 @@ module UUIDSpec
 
   def self.reinit
     reinit_migration_manager
-    UUIDObjectMigration43293.new.apply(Clear::Migration::Direction::UP)
+    UUIDObjectMigration43293.new.apply
   end
 
   describe "Clear::Model::HasSerialPkey with uuid" do
@@ -70,7 +71,7 @@ module UUIDSpec
       temporary do
         reinit
 
-      	3.times do |x|
+        3.times do |x|
           DBObject.create!({name: "obj#{x}"})
         end
 
@@ -83,6 +84,23 @@ module UUIDSpec
 
         dbo = DBObject.find!(dbo_id)
         dbo.db_objects.not_nil!.count.should eq 1
+      end
+    end
+
+    it "can create a model by generating an uuid primary key" do
+      temporary do
+        reinit_example_models
+        m = ModelWithUUID.create!
+        m.id.should_not eq Nil
+      end
+    end
+
+    it "can create a model with a predefined uuid primary key" do
+      temporary do
+        reinit_example_models
+        some_uuid = UUID.new("5ca27508-f2ce-441b-b2cf-41134793e7a1")
+        m = ModelWithUUID.create!({id: some_uuid})
+        m.id.should eq some_uuid
       end
     end
 

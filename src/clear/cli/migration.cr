@@ -84,13 +84,10 @@ class Clear::CLI::Migration < Admiral::Command
 
     def run_impl
       array = Clear::Migration::Manager.instance.migrations_up.to_a.sort
-      num = if arguments.num.nil?
-              2
-            else
-              arguments.num.not_nil!.to_i + 1
-            end
 
-      if (num > array.size)
+      num = (arguments.num.try(&.to_i) || 1) + 1
+
+      if num > array.size
         num = array.size - 1
       end
 

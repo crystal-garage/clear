@@ -19,7 +19,7 @@ module Clear::Model::HasValidation
   # Return `true` if saving has been declined because of validation issues.
   # The error list can be found by calling `Clear::Model#errors`
   def error?
-    @errors.any?
+    !@errors.empty?
   end
 
   # Clear the errors log (if any) of the model and return itself
@@ -30,9 +30,9 @@ module Clear::Model::HasValidation
 
   # Print the errors in string. Useful for debugging or simple error handling.
   def print_errors
-    @errors.group_by(&.column).to_a.sort { |(f1, _), (f2, _)| (f1 || "") <=> (f2 || "") }.map do |column, errors|
-      [column, errors.map(&.reason).join(", ")].compact.join(": ")
-    end.join("\n")
+    @errors.group_by(&.column).to_a.sort { |(f1, _), (f2, _)| (f1 || "") <=> (f2 || "") }.join("\n") do |column, errors|
+      [column, errors.join(", ", &.reason)].compact.join(": ")
+    end
   end
 
   # This method is called whenever `valid?` or `save` is called.
@@ -41,10 +41,10 @@ module Clear::Model::HasValidation
     # Can be overwritten
   end
 
-  # Check whether the model is valid. If not, raise `InvalidModelError`.
+  # Check whether the model is valid. If not, raise `InvalidError`.
   # Return the model itself
   def valid!
-    raise InvalidModelError.new("Model is invalid: #{print_errors}") unless valid?
+    raise InvalidError.new(self) unless valid?
     self
   end
 

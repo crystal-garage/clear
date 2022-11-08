@@ -28,7 +28,7 @@ class Clear::CLI::Generator
         class_name = name.camelcase
 
         fields = @argv.join("|")
-        migration_uid = Time.now.to_unix.to_s.rjust(10, '0')
+        migration_uid = Time.local.to_unix.to_s.rjust(10, '0')
 
         g["model_class"] = class_name
         g["migration_uid"] = migration_uid
@@ -38,7 +38,7 @@ class Clear::CLI::Generator
         model_file = "#{name_underscore}.cr"
         migration_file = "#{migration_uid}_create_#{name_underscore.pluralize}.cr"
 
-        if Dir[File.join(g.target_directory, "src/db/migrations/*_create_#{name_underscore.pluralize}.cr")].any?
+        unless Dir[File.join(g.target_directory, "src/db/migrations/*_create_#{name_underscore.pluralize}.cr")].empty?
           puts "A migration file `xxxx__create_#{name_underscore.pluralize}.cr` already exists"
           exit 1
         end
