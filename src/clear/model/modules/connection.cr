@@ -8,6 +8,7 @@ module Clear::Model::Connection
       # See `Clear::SQL#init(URI, *opts)` for more information about multi-connections.
       #
       # Example:
+      #
       # ```
       # Clear::SQL.init("postgres://postgres@localhost/database_1")
       # Clear::SQL.init("secondary", "postgres://postgres@localhost/database_2")

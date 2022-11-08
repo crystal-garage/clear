@@ -1,4 +1,3 @@
-#
 # ## JSONB Integration with Clear
 #
 # Clear supports natively postgres jsonb columns
@@ -15,6 +14,7 @@
 #   end
 # end
 # ```
+#
 # Moreover, jsonb is directly integrated into the Expression Engine.
 # For that, just call `jsonb` after a variable to activate the methods:
 #
@@ -25,10 +25,8 @@
 # # ^-- Will produce optimized for gin index jsonb filter query:
 # # WHERE attributes @> '{"category": "Book", "author": {"name": "Philip K. Dick"} }'::jsonb
 # ```
-#
-#
-require "json"
 
+require "json"
 require "./**"
 
 module Clear::SQL::JSONB
@@ -44,7 +42,6 @@ module Clear::SQL::JSONB
 
   # jsonb `?|` operator
   # Do any of these array strings exist as top-level keys?
-  #
   def jsonb_any_exists?(field, keys : Array(String))
     {field, "array[" + keys.join(",") { |x| Clear::SQL.sanitize(x) } + "]"}.join(" ?| ")
   end
@@ -138,7 +135,6 @@ module Clear::SQL::JSONB
   # jsonb_text("data", "sub.key").like("user%")
   # # => "data->'sub'->>'key' LIKE 'user%'"
   # ```
-  #
   def jsonb_resolve(field, key : String, cast = nil)
     arr = jsonb_k2a(key)
     jsonb_resolve(field, arr, cast)

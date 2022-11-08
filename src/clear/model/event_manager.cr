@@ -12,6 +12,7 @@ class Clear::Model::EventManager
   # Trigger events callback for a specific model.
   # Direction can be `:before` and `:after`
   # In case of `:before` direction, the events are called in reverse order:
+  #
   # ```
   # before:
   # - Last defined event
@@ -20,6 +21,7 @@ class Clear::Model::EventManager
   # after:
   # - First defined events
   # - Last defined events
+  # ```
   def self.trigger(klazz, direction : Symbol, event : Symbol, mdl : Clear::Model)
     arr = EVENT_CALLBACKS.fetch({klazz.to_s, direction, event}) { [] of HookFunction }
 

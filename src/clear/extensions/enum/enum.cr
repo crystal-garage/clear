@@ -124,7 +124,6 @@ module Clear
         }
       {% end %}
 
-
       # Return the enum with the string passed as parameter.
       # Throw Clear::IllegalEnumValueError if the string is not found.
       def self.from_string(str : String)
@@ -171,7 +170,5 @@ module Clear
 
       {{yield}}
     end
-
-
   end
 end

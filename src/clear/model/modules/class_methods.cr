@@ -20,20 +20,20 @@ module Clear::Model::ClassMethods
       # Example:
       #
       # ```
-      #   MyModel => "my_models"
-      #   Person => "people"
-      #   Project::Info => "project_infos"
+      # MyModel => "my_models"
+      # Person => "people"
+      # Project::Info => "project_infos"
       # ```
       #
       # The property can be updated at initialization to a custom table name:
       #
       # ```
-      #   class MyModel
-      #     include Clear::Model
+      # class MyModel
+      #   include Clear::Model
       #
-      #     self.table = "another_table_name"
-      #   end
-      #   MyModel.query.to_sql # SELECT * FROM "another_table_name"
+      #   self.table = "another_table_name"
+      # end
+      # MyModel.query.to_sql # SELECT * FROM "another_table_name"
       # ```
       class_property table : Clear::SQL::Symbolic = self.name.underscore.gsub(/::/, "_").pluralize
 
@@ -43,12 +43,12 @@ module Clear::Model::ClassMethods
       # This property can be redefined on initialization. Example:
       #
       # ```
-      #   class MyModel
-      #     include Clear::Model
+      # class MyModel
+      #   include Clear::Model
       #
-      #     self.schema = "my_schema"
-      #   end
-      #   MyModel.query.to_sql # SELECT * FROM "my_schema"."my_models"
+      #   self.schema = "my_schema"
+      # end
+      # MyModel.query.to_sql # SELECT * FROM "my_schema"."my_models"
       # ```
       class_property schema : Clear::SQL::Symbolic? = nil
 

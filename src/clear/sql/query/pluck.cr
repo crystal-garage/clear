@@ -16,11 +16,11 @@ module Clear::SQL::Query::Pluck
   # The field argument is a SQL fragment; it's not escaped (beware SQL injection) and allow call to functions
   # and aggregate methods:
   #
-  #  ```
-  #    # ...
-  #    User.query.pluck_col("CASE WHEN id % 2 = 0 THEN id ELSE NULL END AS id").each do
-  #    # ...
-  #  ```
+  # ```
+  # # ...
+  # User.query.pluck_col("CASE WHEN id % 2 = 0 THEN id ELSE NULL END AS id").each do
+  # # ...
+  # ```
   def pluck_col(field : Clear::SQL::Symbolic)
     field = Clear::SQL.escape(field) if field.is_a?(Symbol)
 
@@ -97,7 +97,7 @@ module Clear::SQL::Query::Pluck
   # Select specifics columns and returns on array of tuple of type of the named tuple passed as parameter:
   #
   # ```
-  #   User.query.pluck(id: Int64, "UPPER(last_name)": String).each do #...
+  # User.query.pluck(id: Int64, "UPPER(last_name)": String).each do #...
   # ```
   def pluck(**fields : **T) forall T
     sql = clear_select.select(fields.keys.join(", ")).to_sql

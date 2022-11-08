@@ -3,6 +3,7 @@ module Clear::SQL
     getter froms : Array(SQL::From)
 
     # FROM fragment of the SQL query
+    #
     # ```
     # Clear::SQL.select.from("airplanes").to_sql # < SELECT * FROM airplanes
     # ```

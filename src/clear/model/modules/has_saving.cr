@@ -14,6 +14,7 @@ module Clear::Model::HasSaving
       # models as saved in the database.
       #
       # ## Example:
+      #
       # ```
       # users = [User.new(id: 1), User.new(id: 2), User.new(id: 3)]
       # users = User.import(users)

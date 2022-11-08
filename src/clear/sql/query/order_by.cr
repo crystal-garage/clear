@@ -42,6 +42,7 @@ module Clear::SQL::Query::OrderBy
   end
 
   # Flip over all order bys by switching the ASC direction to DESC and the NULLS FIRST to NULLS LAST
+  #
   # ```
   # query = Clear::SQL.select.from("users").order_by(id: :desc, name: :asc, company: {:asc, :nulls_last})
   # query.reverse_order_by
@@ -93,6 +94,7 @@ module Clear::SQL::Query::OrderBy
   end
 
   # Add one ORDER BY clause
+  #
   # ```
   # query = Clear::SQL.select.from("users").order_by(:id, :desc, nulls_last)
   # query.to_sql # > SELECT * FROM users ORDER BY "id" DESC NULLS LAST

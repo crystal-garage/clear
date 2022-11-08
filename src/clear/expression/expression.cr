@@ -1,4 +1,3 @@
-###
 # ## Clear's Expression engine
 #
 # The goal of this module is to offer the most natural way to write down your
@@ -18,6 +17,7 @@
 # ```
 #
 # or even:
+#
 # ```
 # model_collection.where { created_at.in?(1.day.ago..DateTime.local) }
 # ```
@@ -139,6 +139,7 @@ class Clear::Expression
   # If the optional parameter `date` is passed, the time is truncated and only the date is passed:
   #
   # ## Example
+  #
   # ```
   # Clear::Expression[Time.local]             # < "2017-04-03 23:04:43.234 +08:00"
   # Clear::Expression[Time.local, date: true] # < "2017-04-03"
@@ -233,7 +234,6 @@ class Clear::Expression
   # where { raw("func(?, ?) = ?", a, b, c) } # SELECT ... FROM ... WHERE function(a, b) = c
   # ```
   #
-  #
   def raw(x : String, *args)
     Node::Raw.new(self.class.raw(x, *args))
   end
@@ -248,7 +248,6 @@ class Clear::Expression
   # having { raw("COUNT(*)") > 5 }           # SELECT ... FROM ... HAVING COUNT(*) > 5
   # where { raw("func(?, ?) = ?", a, b, c) } # SELECT ... FROM ... WHERE function(a, b) = c
   # ```
-  #
   #
   def self.raw(x : String, *args)
     raw_enum(x, args)
@@ -315,6 +314,7 @@ class Clear::Expression
   # var("template1", "users.table2", "name") # "template1"."users.table2"."name"
   # var("order")                             # "order"
   # ```
+  #
   #
   def var(*parts)
     _var(parts)

@@ -51,7 +51,7 @@ module Clear::SQL::Query::Aggregate
     # SQL aggregation function {{x.upcase}}:
     #
     # ```
-    #   query.{{x.id}}("field", Int64)
+    # query.{{x.id}}("field", Int64)
     # ```
     def {{x.id}}(field, x : X.class) forall X
       agg("{{x.id.upcase}}(#{field})", X)

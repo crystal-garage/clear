@@ -7,6 +7,7 @@ require "./query/*"
 # An insert query
 #
 # cf. postgres documentation
+#
 # ```
 # [ WITH [ RECURSIVE ] with_query [, ...] ]
 # INSERT INTO table_name [ AS alias ] [ ( column_name [, ...] ) ]
@@ -14,10 +15,6 @@ require "./query/*"
 #    [ ON CONFLICT [ conflict_target ] conflict_action ]
 #    [ RETURNING * | output_expression [ [ AS ] output_name ] [, ...] ]
 # ```
-#
-#
-#
-#
 class Clear::SQL::InsertQuery
   include Clear::SQL::Query::CTE
   include Query::Change

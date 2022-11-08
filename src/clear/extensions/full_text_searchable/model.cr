@@ -40,6 +40,7 @@ require "./tsvector"
 # ```
 #
 # Search is now easily done
+#
 # ```
 # Post.query.search("poney") # Return all the articles !
 # ```

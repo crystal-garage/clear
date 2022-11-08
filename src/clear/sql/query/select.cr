@@ -45,9 +45,10 @@ module Clear::SQL::Query::Select
   end
 
   # Add field(s) to selection from tuple
+  #
   # ```
-  #  select({user_id: "uid", updated_at: "updated_at"})
-  #  # => Output "SELECT user_id as uid, updated_at as updated_at"
+  # select({user_id: "uid", updated_at: "updated_at"})
+  # # => Output "SELECT user_id as uid, updated_at as updated_at"
   # ```
   def select(*args)
     args.each do |arg|

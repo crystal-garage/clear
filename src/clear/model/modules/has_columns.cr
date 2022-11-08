@@ -114,6 +114,7 @@ module Clear::Model::HasColumns
   # Bind a column to the model.
   #
   # Simple example:
+  #
   # ```
   # class MyModel
   #   include Clear::Model
@@ -442,6 +443,5 @@ module Clear::Model::HasColumns
 
       return false
     end
-
   end
 end

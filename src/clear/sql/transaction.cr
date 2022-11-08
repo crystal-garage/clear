@@ -33,6 +33,7 @@ module Clear::SQL::Transaction
   # Enter new transaction block for the current connection/fiber pair.
   #
   # Example:
+  #
   # ```
   # Clear::SQL.transaction do
   #   # do something
@@ -41,6 +42,7 @@ module Clear::SQL::Transaction
   #   end
   # end
   # ```
+  #
   # see #with_savepoint to use a stackable version using savepoints.
   #
   def transaction(connection : String = "default", level : Level = Level::Serializable, &block)
@@ -107,6 +109,7 @@ module Clear::SQL::Transaction
   # using savepoints.
   #
   # Example:
+  #
   # ```
   # Clear::SQL.with_savepoint do
   #   # do something

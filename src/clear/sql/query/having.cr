@@ -4,14 +4,18 @@ module Clear::SQL::Query::Having
   end
 
   # Build SQL `having` condition using a Clear::Expression::Node
+  #
   # ```
   # query.having(Clear::Expression::Node::InArray.new("id", ['1', '2', '3', '4']))
   # # Note: in this example, InArray node use unsafe strings
   # ```
+  #
   # If useful for moving a having clause from a request to another one:
+  #
   # ```
   # query1.having { a == b } # having a = b
   # ```
+  #
   # ```
   # query2.having(query1.havings[0]) # HAVING a = b
   # ```
@@ -21,6 +25,7 @@ module Clear::SQL::Query::Having
   end
 
   # Build SQL `having` condition using the Expression engine.
+  #
   # ```
   # query.having { id == 1 }
   # ```
@@ -33,21 +38,29 @@ module Clear::SQL::Query::Having
   end
 
   # Build SQL `having` condition using a NamedTuple.
-  #   this will use:
+  # this will use:
+  #
   # - the `=` operator if compared with a literal
+  #
   # ```
   # query.having({keyword: "hello"}) # having keyword = 'hello'
   # ```
+  #
   # - the `IN` operator if compared with an array:
+  #
   # ```
   # query.having({x: [1, 2]}) # having x in (1, 2)
   # ```
+  #
   # - the `>=` and `<=` | `<` if compared with a range:
+  #
   # ```
   # query.having({x: (1..4)})  # having x >= 1 AND x <= 4
   # query.having({x: (1...4)}) # having x >= 1 AND x < 4
   # ```
+  #
   # - You also can put another select query as argument:
+  #
   # ```
   # query.having({x: another_select}) # having x IN (SELECT ... )
   # ```
@@ -77,6 +90,7 @@ module Clear::SQL::Query::Having
   end
 
   # Build SQL `having` interpolating `:keyword` with the NamedTuple passed in argument.
+  #
   # ```
   # having("id = :id OR date >= :start", id: 1, start: 1.day.ago)
   # # having id = 1 AND date >= '201x-xx-xx ...'
@@ -87,23 +101,29 @@ module Clear::SQL::Query::Having
 
   # Build SQL `having` condition using a template string and
   # interpolating `?` characters with parameters given in a tuple or array.
+  #
   # ```
   # having("x = ? OR y = ?", 1, "l'eau") # having x = 1 OR y = 'l''eau'
   # ```
+  #
   # Raise error if there's not enough parameters to cover all the `?` placeholders
   def having(template : String, *args)
     having(Clear::Expression::Node::Raw.new(Clear::SQL.raw(template, *args)))
   end
 
   # Build SQL `or_having` condition using a Clear::Expression::Node
+  #
   # ```
   # query.or_having(Clear::Expression::Node::InArray.new("id", ['1', '2', '3', '4']))
   # # Note: in this example, InArray node use unsafe strings
   # ```
+  #
   # If useful for moving a having clause from a request to another one:
+  #
   # ```
   # query1.or_having { a == b } # having a = b
   # ```
+  #
   # ```
   # query2.or_having(query1.havings[0]) # having a = b
   # ```
@@ -140,6 +160,7 @@ module Clear::SQL::Query::Having
   end
 
   # Build SQL `having` condition using the Expression engine.
+  #
   # ```
   # query.or_having { id == 1 }
   # ```

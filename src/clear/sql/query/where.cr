@@ -11,14 +11,18 @@ module Clear::SQL::Query::Where
   end
 
   # Build SQL `where` condition using a Clear::Expression::Node
+  #
   # ```
   # query.where(Clear::Expression::Node::InArray.new("id", ['1', '2', '3', '4']))
   # # Note: in this example, InArray node use unsafe strings
   # ```
+  #
   # If useful for moving a where clause from a request to another one:
+  #
   # ```
   # query1.where { a == b } # WHERE a = b
   # ```
+  #
   # ```
   # query2.where(query1.wheres[0]) # WHERE a = b
   # ```
@@ -29,6 +33,7 @@ module Clear::SQL::Query::Where
   end
 
   # Build SQL `where` condition using the Expression engine.
+  #
   # ```
   # query.where { id == 1 }
   # ```
@@ -41,21 +46,28 @@ module Clear::SQL::Query::Where
   end
 
   # Build SQL `where` condition using a NamedTuple.
-  #   this will use:
+  # this will use:
   # - the `=` operator if compared with a literal
+  #
   # ```
   # query.where({keyword: "hello"}) # WHERE keyword = 'hello'
   # ```
+  #
   # - the `IN` operator if compared with an array:
+  #
   # ```
   # query.where({x: [1, 2]}) # WHERE x in (1,2)
   # ```
+  #
   # - the `>=` and `<=` | `<` if compared with a range:
+  #
   # ```
   # query.where({x: (1..4)})  # WHERE x >= 1 AND x <= 4
   # query.where({x: (1...4)}) # WHERE x >= 1 AND x < 4
   # ```
+  #
   # - You also can put another select query as argument:
+  #
   # ```
   # query.where({x: another_select}) # WHERE x IN (SELECT ... )
   # ```
@@ -85,6 +97,7 @@ module Clear::SQL::Query::Where
   end
 
   # Build SQL `where` interpolating `:keyword` with the NamedTuple passed in argument.
+  #
   # ```
   # where("id = :id OR date >= :start", id: 1, start: 1.day.ago)
   # # WHERE id = 1 AND date >= '201x-xx-xx ...'
@@ -95,16 +108,19 @@ module Clear::SQL::Query::Where
 
   # Build SQL `where` condition using a template string and
   # interpolating `?` characters with parameters given in a tuple or array.
+  #
   # ```
   # where("x = ? OR y = ?", 1, "l'eau") # WHERE x = 1 OR y = 'l''eau'
   # ```
+  #
   # Raise error if there's not enough parameters to cover all the `?` placeholders
   def where(template : String, *args)
     where(Clear::Expression::Node::Raw.new(Clear::SQL.raw(template, *args)))
   end
 
   # Build custom SQL `where`
-  #   beware of SQL injections!
+  # beware of SQL injections!
+  #
   # ```
   # where("ADD_SOME_DANGEROUS_SQL_HERE") # WHERE ADD_SOME_DANGEROUS_SQL_HERE
   # ```
@@ -114,14 +130,18 @@ module Clear::SQL::Query::Where
   end
 
   # Build SQL `or_where` condition using a Clear::Expression::Node
+  #
   # ```
   # query.or_where(Clear::Expression::Node::InArray.new("id", ['1', '2', '3', '4']))
   # # Note: in this example, InArray node use unsafe strings
   # ```
+  #
   # If useful for moving a where clause from a request to another one:
+  #
   # ```
   # query1.or_where { a == b } # WHERE a = b
   # ```
+  #
   # ```
   # query2.or_where(query1.wheres[0]) # WHERE a = b
   # ```
@@ -158,6 +178,7 @@ module Clear::SQL::Query::Where
   end
 
   # Build SQL `where` condition using the Expression engine.
+  #
   # ```
   # query.or_where { id == 1 }
   # ```

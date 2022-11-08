@@ -49,6 +49,7 @@
 #
 class Clear::View
   # Call the DSL to register a new view
+  #
   # ```
   # Clear::View.register(:name) do |view|
   #   # describe the view here.

@@ -1,6 +1,5 @@
 require "./migration"
 
-#
 # The migration manager is a singleton, it load all the migrations,
 # check which one are `up` and `down`, and can trigger one or multiple
 # downgrade / upgrade of the database.
@@ -16,6 +15,7 @@ class Clear::Migration::Manager
   METADATA_VERSION = "1"
 
   # To access to the manager
+  #
   # ```
   # Clear::Migration::Manager.instance
   # ```
@@ -154,7 +154,6 @@ class Clear::Migration::Manager
     Clear::View.apply(:create)
   end
 
-  #
   # Return `true` if the migration has been commited (already applied into the database)
   # or `false` otherwise
   def commited?(m : Clear::Migration)
@@ -190,24 +189,6 @@ class Clear::Migration::Manager
     ensure_ready
     self
   end
-
-  # : nodoc:
-  # private def check_version
-  #   version = Clear::SQL.select("value").from("__clear_metadatas").where({metatype: "version"}).scalar(String)
-
-  #   if version != METADATA_VERSION
-  #     raise "The database has been initialized with a different version of Clear.\n" +
-  #           " (wanted: #{METADATA_VERSION}, current: #{version})"
-  #   end
-  # rescue e
-  #   #
-  #   # The shard `db` Must have a better exception than just "no result" in scalar fetching
-  #   # because it breaks here the code...
-  #   # TODO: Fixme
-  #   # Clear::SQL.insert_into("__clear_metadatas", {metatype: "version", value: METADATA_VERSION}).execute
-  #   #
-  #   # raise e
-  # end
 
   # :nodoc:
   private def ensure_unicity!

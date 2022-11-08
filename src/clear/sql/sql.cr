@@ -21,7 +21,7 @@ module Clear
   #
   # Clear is made like an onion:
   #
-  # ```text
+  # ```
   # +------------------------------------+
   # |           THE ORM STACK            +
   # +------------------------------------+
@@ -129,6 +129,7 @@ module Clear
     # using savepoints.
     #
     # Example:
+    #
     # ```
     # Clear::SQL.with_savepoint do
     #   # do something

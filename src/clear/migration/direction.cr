@@ -19,7 +19,6 @@
 #   dir.down { irreversible! } # Any rollback will trigger an error.
 # end
 # ```
-#
 module Clear::Migration
   enum Direction
     Up

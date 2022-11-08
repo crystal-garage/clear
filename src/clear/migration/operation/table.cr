@@ -89,7 +89,6 @@ module Clear::Migration
       )
     end
 
-    #
     # Return a safe index name from the condition string
     private def safe_index_name(str)
       str.underscore.gsub(/[^a-zA-Z0-9_]+/, "_")

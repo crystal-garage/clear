@@ -1,4 +1,3 @@
-###
 # # Clear's migration system
 #
 # Migrations in Clear are very similar to active record's migrations.
@@ -56,9 +55,6 @@
 #   end
 # end
 # ```
-#
-#
-###
 module Clear::Migration
   Log = ::Log.for("clear.migration")
 
@@ -143,7 +139,6 @@ module Clear::Migration
   macro included
     @operations : Array(Operation) = [] of Operation
 
-    #
     # Return the migration number (Unique ID or UID) for migration sorting.
     #
     # Default behavior (By order of priority):
@@ -156,8 +151,6 @@ module Clear::Migration
     #
     # `class MyMigration1234567 # << Order = 1234567`
     # `file db/1234567_my_migration.cr # << Order = 1234567`
-    #
-    #
     def uid : Int64
       Int64.new(begin
         filename = File.basename(__FILE__)
