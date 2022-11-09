@@ -9,11 +9,14 @@ module Clear::Model::HasSerialPkey
   # For `bigserial` and `serial`, let to PostgreSQL the handling of sequence numbers.
   # For `uuid`, will generate a new `UUID` number on creation.
   macro primary_key(name = "id", type = :bigserial)
-    {% # Transform symbols to string
+    # Transform symbols to string
+    {%
+      name = "#{name.id}"
+      type = "#{type.id}"
+    %}
 
- name = "#{name.id}"
- type = "#{type.id}" %}
     {% cb = PKEY_TYPE[type] %}
+
     {% if cb %}
       {{cb.gsub(/__name__/, name).id}}
     {% else %}
