@@ -65,21 +65,7 @@ module Clear::Model::ClassMethods
         end
       end
 
-      # Returns the name of the `pkey` field
-      class_property pkey : String = "id"      # <~~ FIXME
-
-      # :nodoc:
-      # FIXME
-      # @@pkey : String? = nil
-      # def self.pkey
-      #   pkey = @@pkey
-      #   raise Clear::ErrorMessages.lack_of_primary_key(self.name) unless pkey
-      #   pkey
-      # end
-      #
-      # def self.pkey=(value)
-      #   @@pkey = value
-      # end
+      class_property __pkey__ : String = "id"
 
       # :doc:
       # {{@type}}::Collection
@@ -101,7 +87,7 @@ module Clear::Model::ClassMethods
       # Returns a model using primary key equality
       # Returns `nil` if not found.
       def self.find(x)
-        query.where { raw(pkey) == x }.first
+        query.where { raw(__pkey__) == x }.first
       end
 
       # Returns a model using primary key equality.

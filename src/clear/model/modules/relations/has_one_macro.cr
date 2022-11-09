@@ -11,7 +11,7 @@ module Clear::Model::Relations::HasOneMacro
     # If the relation hasn't been cached, will call a `select` SQL operation.
     # Otherwise, will try to find in the cache.
     def {{method_name}} : {{relation_type}}?
-      %primary_key = {{(primary_key || "pkey").id}}
+      %primary_key = {{(primary_key || "__pkey__").id}}
       %foreign_key =  {{foreign_key}} || ( self.class.table.to_s.singularize + "_id" )
 
       {{relation_type}}.query.where{ raw(%foreign_key) == %primary_key }.first
@@ -22,7 +22,5 @@ module Clear::Model::Relations::HasOneMacro
     def {{method_name}}! : {{relation_type}}
       {{method_name}}.not_nil!
     end
-
-
   end
 end

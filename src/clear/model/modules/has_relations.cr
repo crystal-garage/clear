@@ -20,7 +20,7 @@ module Clear::Model::HasRelations
 
   # The method `has_one` declare a relation 1 to [0,1]
   # where the current model primary key is stored in the foreign table.
-  # `primary_key` method (default: `self#pkey`) and `foreign_key` method
+  # `primary_key` method (default: `self#__pkey__`) and `foreign_key` method
   # (default: table_name in singular, plus "_id" appended)
   # can be redefined
   #

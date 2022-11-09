@@ -2,15 +2,14 @@
 module Clear::Model::Relations::HasManyMacro
   # has many
   macro generate(self_type, method_name, relation_type, foreign_key = nil, primary_key = nil)
-    # The method {{method_name}} is a `has_many` relation
-    #   to {{relation_type}}
+    # The method {{method_name}} is a `has_many` relation to {{relation_type}}
     def {{method_name}} : {{relation_type}}::Collection
-      %primary_key = {{(primary_key || "pkey").id}}
+      %primary_key = {{(primary_key || "__pkey__").id}}
       %foreign_key =   {% if foreign_key %} "{{foreign_key}}" {% else %} (self.class.table.to_s.singularize + "_id") {% end %}
 
       cache = @cache
       query = if cache && cache.active?("{{method_name}}")
-        arr = cache.hit("{{method_name}}", {{(primary_key || "pkey").id}}_column.to_sql_value, {{relation_type}})
+        arr = cache.hit("{{method_name}}", self.__pkey_column__.to_sql_value, {{relation_type}})
 
         # This relation will trigger the cache if it exists
         {{relation_type}}.query \
@@ -38,7 +37,7 @@ module Clear::Model::Relations::HasManyMacro
       # Use it to avoid N+1 queries.
       def with_{{method_name}}(fetch_columns = false, &block : {{relation_type}}::Collection -> ) : self
         before_query do
-          %primary_key = {{(primary_key || "#{relation_type}.pkey").id}}
+          %primary_key = {{(primary_key || "#{relation_type}.__pkey__").id}}
           %foreign_key =   {% if foreign_key %} "{{foreign_key}}" {% else %} ({{self_type}}.table.to_s.singularize + "_id") {% end %}
 
           #SELECT * FROM foreign WHERE foreign_key IN ( SELECT primary_key FROM users )
@@ -50,7 +49,6 @@ module Clear::Model::Relations::HasManyMacro
           @cache.active "{{method_name}}"
 
           h = {} of Clear::SQL::Any => Array({{relation_type}})
-
 
           qry.each(fetch_columns: true) do |mdl|
             unless h[mdl.attributes[%foreign_key]]?
@@ -72,6 +70,5 @@ module Clear::Model::Relations::HasManyMacro
         with_{{method_name}}(fetch_columns){|q|} #empty block
       end
     end
-
   end
 end
