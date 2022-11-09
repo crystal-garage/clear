@@ -1,73 +1,7 @@
-class Tag
-  include Clear::Model
-
-  column id : Int32, primary: true, presence: false
-
-  column name : String
-
-  has_many posts : Post, through: :post_tags, foreign_key: :post_id, own_key: :tag_id
-end
-
-class PostTag
-  include Clear::Model
-
-  belongs_to post : Post, foreign_key_type: Int32?
-  belongs_to tag : Tag, foreign_key_type: Int32?
-end
-
-class Category
-  include Clear::Model
-
-  column id : Int32, primary: true, presence: false
-
-  column name : String
-
-  has_many posts : Post
-  has_many users : User, through: Post, foreign_key: :user_id, own_key: :category_id
-
-  timestamps
-end
-
-class Post
-  include Clear::Model
-
-  column id : Int32, primary: true, presence: false
-
-  column title : String
-
-  column tags : Array(String), presence: false
-  column flags : Array(Int64), presence: false, column_name: "flags_other_column_name"
-
-  column content : String, presence: false
-
-  column published : Bool, presence: false
-
-  scope("published") { where published: true }
-
-  def validate
-    ensure_than(title, "is not empty", &.size.>(0))
-  end
-
-  has_many post_tags : PostTag, foreign_key: "post_id"
-  has_many tag_relations : Tag, through: :post_tags, foreign_key: :tag_id, own_key: :post_id
-
-  belongs_to user : User, foreign_key_type: Int32?
-  belongs_to category : Category, foreign_key_type: Int32?
-end
-
-class UserInfo
-  include Clear::Model
-
-  column id : Int32, primary: true, presence: false
-
-  belongs_to user : User, foreign_key_type: Int32?
-  column registration_number : Int64
-end
-
 class User
   include Clear::Model
 
-  column id : Int32, primary: true, presence: false
+  primary_key
 
   column first_name : String
   column last_name : String?
@@ -95,6 +29,72 @@ class User
   def full_name
     {self.first_name, self.last_name}.join(" ")
   end
+end
+
+class Post
+  include Clear::Model
+
+  primary_key
+
+  column title : String
+
+  column tags : Array(String), presence: false
+  column flags : Array(Int64), presence: false, column_name: "flags_other_column_name"
+
+  column content : String, presence: false
+
+  column published : Bool, presence: false
+
+  scope("published") { where published: true }
+
+  def validate
+    ensure_than(title, "title: is empty", &.size.>(0))
+  end
+
+  has_many post_tags : PostTag, foreign_key: "post_id"
+  has_many tag_relations : Tag, through: :post_tags, foreign_key: :tag_id, own_key: :post_id
+
+  belongs_to user : User
+  belongs_to category : Category, foreign_key_type: Int32?
+end
+
+class UserInfo
+  include Clear::Model
+
+  column id : Int32, primary: true, presence: false
+
+  belongs_to user : User, foreign_key_type: Int64?
+  column registration_number : Int64
+end
+
+class Tag
+  include Clear::Model
+
+  column id : Int32, primary: true, presence: false
+
+  column name : String
+
+  has_many posts : Post, through: :post_tags, foreign_key: :post_id, own_key: :tag_id
+end
+
+class PostTag
+  include Clear::Model
+
+  belongs_to post : Post, foreign_key_type: Int64?
+  belongs_to tag : Tag, foreign_key_type: Int32?
+end
+
+class Category
+  include Clear::Model
+
+  column id : Int32, primary: true, presence: false
+
+  column name : String
+
+  has_many posts : Post
+  has_many users : User, through: Post, foreign_key: :user_id, own_key: :category_id
+
+  timestamps
 end
 
 class Relationship
@@ -220,5 +220,6 @@ end
 
 def self.reinit_example_models
   reinit_migration_manager
+
   ModelSpecMigration123.new.apply
 end
