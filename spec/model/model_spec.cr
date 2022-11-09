@@ -3,6 +3,44 @@ require "../data/example_models"
 
 module ModelSpec
   describe "Clear::Model" do
+    context "#build" do
+      it "can build empty model" do
+        temporary do
+          reinit_example_models
+
+          user = User.build # first_name: must be present
+
+          user.persisted?.should be_false
+          user.valid?.should be_false
+        end
+      end
+
+      it "can build with arguments" do
+        temporary do
+          reinit_example_models
+
+          user = User.build(first_name: "name")
+
+          user.persisted?.should be_false
+          user.valid?.should be_true
+        end
+      end
+
+      it "can build with block" do
+        temporary do
+          reinit_example_models
+
+          user = User.build(first_name: "John") do |u|
+            u.last_name = "Doe"
+          end
+
+          user.persisted?.should be_false
+          user.valid?.should be_true
+          user.full_name.should eq("John Doe")
+        end
+      end
+    end
+
     context "#create!" do
       it "can create with parameters" do
         temporary do
@@ -21,6 +59,20 @@ module ModelSpec
           reinit_example_models
 
           user = User.create!({first_name: "John", last_name: "Doe"})
+
+          user.persisted?.should be_true
+          User.query.count.should eq(1)
+          User.query.first!.full_name.should eq("John Doe")
+        end
+      end
+
+      it "can create from relation with block" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!(first_name: "John") do |u|
+            u.last_name = "Doe"
+          end
 
           user.persisted?.should be_true
           User.query.count.should eq(1)
@@ -47,6 +99,20 @@ module ModelSpec
           reinit_example_models
 
           user = User.create({first_name: "John", last_name: "Doe"})
+
+          user.persisted?.should be_true
+          User.query.count.should eq(1)
+          User.query.first!.full_name.should eq("John Doe")
+        end
+      end
+
+      it "can create from relation with block" do
+        temporary do
+          reinit_example_models
+
+          user = User.create({first_name: "John"}) do |u|
+            u.last_name = "Doe"
+          end
 
           user.persisted?.should be_true
           User.query.count.should eq(1)
