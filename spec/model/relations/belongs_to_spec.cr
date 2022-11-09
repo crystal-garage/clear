@@ -65,7 +65,7 @@ module BelongsToSpec
         }
 
         5.times do |x|
-          Post.create!(user: users.sample, title: "title")
+          Post.create!(user: users.sample, title: "title #{x}")
         end
 
         post_call = 0

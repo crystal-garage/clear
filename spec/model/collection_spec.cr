@@ -36,7 +36,7 @@ module CollectionSpec
 
           user = User.create!(first_name: "name")
 
-          post = user.posts.build { |p| p.title = "title" }
+          post = user.posts.build(&.title=("title"))
 
           post.persisted?.should be_false
           post.valid?.should be_true
@@ -65,7 +65,7 @@ module CollectionSpec
 
           user = User.create!(first_name: "name")
 
-          post = user.posts.create { |p| p.title = "title" }
+          post = user.posts.create(&.title=("title"))
 
           post.persisted?.should be_true
           post.user.id.should eq(user.id)
@@ -108,7 +108,7 @@ module CollectionSpec
 
           user = User.create!(first_name: "name")
 
-          post = user.posts.create! { |p| p.title = "title" }
+          post = user.posts.create!(&.title=("title"))
 
           post.user.id.should eq(user.id)
           user.posts.count.should eq(1)
