@@ -121,16 +121,11 @@ module Clear::Model::ClassMethods
         \\{% end %}
       end
 
-      # :ditto:
-      def self.create(**tuple) : self
-        create(**tuple) { }
-      end
-
       # Build and new model and save it. Returns the model.
       #
       # The model may not be saved due to validation failure;
       # check the returned model `errors?` and `persisted?` flags.
-      def self.create(**tuple) : self
+      def self.create(**tuple, &block : self -> Nil) : self
         r = build(**tuple) do |mdl|
           yield(mdl)
         end
@@ -141,19 +136,32 @@ module Clear::Model::ClassMethods
       end
 
       # :ditto:
-      def self.create(x : NamedTuple, &block) : self
-        r = build(**x) do |mdl|
-          yield(mdl)
-        end
-
-        r.save
-
-        r
+      def self.create(**tuple) : self
+        create(**tuple) { }
       end
 
       # :ditto:
       def self.create(x : NamedTuple) : self
-        create(**x)
+        create(**x) { }
+      end
+
+      # :ditto:
+      def self.create(x : NamedTuple, &block : self -> Nil) : self
+        create(**x, &block)
+      end
+
+      # Build and new model and save it. Returns the model.
+      #
+      # Returns the newly inserted model
+      # Raises an exception if validation failed during the saving process.
+      def self.create!(**tuple, &block : self -> Nil) : self
+        r = build(**tuple) do |mdl|
+          yield(mdl)
+        end
+
+        r.save!
+
+        r
       end
 
       # :ditto:
@@ -161,34 +169,14 @@ module Clear::Model::ClassMethods
         create!(**tuple) { }
       end
 
-      # Build and new model and save it. Returns the model.
-      #
-      # Returns the newly inserted model
-      # Raises an exception if validation failed during the saving process.
-      def self.create!(**tuple, &block) : self
-        r = build(**tuple) do |mdl|
-          yield(mdl)
-        end
-
-        r.save!
-
-        r
-      end
-
-      # :ditto:
-      def self.create!(x : NamedTuple, &block) : self
-        r = build(**x) do |mdl|
-          yield(mdl)
-        end
-
-        r.save!
-
-        r
-      end
-
       # :ditto:
       def self.create!(x : NamedTuple) : self
-        create!(**x)
+        create!(**x) { }
+      end
+
+      # :ditto:
+      def self.create!(x : NamedTuple, &block : self -> Nil) : self
+        create!(**x, &block)
       end
 
       def self.columns

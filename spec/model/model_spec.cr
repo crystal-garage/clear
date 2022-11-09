@@ -70,13 +70,18 @@ module ModelSpec
         temporary do
           reinit_example_models
 
-          user = User.create!(first_name: "John") do |u|
+          user1 = User.create!({first_name: "John"}) do |u|
             u.last_name = "Doe"
           end
 
-          user.persisted?.should be_true
-          User.query.count.should eq(1)
-          User.query.first!.full_name.should eq("John Doe")
+          user2 = User.create!(first_name: "Jane") do |u|
+            u.last_name = "Doe"
+          end
+
+          User.query.count.should eq(2)
+
+          user1.full_name.should eq("John Doe")
+          user2.full_name.should eq("Jane Doe")
         end
       end
     end
@@ -110,13 +115,18 @@ module ModelSpec
         temporary do
           reinit_example_models
 
-          user = User.create({first_name: "John"}) do |u|
+          user1 = User.create({first_name: "John"}) do |u|
             u.last_name = "Doe"
           end
 
-          user.persisted?.should be_true
-          User.query.count.should eq(1)
-          User.query.first!.full_name.should eq("John Doe")
+          user2 = User.create(first_name: "Jane") do |u|
+            u.last_name = "Doe"
+          end
+
+          User.query.count.should eq(2)
+
+          user1.full_name.should eq("John Doe")
+          user2.full_name.should eq("Jane Doe")
         end
       end
     end
