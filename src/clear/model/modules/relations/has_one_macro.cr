@@ -14,7 +14,7 @@ module Clear::Model::Relations::HasOneMacro
       %primary_key = {{(primary_key || "__pkey__").id}}
       %foreign_key =  {{foreign_key}} || ( self.class.table.to_s.singularize + "_id" )
 
-      {{relation_type}}.query.where{ raw(%foreign_key) == %primary_key }.first
+      {{relation_type}}.query.where { raw(%foreign_key) == %primary_key }.first
     end
 
     # Return the related model `{{method_name}}`,

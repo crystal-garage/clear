@@ -6,29 +6,42 @@ module Clear::Model::Relations::HasManyThroughMacro
       %final_table = {{relation_type}}.table
       %final_pkey = {{relation_type}}.__pkey__
 
-      %through_table = {% if through.is_a?(Path) %}
-        {{through}}.table
-      {% else %}
-        {{through.id.stringify}}
-      {% end %}
+      %through_table =
+        {% if through.is_a?(Path) %}
+          {{through}}.table
+        {% else %}
+          {{through.id.stringify}}
+        {% end %}
 
-      %through_key = {% if foreign_key %} "{{foreign_key}}" {% else %} {{relation_type}}.table.to_s.singularize + "_id" {% end %}
+      %through_key =
+        {% if foreign_key %}
+          "{{foreign_key}}"
+        {% else %}
+          {{relation_type}}.table.to_s.singularize + "_id"
+        {% end %}
 
-      %own_key = {% if own_key %} "{{own_key}}" {% else %} {{self_type}}.table.to_s.singularize + "_id" {% end %}
+      %own_key =
+        {% if own_key %}
+          "{{own_key}}"
+        {% else %}
+          {{self_type}}.table.to_s.singularize + "_id"
+        {% end %}
 
       cache = @cache
 
       current_model_id = self.__pkey__
 
-      qry = {{relation_type}}.query.select("#{Clear::SQL.escape(%final_table)}.*")
-        .join(Clear::SQL.escape(%through_table)){
-          var(%through_table, %through_key) == var(%final_table, %final_pkey)
-        }.where{
-          var(%through_table, %own_key) == current_model_id
-        }.distinct("#{Clear::SQL.escape(%final_table)}.#{Clear::SQL.escape(%final_pkey)}")
+      qry =
+        {{relation_type}}.query.select("#{Clear::SQL.escape(%final_table)}.*")
+          .join(Clear::SQL.escape(%through_table))  {
+            var(%through_table, %through_key) == var(%final_table, %final_pkey)
+          }.where {
+            var(%through_table, %own_key) == current_model_id
+          }.distinct("#{Clear::SQL.escape(%final_table)}.#{Clear::SQL.escape(%final_pkey)}")
 
       if cache && cache.active?("{{method_name}}")
         arr = cache.hit("{{method_name}}", self.__pkey_column__.to_sql_value, {{relation_type}})
+
         qry.with_cached_result(arr)
       end
 
@@ -48,6 +61,7 @@ module Clear::Model::Relations::HasManyThroughMacro
             "#{%through_key}" => x.__pkey__
           }).execute
         {% end %}
+
         x
       }
 
@@ -79,8 +93,19 @@ module Clear::Model::Relations::HasManyThroughMacro
           %final_pkey = {{relation_type}}.__pkey__
           %through_table = {{through}}.table
 
-          %through_key = {% if foreign_key %} "{{foreign_key}}" {% else %} {{relation_type}}.table.to_s.singularize + "_id" {% end %}
-          %own_key = {% if own_key %} "{{own_key}}" {% else %} {{self_type}}.table.to_s.singularize + "_id" {% end %}
+          %through_key =
+            {% if foreign_key %}
+              "{{foreign_key}}"
+            {% else %}
+              {{relation_type}}.table.to_s.singularize + "_id"
+            {% end %}
+
+          %own_key =
+            {% if own_key %}
+              "{{own_key}}"
+            {% else %}
+              {{self_type}}.table.to_s.singularize + "_id"
+            {% end %}
 
           self_type = {{self_type}}
 
@@ -88,9 +113,9 @@ module Clear::Model::Relations::HasManyThroughMacro
 
           sub_query = self.dup.clear_select.select("#{{{self_type}}.table}.#{self_type.__pkey__}")
 
-          qry = {{relation_type}}.query.join(%through_table){
+          qry = {{relation_type}}.query.join(%through_table) {
             var(%through_table, %through_key) == var(%final_table, %final_pkey)
-          }.where{
+          }.where {
             var(%through_table, %own_key).in?(sub_query)
           }.distinct.select( "#{Clear::SQL.escape(%final_table)}.*",
             "#{Clear::SQL.escape(%through_table)}.#{Clear::SQL.escape(%own_key)} AS __own_id"
