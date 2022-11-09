@@ -12,9 +12,5 @@ class Clear::Reflection::Column
   column table_name : String
   column column_name : String, primary: true
 
-  belongs_to table : Clear::Reflection::Table?, foreign_key: "table_name", key_type: String
-
-  # def table : Clear::Reflection::Table
-  #   Column.query.where { var("table_name") == self.table_name }.first
-  # end
+  belongs_to table : Clear::Reflection::Table?, foreign_key: "table_name", foreign_key_type: String
 end

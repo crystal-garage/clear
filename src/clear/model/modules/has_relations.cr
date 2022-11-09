@@ -115,7 +115,7 @@ module Clear::Model::HasRelations
   #   belongs_to user : User, foreign_key: "the_user_id"
   #
   # ```
-  macro belongs_to(name, foreign_key = nil, no_cache = false, primary = false, key_type = Int64)
+  macro belongs_to(name, foreign_key = nil, no_cache = false, primary = false, foreign_key_type = Int64)
     {%
       foreign_key = foreign_key.id if foreign_key.is_a?(SymbolLiteral) || foreign_key.is_a?(StringLiteral)
 
@@ -134,19 +134,19 @@ module Clear::Model::HasRelations
       end
 
       if nilable
-        unless key_type.resolve.nilable?
-          key_type = "#{key_type.id}?".id
+        unless foreign_key_type.resolve.nilable?
+          foreign_key_type = "#{foreign_key_type.id}?".id
         end
       end
 
       RELATIONS[name.var.id] = {
-        relation_type: :belongs_to,
-        type:          type,
-        foreign_key:   foreign_key,
-        nilable:       nilable,
-        primary:       primary,
-        no_cache:      no_cache,
-        key_type:      key_type,
+        relation_type:    :belongs_to,
+        type:             type,
+        foreign_key:      foreign_key,
+        nilable:          nilable,
+        primary:          primary,
+        no_cache:         no_cache,
+        foreign_key_type: foreign_key_type,
       }
     %}
   end
@@ -158,7 +158,7 @@ module Clear::Model::HasRelations
     {% for name, settings in RELATIONS %}
       {% if settings[:relation_type] == :belongs_to %}
         Relations::BelongsToMacro.generate({{@type}}, {{name}}, {{settings[:type]}}, {{settings[:nilable]}}, {{settings[:foreign_key]}},
-          {{settings[:primary]}}, {{settings[:no_cache]}}, {{settings[:key_type]}})
+          {{settings[:primary]}}, {{settings[:no_cache]}}, {{settings[:foreign_key_type]}})
       {% elsif settings[:relation_type] == :has_many %}
         Relations::HasManyMacro.generate({{@type}}, {{name}}, {{settings[:type]}}, {{settings[:foreign_key]}},
           {{settings[:primary_key]}})

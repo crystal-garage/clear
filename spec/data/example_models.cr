@@ -11,8 +11,8 @@ end
 class PostTag
   include Clear::Model
 
-  belongs_to post : Post, key_type: Int32?
-  belongs_to tag : Tag, key_type: Int32?
+  belongs_to post : Post, foreign_key_type: Int32?
+  belongs_to tag : Tag, foreign_key_type: Int32?
 end
 
 class Category
@@ -51,8 +51,8 @@ class Post
   has_many post_tags : PostTag, foreign_key: "post_id"
   has_many tag_relations : Tag, through: :post_tags, foreign_key: :tag_id, own_key: :post_id
 
-  belongs_to user : User, key_type: Int32?
-  belongs_to category : Category, key_type: Int32?
+  belongs_to user : User, foreign_key_type: Int32?
+  belongs_to category : Category, foreign_key_type: Int32?
 end
 
 class UserInfo
@@ -60,7 +60,7 @@ class UserInfo
 
   column id : Int32, primary: true, presence: false
 
-  belongs_to user : User, key_type: Int32?
+  belongs_to user : User, foreign_key_type: Int32?
   column registration_number : Int64
 end
 

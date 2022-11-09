@@ -1,6 +1,6 @@
 # :nodoc:
 module Clear::Model::Relations::BelongsToMacro
-  macro generate(self_type, method_name, relation_type, nilable, foreign_key, primary, no_cache, key_type)
+  macro generate(self_type, method_name, relation_type, nilable, foreign_key, primary, no_cache, foreign_key_type)
     {% foreign_key = foreign_key || method_name.stringify.underscore + "_id" %}
 
     {%
@@ -11,7 +11,7 @@ module Clear::Model::Relations::BelongsToMacro
       end
     %}
 
-    column {{foreign_key.id}} : {{key_type}}, primary: {{primary}}, presence: {{nilable}}
+    column {{foreign_key.id}} : {{foreign_key_type}}, primary: {{primary}}, presence: {{nilable}}
     getter _cached_{{method_name}} : {{relation_type}}?
 
     protected def invalidate_caching
