@@ -111,8 +111,15 @@ module Clear::Model::ClassMethods
       #
       # The model may not be saved due to validation failure;
       # check the returned model `errors?` and `persisted?` flags.
-      def self.create(**args) : self
-        mdl = build(**args)
+      def self.create(**tuple) : self
+        mdl = build(**tuple)
+        mdl.save
+        mdl
+      end
+
+      # :ditto:
+      def self.create(x : NamedTuple) : self
+        mdl = build(**x)
         mdl.save
         mdl
       end
@@ -124,42 +131,6 @@ module Clear::Model::ClassMethods
       def self.create!(**args) : self
         mdl = build(**args)
         mdl.save!
-        mdl
-      end
-
-      def self.create!(a : Hash) : self
-        mdl = self.new(a)
-        mdl.save!
-        mdl
-      end
-
-      def self.create(x : Hash) : self
-        mdl = self.new(a)
-        mdl.save
-        mdl
-      end
-
-      # Multi-models creation. See `Collection#create(**args)`
-      #
-      # Returns the list of newly created model.
-      #
-      # Each model will call an `INSERT` query.
-      # You may want to use `Collection#import` to insert multiple model more efficiently in one query.
-      def self.create(x : Array(NamedTuple)) : Array(self)
-        x.map { |elm| create(**elm) }
-      end
-
-      # Multi-models creation. See `Collection#create!(**args)`
-      #
-      # Returns the list of newly created model.
-      # Raises exception if any of the model has validation error.
-      def self.create!(x : Array(NamedTuple)) : Array(self)
-        x.map { |elm| create!(**elm) }
-      end
-
-      def self.create(x : NamedTuple) : self
-        mdl = build(**x)
-        mdl.save
         mdl
       end
 

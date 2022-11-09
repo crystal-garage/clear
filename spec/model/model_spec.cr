@@ -3,6 +3,58 @@ require "../data/example_models"
 
 module ModelSpec
   describe "Clear::Model" do
+    context "#create!" do
+      it "can create with parameters" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!(first_name: "John", last_name: "Doe")
+
+          user.persisted?.should be_true
+          User.query.count.should eq(1)
+          User.query.first!.full_name.should eq("John Doe")
+        end
+      end
+
+      it "can create with NamedTuple" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!({first_name: "John", last_name: "Doe"})
+
+          user.persisted?.should be_true
+          User.query.count.should eq(1)
+          User.query.first!.full_name.should eq("John Doe")
+        end
+      end
+    end
+
+    context "#create" do
+      it "can create with parameters" do
+        temporary do
+          reinit_example_models
+
+          user = User.create(first_name: "John", last_name: "Doe")
+
+          user.persisted?.should be_true
+          User.query.count.should eq(1)
+          User.query.first!.full_name.should eq("John Doe")
+        end
+      end
+
+      it "can create with NamedTuple" do
+        temporary do
+          reinit_example_models
+
+          user = User.create({first_name: "John", last_name: "Doe"})
+
+          user.persisted?.should be_true
+          User.query.count.should eq(1)
+          User.query.first!.full_name.should eq("John Doe")
+        end
+      end
+    end
+
     context "fields management" do
       it "can load from tuple" do
         temporary do
