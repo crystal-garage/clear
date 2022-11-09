@@ -29,7 +29,6 @@ crystal $CMD migrate #Go to the version 3
 crystal $CMD migration status # Version 1,2,3 loaded
 crystal $CMD rollback #Rollback to 2
 
-
 crystal $CMD migration status # Version 1,2 loaded
 
 crystal $CMD migration down 1 # Remove 1

@@ -6,7 +6,6 @@
 # It helps to keep a consistent database state during development lifecycle
 # of your application.
 #
-#
 # To create a migration, two ways:
 #
 # ## Clear command

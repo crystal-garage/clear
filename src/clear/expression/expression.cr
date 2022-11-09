@@ -314,8 +314,6 @@ class Clear::Expression
   # var("template1", "users.table2", "name") # "template1"."users.table2"."name"
   # var("order")                             # "order"
   # ```
-  #
-  #
   def var(*parts)
     _var(parts)
   end

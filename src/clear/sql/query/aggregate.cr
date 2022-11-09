@@ -3,8 +3,6 @@ module Clear::SQL::Query::Aggregate
   #
   # as count return always a scalar, the usage of `COUNT(*) OVER GROUP BY` can be done by
   # using `pluck` or `select`
-  #
-  #
   def count(type : X.class = Int64) forall X
     # save the `select` column clause to ensure non-mutability of the query
     columns = @columns.dup

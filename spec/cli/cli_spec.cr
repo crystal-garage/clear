@@ -16,4 +16,3 @@ require "../spec_helper"
 #     Clear::CLI.run("generate", "--list")
 #   end
 # end
-# end
