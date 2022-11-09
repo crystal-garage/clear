@@ -96,6 +96,17 @@ module Clear::Model::ClassMethods
         find(x) || raise Clear::SQL::RecordNotFoundError.new
       end
 
+      # Build a new empty model and fill the columns using the NamedTuple in argument.
+      #
+      # Returns the new model
+      def self.build(**x : **T) forall T
+        \\{% if T.size > 0 %}
+          self.new(x)
+        \\{% else %}
+          self.new
+        \\{% end %}
+      end
+
       # :ditto:
       def self.build(**tuple)
         build(**tuple) { }
@@ -108,17 +119,6 @@ module Clear::Model::ClassMethods
         yield(r)
 
         r
-      end
-
-      # Build a new empty model and fill the columns using the NamedTuple in argument.
-      #
-      # Returns the new model
-      def self.build(**x : **T) forall T
-        \\{% if T.size > 0 %}
-          self.new(x)
-        \\{% else %}
-          self.new
-        \\{% end %}
       end
 
       # Build and new model and save it. Returns the model.
