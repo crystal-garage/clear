@@ -3,6 +3,131 @@ require "../data/example_models"
 
 module CollectionSpec
   describe Clear::Model::CollectionBase do
+    describe "#build" do
+      it "can build from relation" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!(first_name: "name")
+
+          post = user.posts.build(title: "title")
+
+          post.persisted?.should be_false
+          post.valid?.should be_true
+        end
+      end
+
+      it "can build from relation without params" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!(first_name: "name")
+
+          post = user.posts.build
+
+          post.persisted?.should be_false
+          post.valid?.should be_false
+        end
+      end
+
+      it "can build from relation with block" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!(first_name: "name")
+
+          post = user.posts.build { |p| p.title = "title" }
+
+          post.persisted?.should be_false
+          post.valid?.should be_true
+        end
+      end
+    end
+
+    describe "#create" do
+      it "can create from relation" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!(first_name: "name")
+
+          post = user.posts.create(title: "title")
+
+          post.persisted?.should be_true
+          post.user.id.should eq(user.id)
+          user.posts.count.should eq(1)
+        end
+      end
+
+      it "can create from relation with block" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!(first_name: "name")
+
+          post = user.posts.create { |p| p.title = "title" }
+
+          post.persisted?.should be_true
+          post.user.id.should eq(user.id)
+          user.posts.count.should eq(1)
+        end
+      end
+
+      it "return self if validation failed" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!(first_name: "name")
+
+          post = user.posts.create(title: "")
+
+          post.valid?.should be_false
+          post.errors.size.should eq(1)
+          post.errors[0].reason.should eq("title: is empty")
+        end
+      end
+    end
+
+    describe "#create!" do
+      it "can create from relation" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!(first_name: "name")
+
+          post = user.posts.create!(title: "title")
+
+          post.user.id.should eq(user.id)
+          user.posts.count.should eq(1)
+        end
+      end
+
+      it "can create from relation with block" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!(first_name: "name")
+
+          post = user.posts.create! { |p| p.title = "title" }
+
+          post.user.id.should eq(user.id)
+          user.posts.count.should eq(1)
+        end
+      end
+
+      it "raise exception if validation failed" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!(first_name: "name")
+
+          expect_raises(Clear::Model::InvalidError) do
+            post = user.posts.create!(title: "")
+          end
+        end
+      end
+    end
+
     it "[] / []?" do
       temporary do
         reinit_example_models

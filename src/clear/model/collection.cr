@@ -374,14 +374,70 @@ module Clear::Model
       Clear::Model::Factory.build(T, @tags, persisted: false)
     end
 
+    # :ditto:
+    def build(**tuple) : T
+      build(**tuple) { }
+    end
+
     # Build a new collection; if the collection comes from a has_many relation
     # (e.g. `my_model.associations.build`), the foreign column which store
     # the primary key of `my_model` will be setup by default, preventing you
     # to forget it.
     # You can pass extra parameters using a named tuple:
     # `my_model.associations.build({a_column: "value"}) `
-    def build(x : NamedTuple) : T
-      Clear::Model::Factory.build(T, @tags.merge(x.to_h), persisted: false)
+    def build(**tuple, &block : T -> Nil) : T
+      str_hash = @tags.dup
+      tuple.map { |k, v| str_hash[k.to_s] = v }
+
+      r = Clear::Model::Factory.build(T, str_hash, persisted: false)
+
+      yield(r)
+
+      r
+    end
+
+    # Build a new object and setup
+    # the fields like setup in the condition tuple.
+    # Just after building, save the object.
+    def create(**tuple) : T
+      r = build(**tuple)
+
+      r.save
+
+      r
+    end
+
+    # :ditto:
+    def create(**tuple, &block : T -> Nil) : T
+      r = build(**tuple) do |mdl|
+        yield(mdl)
+      end
+
+      r.save
+
+      r
+    end
+
+    # Build a new object and setup
+    # the fields like setup in the condition tuple.
+    # Just after building, save the object.
+    # But instead of returning self if validation failed,
+    # raise `Clear::Model::InvalidError` exception
+    def create!(**tuple) : T
+      r = build(**tuple)
+
+      r.save!
+      r
+    end
+
+    # :ditto:
+    def create!(**tuple, &block : T -> Nil) : T
+      r = build(**tuple) do |mdl|
+        yield(mdl)
+      end
+
+      r.save!
+      r
     end
 
     # Check whether the query return any row.
