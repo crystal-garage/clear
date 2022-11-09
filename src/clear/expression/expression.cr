@@ -345,7 +345,7 @@ class Clear::Expression
   # Used internally by the expression engine.
   macro method_missing(call)
      {% if call.args.size > 0 %}
-       args = {{call.args}}.map{ |x| Clear::Expression[x] }
+       args = {{call.args}}.map { |x| Clear::Expression[x] }
        return Node::Function.new("{{call.name.id}}", args)
      {% else %}
        return Node::Variable.new({{call.name.id.stringify}})

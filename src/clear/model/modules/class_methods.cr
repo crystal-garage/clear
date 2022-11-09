@@ -58,7 +58,7 @@ module Clear::Model::ClassMethods
       # ex: "schema"."table"
       def self.full_table_name
         if s = schema
-          {schema, table}.map{ |x| Clear::SQL.escape(x.to_s) }.join(".")
+          {schema, table}.map { |x| Clear::SQL.escape(x.to_s) }.join(".")
         else
           # Default schema
           Clear::SQL.escape(table)
@@ -146,7 +146,7 @@ module Clear::Model::ClassMethods
       # Each model will call an `INSERT` query.
       # You may want to use `Collection#import` to insert multiple model more efficiently in one query.
       def self.create(x : Array(NamedTuple)) : Array(self)
-        x.map{ |elm| create(**elm) }
+        x.map { |elm| create(**elm) }
       end
 
       # Multi-models creation. See `Collection#create!(**args)`
@@ -154,7 +154,7 @@ module Clear::Model::ClassMethods
       # Returns the list of newly created model.
       # Raises exception if any of the model has validation error.
       def self.create!(x : Array(NamedTuple)) : Array(self)
-        x.map{ |elm| create!(**elm) }
+        x.map { |elm| create!(**elm) }
       end
 
       def self.create(x : NamedTuple) : self
