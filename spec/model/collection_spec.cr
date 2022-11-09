@@ -59,6 +59,20 @@ module CollectionSpec
         end
       end
 
+      it "can create from relation with NameTuple" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!(first_name: "name")
+
+          post = user.posts.create({title: "title"})
+
+          post.persisted?.should be_true
+          post.user.id.should eq(user.id)
+          user.posts.count.should eq(1)
+        end
+      end
+
       it "can create from relation with block" do
         temporary do
           reinit_example_models

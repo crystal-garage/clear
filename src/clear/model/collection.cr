@@ -396,18 +396,14 @@ module Clear::Model
       r
     end
 
+    # :ditto:
+    def create(**tuple) : T
+      create(**tuple) { }
+    end
+
     # Build a new object and setup
     # the fields like setup in the condition tuple.
     # Just after building, save the object.
-    def create(**tuple) : T
-      r = build(**tuple)
-
-      r.save
-
-      r
-    end
-
-    # :ditto:
     def create(**tuple, &block : T -> Nil) : T
       r = build(**tuple) do |mdl|
         yield(mdl)
@@ -418,19 +414,21 @@ module Clear::Model
       r
     end
 
+    # :ditto:
+    def create(x : NamedTuple) : T
+      create(**x)
+    end
+
+    # :ditto:
+    def create!(**tuple) : T
+      create!(**tuple) { }
+    end
+
     # Build a new object and setup
     # the fields like setup in the condition tuple.
     # Just after building, save the object.
     # But instead of returning self if validation failed,
     # raise `Clear::Model::InvalidError` exception
-    def create!(**tuple) : T
-      r = build(**tuple)
-
-      r.save!
-      r
-    end
-
-    # :ditto:
     def create!(**tuple, &block : T -> Nil) : T
       r = build(**tuple) do |mdl|
         yield(mdl)
