@@ -3,7 +3,7 @@ require "../data/example_models"
 
 module CollectionSpec
   describe Clear::Model::CollectionBase do
-    context "query" do
+    describe "with query" do
       context "#build" do
         it "can build empty model" do
           temporary do
@@ -238,7 +238,7 @@ module CollectionSpec
       end
     end
 
-    context "with relation" do
+    describe "with relation" do
       describe "#build" do
         it "can build from relation" do
           temporary do
@@ -388,9 +388,10 @@ module CollectionSpec
             post1 = user.posts.create!(title: "title1")
             post2 = user.posts.where(title: "title1").find_or_create
             post3 = user.posts.where(title: "title2").find_or_create
+            post4 = user.posts.find_or_create(title: "title3")
 
             post1.user.id.should eq(user.id)
-            user.posts.count.should eq(2)
+            user.posts.count.should eq(3)
           end
         end
 
@@ -404,12 +405,73 @@ module CollectionSpec
             tag = Tag.create!(name: "Tag1")
             post.tag_relations << tag
 
-            # FIXME: this can be use instead above
+            # FIXME: these can be use instead above
+            # tag = post.tag_relations.create!(name: "Tag1")
             # tag = post.tag_relations.find_or_create(name: "Tag1")
 
             Tag.query.count.should eq(1)
             PostTag.query.count.should eq(1)
           end
+        end
+      end
+    end
+
+    context "#where" do
+      it "with find_or_create" do
+        temporary do
+          reinit_example_models
+
+          10.times do |x|
+            User.create! first_name: "user #{x}"
+          end
+
+          # already existing stuff
+          User.query.where(first_name: "user 1").count.should eq(1)
+          rec = User.query.find_or_create(first_name: "user 1") do
+            raise "Should not initialize the model"
+          end
+
+          rec.persisted?.should be_true
+          User.query.where(first_name: "user 1").count.should eq(1)
+
+          User.query.where(first_name: "not_exist").count.should eq(0)
+          rec = User.query.find_or_create(first_name: "not_exist") do |usr|
+            usr.last_name = "now_it_exists"
+          end
+          rec.persisted?.should be_true
+          User.query.where(last_name: "now_it_exists").count.should eq(1)
+
+          # with @tags metadata of the collection it should infer the where clause
+          usr = User.query.where(first_name: "Sarah", last_name: "Connor").find_or_create
+          usr.persisted?.should be_true
+          usr.first_name.should eq("Sarah")
+          usr.last_name.should eq("Connor")
+        end
+      end
+
+      it "with find_or_build" do
+        # same test than find_or_create, persistance check changing.
+        temporary do
+          reinit_example_models
+
+          10.times do |x|
+            User.create! first_name: "user #{x}"
+          end
+
+          # already existing stuff
+          User.query.where(first_name: "user 1").count.should eq(1)
+          rec = User.query.find_or_build(first_name: "user 1") do
+            raise "Should not initialize the model"
+          end
+
+          rec.persisted?.should be_true
+          User.query.where(first_name: "user 1").count.should eq(1)
+
+          # with @tags metadata of the collection it should infer the where clause
+          usr = User.query.where(first_name: "Sarah", last_name: "Connor").find_or_build
+          usr.persisted?.should be_false
+          usr.first_name.should eq("Sarah")
+          usr.last_name.should eq("Connor")
         end
       end
     end
@@ -471,64 +533,6 @@ module CollectionSpec
              }
           (post.id).should eq(post2.id)
         end
-      end
-    end
-
-    it "find_or_create" do
-      temporary do
-        reinit_example_models
-
-        10.times do |x|
-          User.create! first_name: "user #{x}"
-        end
-
-        # already existing stuff
-        User.query.where(first_name: "user 1").count.should eq(1)
-        rec = User.query.find_or_create(first_name: "user 1") do
-          raise "Should not initialize the model"
-        end
-
-        rec.persisted?.should be_true
-        User.query.where(first_name: "user 1").count.should eq(1)
-
-        User.query.where(first_name: "not_exist").count.should eq(0)
-        rec = User.query.find_or_create(first_name: "not_exist") do |usr|
-          usr.last_name = "now_it_exists"
-        end
-        rec.persisted?.should be_true
-        User.query.where(last_name: "now_it_exists").count.should eq(1)
-
-        # with @tags metadata of the collection it should infer the where clause
-        usr = User.query.where(first_name: "Sarah", last_name: "Connor").find_or_create
-        usr.persisted?.should be_true
-        usr.first_name.should eq("Sarah")
-        usr.last_name.should eq("Connor")
-      end
-    end
-
-    it "find_or_build" do
-      # same test than find_or_create, persistance check changing.
-      temporary do
-        reinit_example_models
-
-        10.times do |x|
-          User.create! first_name: "user #{x}"
-        end
-
-        # already existing stuff
-        User.query.where(first_name: "user 1").count.should eq(1)
-        rec = User.query.find_or_build(first_name: "user 1") do
-          raise "Should not initialize the model"
-        end
-
-        rec.persisted?.should be_true
-        User.query.where(first_name: "user 1").count.should eq(1)
-
-        # with @tags metadata of the collection it should infer the where clause
-        usr = User.query.where(first_name: "Sarah", last_name: "Connor").find_or_build
-        usr.persisted?.should be_false
-        usr.first_name.should eq("Sarah")
-        usr.last_name.should eq("Connor")
       end
     end
 
