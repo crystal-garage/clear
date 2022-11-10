@@ -339,7 +339,7 @@ module CollectionSpec
       end
 
       describe "#create!" do
-        it "can create from relation" do
+        it "can create from has_many relation" do
           temporary do
             reinit_example_models
 
@@ -352,7 +352,7 @@ module CollectionSpec
           end
         end
 
-        it "can create from relation with block" do
+        it "can create from has_many relation with block" do
           temporary do
             reinit_example_models
 
@@ -362,6 +362,24 @@ module CollectionSpec
 
             post.user.id.should eq(user.id)
             user.posts.count.should eq(1)
+          end
+        end
+
+        it "create from has_many through relation" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John")
+            post = Post.create!(title: "Title", user: user)
+
+            tag = Tag.create!(name: "Tag1")
+            post.tag_relations << tag
+
+            # FIXME: these can be use instead above
+            # tag = post.tag_relations.create!(name: "Tag1")
+
+            Tag.query.count.should eq(1)
+            PostTag.query.count.should eq(1)
           end
         end
 
@@ -379,7 +397,7 @@ module CollectionSpec
       end
 
       describe "#find_or_create" do
-        it "can create from has_many relation" do
+        it "create from has_many relation" do
           temporary do
             reinit_example_models
 
@@ -395,7 +413,7 @@ module CollectionSpec
           end
         end
 
-        it "can create from has_many through relation" do
+        it "create from has_many through relation" do
           temporary do
             reinit_example_models
 
@@ -406,7 +424,6 @@ module CollectionSpec
             post.tag_relations << tag
 
             # FIXME: these can be use instead above
-            # tag = post.tag_relations.create!(name: "Tag1")
             # tag = post.tag_relations.find_or_create(name: "Tag1")
 
             Tag.query.count.should eq(1)
