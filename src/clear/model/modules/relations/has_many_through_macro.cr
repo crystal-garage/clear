@@ -45,7 +45,7 @@ module Clear::Model::Relations::HasManyThroughMacro
         qry.with_cached_result(arr)
       end
 
-      qry.add_operation = -> (x : {{relation_type}}) {
+      qry.append_operation = -> (x : {{relation_type}}) {
         x.save! unless x.persisted?
 
         {% if through.is_a?(Path) %}

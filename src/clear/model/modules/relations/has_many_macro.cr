@@ -24,7 +24,7 @@ module Clear::Model::Relations::HasManyMacro
             .where { raw(%foreign_key) == %primary_key }
         end
 
-      query.add_operation = -> (x : {{relation_type}}) {
+      query.append_operation = -> (x : {{relation_type}}) {
         x.reset(query.tags)
         x.save!
         x

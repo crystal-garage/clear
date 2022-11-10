@@ -191,7 +191,7 @@ module Clear::Model
     @cached_result : Array(T)?
 
     # :nodoc:
-    property add_operation : Proc(T, T)?
+    property append_operation : Proc(T, T)?
     # :nodoc:
     property unlink_operation : Proc(T, T)?
 
@@ -489,11 +489,11 @@ module Clear::Model
     #
     # Returns `self` and therefore can be chained
     def <<(item : T)
-      add_operation = self.add_operation
+      append_operation = self.append_operation
 
-      raise "Operation not permitted on this collection." unless add_operation
+      raise "Operation not permitted on this collection." unless append_operation
 
-      add_operation.call(item)
+      append_operation.call(item)
       @cached_result.try &.<<(item)
 
       self
