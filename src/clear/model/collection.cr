@@ -301,6 +301,7 @@ module Clear::Model
       }
 
       tags(any_hash)
+
       super(**tuple)
     end
 

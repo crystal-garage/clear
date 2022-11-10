@@ -377,6 +377,41 @@ module CollectionSpec
           end
         end
       end
+
+      describe "#find_or_create" do
+        it "can create from has_many relation" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "name")
+
+            post1 = user.posts.create!(title: "title1")
+            post2 = user.posts.where(title: "title1").find_or_create
+            post3 = user.posts.where(title: "title2").find_or_create
+
+            post1.user.id.should eq(user.id)
+            user.posts.count.should eq(2)
+          end
+        end
+
+        it "can create from has_many through relation" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John")
+            post = Post.create!(title: "Title", user: user)
+
+            tag = Tag.create!(name: "Tag1")
+            post.tag_relations << tag
+
+            # FIXME: this can be use instead above
+            # tag = post.tag_relations.find_or_create(name: "Tag1")
+
+            Tag.query.count.should eq(1)
+            PostTag.query.count.should eq(1)
+          end
+        end
+      end
     end
 
     it "[] / []?" do

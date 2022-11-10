@@ -58,15 +58,6 @@ class Post
   belongs_to category : Category, foreign_key_type: Int32?
 end
 
-class UserInfo
-  include Clear::Model
-
-  column id : Int32, primary: true, presence: false
-
-  belongs_to user : User, foreign_key_type: Int64?
-  column registration_number : Int64
-end
-
 class Tag
   include Clear::Model
 
@@ -80,8 +71,19 @@ end
 class PostTag
   include Clear::Model
 
+  primary_key
+
   belongs_to post : Post, foreign_key_type: Int64?
   belongs_to tag : Tag, foreign_key_type: Int32?
+end
+
+class UserInfo
+  include Clear::Model
+
+  column id : Int32, primary: true, presence: false
+
+  belongs_to user : User, foreign_key_type: Int64?
+  column registration_number : Int64
 end
 
 class Category
@@ -184,7 +186,7 @@ class ModelSpecMigration123
       t.references to: "categories", name: "category_id", null: true, on_delete: "set null"
     end
 
-    create_table "post_tags", id: false do |t|
+    create_table "post_tags" do |t|
       t.references to: "tags", name: "tag_id", on_delete: "cascade", null: false, primary: true
       t.references to: "posts", name: "post_id", on_delete: "cascade", null: false, primary: true
 
