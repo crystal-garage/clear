@@ -627,12 +627,6 @@ module Clear::Model
     end
 
     # Get the first row from the collection query.
-    # if not found, throw an error
-    def first!(fetch_columns = false) : T
-      first(fetch_columns) || raise Clear::SQL::RecordNotFoundError.new
-    end
-
-    # Get the first row from the collection query.
     # if not found, return `nil`
     def first(fetch_columns = false) : T?
       order_by(Clear::SQL.escape("#{T.__pkey__}"), :asc) if T.__pkey__ || order_bys.empty?
@@ -644,17 +638,10 @@ module Clear::Model
       nil
     end
 
-    # Get the last row from the collection query.
+    # Get the first row from the collection query.
     # if not found, throw an error
-    def last!(fetch_columns = false) : T
-      last(fetch_columns) || raise Clear::SQL::RecordNotFoundError.new
-    end
-
-    # Redefinition of `join_impl` to avoid ambiguity on the column
-    # name if no specific column have been selected.
-    protected def join_impl(name, type, lateral, clear_expr)
-      self.set_default_table_wildcard(Clear::SQL.escape(T.table))
-      super(name, type, lateral, clear_expr)
+    def first!(fetch_columns = false) : T
+      first(fetch_columns) || raise Clear::SQL::RecordNotFoundError.new
     end
 
     # Get the last row from the collection query.
@@ -680,6 +667,19 @@ module Clear::Model
         # reset the order by in case we want to reuse the query
         clear_order_bys.order_by(order_bys)
       end
+    end
+
+    # Get the last row from the collection query.
+    # if not found, throw an error
+    def last!(fetch_columns = false) : T
+      last(fetch_columns) || raise Clear::SQL::RecordNotFoundError.new
+    end
+
+    # Redefinition of `join_impl` to avoid ambiguity on the column
+    # name if no specific column have been selected.
+    protected def join_impl(name, type, lateral, clear_expr)
+      self.set_default_table_wildcard(Clear::SQL.escape(T.table))
+      super(name, type, lateral, clear_expr)
     end
 
     # Delete all the rows which would have been returned by this collection.
