@@ -3,140 +3,309 @@ require "../data/example_models"
 
 module CollectionSpec
   describe Clear::Model::CollectionBase do
-    describe "#build" do
-      it "can build from relation" do
-        temporary do
-          reinit_example_models
+    context "query" do
+      context "#build" do
+        it "can build empty model" do
+          temporary do
+            reinit_example_models
 
-          user = User.create!(first_name: "name")
+            user = User.query.build # first_name: must be present
 
-          post = user.posts.build(title: "title")
+            user.persisted?.should be_false
+            user.valid?.should be_false
 
-          post.persisted?.should be_false
-          post.valid?.should be_true
+            user.first_name = "John"
+            user.valid?.should be_true
+          end
+        end
+
+        it "can build with arguments" do
+          temporary do
+            reinit_example_models
+
+            user = User.query.build(first_name: "name")
+
+            user.persisted?.should be_false
+            user.valid?.should be_true
+          end
+        end
+
+        it "can build with NamedTuple" do
+          temporary do
+            reinit_example_models
+
+            user = User.query.build({first_name: "name"})
+
+            user.persisted?.should be_false
+            user.valid?.should be_true
+          end
+        end
+
+        it "can build with block" do
+          temporary do
+            reinit_example_models
+
+            user1 = User.query.build(first_name: "John") do |u|
+              u.last_name = "Doe"
+            end
+
+            user2 = User.query.build({first_name: "Jane"}) do |u|
+              u.last_name = "Doe"
+            end
+
+            user3 = User.query.build do |u|
+              u.first_name = "Baby"
+              u.last_name = "Doe"
+            end
+
+            user1.persisted?.should be_false
+            user1.valid?.should be_true
+            user1.full_name.should eq("John Doe")
+
+            user2.persisted?.should be_false
+            user2.valid?.should be_true
+            user2.full_name.should eq("Jane Doe")
+
+            user3.persisted?.should be_false
+            user3.valid?.should be_true
+            user3.full_name.should eq("Baby Doe")
+          end
         end
       end
 
-      it "can build from relation without params" do
-        temporary do
-          reinit_example_models
+      context "#create!" do
+        it "can create with parameters" do
+          temporary do
+            reinit_example_models
 
-          user = User.create!(first_name: "name")
+            user = User.query.create!(first_name: "John", last_name: "Doe")
 
-          post = user.posts.build
+            user.persisted?.should be_true
+            User.query.count.should eq(1)
+            User.query.first!.full_name.should eq("John Doe")
+          end
+        end
 
-          post.persisted?.should be_false
-          post.valid?.should be_false
+        it "can create with NamedTuple" do
+          temporary do
+            reinit_example_models
+
+            user = User.query.create!({first_name: "John", last_name: "Doe"})
+
+            user.persisted?.should be_true
+            User.query.count.should eq(1)
+            User.query.first!.full_name.should eq("John Doe")
+          end
+        end
+
+        it "can create from relation with block" do
+          temporary do
+            reinit_example_models
+
+            user1 = User.query.create!({first_name: "John"}) do |u|
+              u.last_name = "Doe"
+            end
+
+            user2 = User.query.create!(first_name: "Jane") do |u|
+              u.last_name = "Doe"
+            end
+
+            user3 = User.query.create! do |u|
+              u.first_name = "Baby"
+              u.last_name = "Doe"
+            end
+
+            User.query.count.should eq(3)
+
+            user1.full_name.should eq("John Doe")
+            user2.full_name.should eq("Jane Doe")
+            user3.full_name.should eq("Baby Doe")
+          end
         end
       end
 
-      it "can build from relation with block" do
-        temporary do
-          reinit_example_models
+      context "#create" do
+        it "can create with parameters" do
+          temporary do
+            reinit_example_models
 
-          user = User.create!(first_name: "name")
+            user = User.query.create(first_name: "John", last_name: "Doe")
 
-          post = user.posts.build(&.title=("title"))
+            user.persisted?.should be_true
+            User.query.count.should eq(1)
+            User.query.first!.full_name.should eq("John Doe")
+          end
+        end
 
-          post.persisted?.should be_false
-          post.valid?.should be_true
+        it "can create with NamedTuple" do
+          temporary do
+            reinit_example_models
+
+            user = User.create({first_name: "John", last_name: "Doe"})
+
+            user.persisted?.should be_true
+            User.query.count.should eq(1)
+            User.query.first!.full_name.should eq("John Doe")
+          end
+        end
+
+        it "can create from relation with block" do
+          temporary do
+            reinit_example_models
+
+            user1 = User.query.create({first_name: "John"}) do |u|
+              u.last_name = "Doe"
+            end
+
+            user2 = User.query.create(first_name: "Jane") do |u|
+              u.last_name = "Doe"
+            end
+
+            User.query.count.should eq(2)
+
+            user1.full_name.should eq("John Doe")
+            user2.full_name.should eq("Jane Doe")
+          end
         end
       end
     end
 
-    describe "#create" do
-      it "can create from relation" do
-        temporary do
-          reinit_example_models
+    context "with relation" do
+      describe "#build" do
+        it "can build from relation" do
+          temporary do
+            reinit_example_models
 
-          user = User.create!(first_name: "name")
+            user = User.create!(first_name: "name")
 
-          post = user.posts.create(title: "title")
+            post = user.posts.build(title: "title")
 
-          post.persisted?.should be_true
-          post.user.id.should eq(user.id)
-          user.posts.count.should eq(1)
+            post.persisted?.should be_false
+            post.valid?.should be_true
+          end
+        end
+
+        it "can build from relation without params" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "name")
+
+            post = user.posts.build
+
+            post.persisted?.should be_false
+            post.valid?.should be_false
+          end
+        end
+
+        it "can build from relation with block" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "name")
+
+            post = user.posts.build(&.title=("title"))
+
+            post.persisted?.should be_false
+            post.valid?.should be_true
+          end
         end
       end
 
-      it "can create from relation with NameTuple" do
-        temporary do
-          reinit_example_models
+      describe "#create" do
+        it "can create from relation" do
+          temporary do
+            reinit_example_models
 
-          user = User.create!(first_name: "name")
+            user = User.create!(first_name: "name")
 
-          post = user.posts.create({title: "title"})
+            post = user.posts.create(title: "title")
 
-          post.persisted?.should be_true
-          post.user.id.should eq(user.id)
-          user.posts.count.should eq(1)
+            post.persisted?.should be_true
+            post.user.id.should eq(user.id)
+            user.posts.count.should eq(1)
+          end
+        end
+
+        it "can create from relation with NameTuple" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "name")
+
+            post = user.posts.create({title: "title"})
+
+            post.persisted?.should be_true
+            post.user.id.should eq(user.id)
+            user.posts.count.should eq(1)
+          end
+        end
+
+        it "can create from relation with block" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "name")
+
+            post = user.posts.create(&.title=("title"))
+
+            post.persisted?.should be_true
+            post.user.id.should eq(user.id)
+            user.posts.count.should eq(1)
+          end
+        end
+
+        it "return self if validation failed" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "name")
+
+            post = user.posts.create(title: "")
+
+            post.valid?.should be_false
+            post.errors.size.should eq(1)
+            post.errors[0].reason.should eq("title: is empty")
+          end
         end
       end
 
-      it "can create from relation with block" do
-        temporary do
-          reinit_example_models
+      describe "#create!" do
+        it "can create from relation" do
+          temporary do
+            reinit_example_models
 
-          user = User.create!(first_name: "name")
+            user = User.create!(first_name: "name")
 
-          post = user.posts.create(&.title=("title"))
+            post = user.posts.create!(title: "title")
 
-          post.persisted?.should be_true
-          post.user.id.should eq(user.id)
-          user.posts.count.should eq(1)
+            post.user.id.should eq(user.id)
+            user.posts.count.should eq(1)
+          end
         end
-      end
 
-      it "return self if validation failed" do
-        temporary do
-          reinit_example_models
+        it "can create from relation with block" do
+          temporary do
+            reinit_example_models
 
-          user = User.create!(first_name: "name")
+            user = User.create!(first_name: "name")
 
-          post = user.posts.create(title: "")
+            post = user.posts.create!(&.title=("title"))
 
-          post.valid?.should be_false
-          post.errors.size.should eq(1)
-          post.errors[0].reason.should eq("title: is empty")
+            post.user.id.should eq(user.id)
+            user.posts.count.should eq(1)
+          end
         end
-      end
-    end
 
-    describe "#create!" do
-      it "can create from relation" do
-        temporary do
-          reinit_example_models
+        it "raise exception if validation failed" do
+          temporary do
+            reinit_example_models
 
-          user = User.create!(first_name: "name")
+            user = User.create!(first_name: "name")
 
-          post = user.posts.create!(title: "title")
-
-          post.user.id.should eq(user.id)
-          user.posts.count.should eq(1)
-        end
-      end
-
-      it "can create from relation with block" do
-        temporary do
-          reinit_example_models
-
-          user = User.create!(first_name: "name")
-
-          post = user.posts.create!(&.title=("title"))
-
-          post.user.id.should eq(user.id)
-          user.posts.count.should eq(1)
-        end
-      end
-
-      it "raise exception if validation failed" do
-        temporary do
-          reinit_example_models
-
-          user = User.create!(first_name: "name")
-
-          expect_raises(Clear::Model::InvalidError) do
-            post = user.posts.create!(title: "")
+            expect_raises(Clear::Model::InvalidError) do
+              post = user.posts.create!(title: "")
+            end
           end
         end
       end

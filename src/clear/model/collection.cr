@@ -370,19 +370,6 @@ module Clear::Model
     # (e.g. `my_model.associations.build`), the foreign column which store
     # the primary key of `my_model` will be setup by default, preventing you
     # to forget it.
-    def build : T
-      Clear::Model::Factory.build(T, @tags, persisted: false)
-    end
-
-    # :ditto:
-    def build(**tuple) : T
-      build(**tuple) { }
-    end
-
-    # Build a new collection; if the collection comes from a has_many relation
-    # (e.g. `my_model.associations.build`), the foreign column which store
-    # the primary key of `my_model` will be setup by default, preventing you
-    # to forget it.
     # You can pass extra parameters using a named tuple:
     # `my_model.associations.build({a_column: "value"}) `
     def build(**tuple, &block : T -> Nil) : T
@@ -397,8 +384,18 @@ module Clear::Model
     end
 
     # :ditto:
-    def create(**tuple) : T
-      create(**tuple) { }
+    def build(**tuple) : T
+      build(**tuple) { }
+    end
+
+    # :ditto:
+    def build(x : NamedTuple) : T
+      build(**x) { }
+    end
+
+    # :ditto:
+    def build(x : NamedTuple, &block : T -> Nil) : T
+      build(**x, &block)
     end
 
     # Build a new object and setup
@@ -415,13 +412,18 @@ module Clear::Model
     end
 
     # :ditto:
+    def create(**tuple) : T
+      create(**tuple) { }
+    end
+
+    # :ditto:
     def create(x : NamedTuple) : T
       create(**x)
     end
 
     # :ditto:
-    def create!(**tuple) : T
-      create!(**tuple) { }
+    def create(x : NamedTuple, &block : T -> Nil) : T
+      create(**x, &block)
     end
 
     # Build a new object and setup
@@ -436,6 +438,21 @@ module Clear::Model
 
       r.save!
       r
+    end
+
+    # :ditto:
+    def create!(**tuple) : T
+      create!(**tuple) { }
+    end
+
+    # :ditto:
+    def create!(x : NamedTuple) : T
+      create(**x)
+    end
+
+    # :ditto:
+    def create!(x : NamedTuple, &block : T -> Nil) : T
+      create(**x, &block)
     end
 
     # Check whether the query return any row.
