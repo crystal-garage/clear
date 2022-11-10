@@ -17,28 +17,28 @@ module SelectSpec
 
   describe "Clear::SQL" do
     describe "SelectQuery" do
-      it "can create a simple request" do
+      it "create a simple request" do
         r = Clear::SQL.select
         r.to_sql.should eq "SELECT *"
       end
 
-      it "can duplicate itself" do
+      it "duplicate itself" do
         cq_2 = complex_query.dup
         cq_2.to_sql.should eq complex_query.to_sql
       end
 
-      it "can transfert to delete method" do
+      it "transfert to delete method" do
         r = Clear::SQL.select("*").from(:users).where { raw("users.id") > 1000 }
         r.to_delete.to_sql.should eq "DELETE FROM \"users\" WHERE (users.id > 1000)"
       end
 
-      it "can transfert to update method" do
+      it "transfert to update method" do
         r = Clear::SQL.select("*").from(:users).where { var("users", "id") > 1000 }
         r.to_update.set(x: 1).to_sql.should eq "UPDATE \"users\" SET \"x\" = 1 WHERE (\"users\".\"id\" > 1000)"
       end
 
       describe "cte" do
-        it "can build request with CTE" do
+        it "build request with CTE" do
           # Simple CTE
           cte = Clear::SQL.select.from(:users_info).where("x > 10")
           sql = Clear::SQL.select.from(:ui).with_cte("ui", cte).to_sql

@@ -5,7 +5,7 @@ module CollectionSpec
   describe Clear::Model::CollectionBase do
     describe "with query" do
       context "#build" do
-        it "can build empty model" do
+        it "build empty model" do
           temporary do
             reinit_example_models
 
@@ -19,7 +19,7 @@ module CollectionSpec
           end
         end
 
-        it "can build with arguments" do
+        it "build with arguments" do
           temporary do
             reinit_example_models
 
@@ -30,7 +30,7 @@ module CollectionSpec
           end
         end
 
-        it "can build with NamedTuple" do
+        it "build with NamedTuple" do
           temporary do
             reinit_example_models
 
@@ -41,7 +41,7 @@ module CollectionSpec
           end
         end
 
-        it "can build with block" do
+        it "build with block" do
           temporary do
             reinit_example_models
 
@@ -74,7 +74,7 @@ module CollectionSpec
       end
 
       context "#create!" do
-        it "can create with parameters" do
+        it "create with parameters" do
           temporary do
             reinit_example_models
 
@@ -86,7 +86,7 @@ module CollectionSpec
           end
         end
 
-        it "can create with NamedTuple" do
+        it "create with NamedTuple" do
           temporary do
             reinit_example_models
 
@@ -98,7 +98,7 @@ module CollectionSpec
           end
         end
 
-        it "can create with block" do
+        it "create with block" do
           temporary do
             reinit_example_models
 
@@ -125,7 +125,7 @@ module CollectionSpec
       end
 
       context "#create" do
-        it "can create with parameters" do
+        it "create with parameters" do
           temporary do
             reinit_example_models
 
@@ -137,7 +137,7 @@ module CollectionSpec
           end
         end
 
-        it "can create with NamedTuple" do
+        it "create with NamedTuple" do
           temporary do
             reinit_example_models
 
@@ -149,7 +149,7 @@ module CollectionSpec
           end
         end
 
-        it "can create from relation with block" do
+        it "create from relation with block" do
           temporary do
             reinit_example_models
 
@@ -240,7 +240,7 @@ module CollectionSpec
 
     describe "with relation" do
       describe "#build" do
-        it "can build from relation" do
+        it "build from relation" do
           temporary do
             reinit_example_models
 
@@ -253,7 +253,7 @@ module CollectionSpec
           end
         end
 
-        it "can build from relation without params" do
+        it "build from relation without params" do
           temporary do
             reinit_example_models
 
@@ -266,7 +266,7 @@ module CollectionSpec
           end
         end
 
-        it "can build from relation with block" do
+        it "build from relation with block" do
           temporary do
             reinit_example_models
 
@@ -281,7 +281,7 @@ module CollectionSpec
       end
 
       describe "#create" do
-        it "can create from relation" do
+        it "create from relation" do
           temporary do
             reinit_example_models
 
@@ -295,7 +295,7 @@ module CollectionSpec
           end
         end
 
-        it "can create from relation with NameTuple" do
+        it "create from relation with NameTuple" do
           temporary do
             reinit_example_models
 
@@ -309,7 +309,7 @@ module CollectionSpec
           end
         end
 
-        it "can create from relation with block" do
+        it "create from relation with block" do
           temporary do
             reinit_example_models
 
@@ -339,7 +339,7 @@ module CollectionSpec
       end
 
       describe "#create!" do
-        it "can create from has_many relation" do
+        it "create from has_many relation" do
           temporary do
             reinit_example_models
 
@@ -352,7 +352,7 @@ module CollectionSpec
           end
         end
 
-        it "can create from has_many relation with block" do
+        it "create from has_many relation with block" do
           temporary do
             reinit_example_models
 

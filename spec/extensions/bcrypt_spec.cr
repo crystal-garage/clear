@@ -30,7 +30,7 @@ module BCryptSpec
   end
 
   describe "Clear::Migration::CreateEnum" do
-    it "Can create bcrypt password" do
+    it "create bcrypt password" do
       temporary do
         reinit!
 

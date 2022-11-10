@@ -24,12 +24,12 @@ module DeleteSpec
 
   describe "Clear::SQL" do
     describe "DeleteQuery" do
-      it "can create a simple delete" do
+      it "create a simple delete" do
         r = delete_request.from("table")
         r.to_sql.should eq "DELETE FROM table"
       end
 
-      it "can create a delete with where parameter" do
+      it "create a delete with where parameter" do
         r = delete_request.from(:table).where({id: complex_query})
         r.to_sql.should eq "DELETE FROM \"table\" WHERE \"id\" IN (SELECT * " +
                            "FROM \"users\" " +

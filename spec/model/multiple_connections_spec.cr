@@ -42,7 +42,7 @@ module MultipleConnectionsSpec
         PostStat.connection.should eq "secondary"
       end
 
-      it "can load data from the default database" do
+      it "load data from the default database" do
         temporary do
           reinit
           p = Post.new({title: "some post"})
@@ -51,7 +51,7 @@ module MultipleConnectionsSpec
         end
       end
 
-      it "can insert data into the secondary database" do
+      it "insert data into the secondary database" do
         temporary do
           reinit
           p = PostStat.new({post_id: 1})
@@ -61,7 +61,7 @@ module MultipleConnectionsSpec
         end
       end
 
-      it "can update data on the secondary database" do
+      it "update data on the secondary database" do
         temporary do
           reinit
           p = PostStat.new({post_id: 1})
@@ -76,7 +76,7 @@ module MultipleConnectionsSpec
         end
       end
 
-      it "can update data on the secondary database" do
+      it "update data on the secondary database" do
         temporary do
           reinit
           p = PostStat.new({post_id: 1})

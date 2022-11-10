@@ -3,7 +3,7 @@ require "../../data/example_models"
 
 module BelongsToSpec
   describe("belongs_to relation (not nilable)") do
-    it "can access" do
+    it "access" do
       temporary do
         reinit_example_models
 
@@ -55,7 +55,7 @@ module BelongsToSpec
       end
     end
 
-    it "can avoid n+1 queries" do
+    it "avoid n+1 queries" do
       temporary do
         reinit_example_models
 

@@ -31,7 +31,7 @@ module IntervalSpec
   end
 
   describe Clear::Interval do
-    it "Can be saved into database (and converted to pg interval type)" do
+    it "be saved into database (and converted to pg interval type)" do
       temporary do
         reinit!
 
@@ -50,7 +50,7 @@ module IntervalSpec
       end
     end
 
-    it "can be added and substracted to a date" do
+    it "be added and substracted to a date" do
       # TimeSpan
       [1.hour, 1.day, 1.month].each do |span|
         i = Clear::Interval.new(span)
@@ -67,19 +67,19 @@ module IntervalSpec
       (now - i).to_unix.should eq((now - 1.month + 1.day - 12.minute).to_unix)
     end
 
-    it "can be used in expression engine" do
+    it "be used in expression engine" do
       IntervalModel.query.where {
         (created_at - Clear::Interval.new(months: 1)) > updated_at
       }.to_sql.should eq %(SELECT * FROM "interval_table" WHERE (("created_at" - INTERVAL '1 months') > "updated_at"))
     end
 
-    it "can be casted into string" do
+    it "be casted into string" do
       Clear::Interval.new(months: 1, days: 1).to_sql.to_s.should eq("INTERVAL '1 months 1 days'")
     end
   end
 
   describe Clear::TimeInDay do
-    it "can be parsed" do
+    it "be parsed" do
       value = 12i64 * 3_600 + 50*60
       Clear::TimeInDay.parse("12:50").microseconds.should eq(value * 1_000_000)
 
@@ -92,7 +92,7 @@ module IntervalSpec
       end
     end
 
-    it "can be saved into database and converted" do
+    it "be saved into database and converted" do
       temporary do
         reinit!
 

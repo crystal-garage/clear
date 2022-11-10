@@ -6,7 +6,7 @@ module TransactionSpec
   extend self
 
   describe "Clear::SQL::Transaction#transaction" do
-    it "can create transactional block" do
+    it "create transactional block" do
       Clear::SQL.transaction { Clear::SQL.select("1").execute }
       Clear::SQL.transaction(level: Clear::SQL::Transaction::Level::ReadCommitted) { Clear::SQL.select("1").execute }
       Clear::SQL.transaction(level: Clear::SQL::Transaction::Level::RepeatableRead) { Clear::SQL.select("1").execute }

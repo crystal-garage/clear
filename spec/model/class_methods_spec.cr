@@ -3,7 +3,7 @@ require "../data/example_models"
 
 describe Clear::Model::ClassMethods do
   context "#build" do
-    it "can build empty model" do
+    it "build empty model" do
       temporary do
         reinit_example_models
 
@@ -14,7 +14,7 @@ describe Clear::Model::ClassMethods do
       end
     end
 
-    it "can build with arguments" do
+    it "build with arguments" do
       temporary do
         reinit_example_models
 
@@ -25,7 +25,7 @@ describe Clear::Model::ClassMethods do
       end
     end
 
-    it "can build with NamedTuple" do
+    it "build with NamedTuple" do
       temporary do
         reinit_example_models
 
@@ -36,7 +36,7 @@ describe Clear::Model::ClassMethods do
       end
     end
 
-    it "can build with block" do
+    it "build with block" do
       temporary do
         reinit_example_models
 
@@ -62,7 +62,7 @@ describe Clear::Model::ClassMethods do
   end
 
   context "#create!" do
-    it "can create with parameters" do
+    it "create with parameters" do
       temporary do
         reinit_example_models
 
@@ -74,7 +74,7 @@ describe Clear::Model::ClassMethods do
       end
     end
 
-    it "can create with NamedTuple" do
+    it "create with NamedTuple" do
       temporary do
         reinit_example_models
 
@@ -86,7 +86,7 @@ describe Clear::Model::ClassMethods do
       end
     end
 
-    it "can create with block" do
+    it "create with block" do
       temporary do
         reinit_example_models
 
@@ -107,7 +107,7 @@ describe Clear::Model::ClassMethods do
   end
 
   context "#create" do
-    it "can create with parameters" do
+    it "create with parameters" do
       temporary do
         reinit_example_models
 
@@ -119,7 +119,7 @@ describe Clear::Model::ClassMethods do
       end
     end
 
-    it "can create with NamedTuple" do
+    it "create with NamedTuple" do
       temporary do
         reinit_example_models
 
@@ -131,7 +131,7 @@ describe Clear::Model::ClassMethods do
       end
     end
 
-    it "can create with block" do
+    it "create with block" do
       temporary do
         reinit_example_models
 

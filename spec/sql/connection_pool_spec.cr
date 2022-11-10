@@ -11,7 +11,7 @@ module ConnectionPoolSpec
 
   describe "Clear::SQL" do
     describe "ConnectionPool" do
-      it "can handle multiple fibers" do
+      it "handle multiple fibers" do
         begin
           Clear::SQL.execute("CREATE TABLE tests (id serial PRIMARY KEY)")
 

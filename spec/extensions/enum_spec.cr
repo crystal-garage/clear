@@ -40,13 +40,13 @@ module EnumSpec
   end
 
   describe "Clear.enum" do
-    it "can call custom member methods" do
+    it "call custom member methods" do
       ClientType::Personnal.pay_vat?.should eq true
       ClientType::Company.pay_vat?.should eq false
       ClientType::NonProfit.pay_vat?.should eq false
     end
 
-    it "Can create and use enum" do
+    it "create and use enum" do
       temporary do
         reinit!
 
@@ -65,7 +65,7 @@ module EnumSpec
       end
     end
 
-    it "can export to json" do
+    it "export to json" do
       temporary do
         reinit!
 

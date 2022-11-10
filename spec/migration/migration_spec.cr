@@ -32,15 +32,15 @@ module MigrationSpec
 
   temporary do
     describe "Migration" do
-      it "can discover UID from class name" do
+      it "discover UID from class name" do
         Migration1.new.uid.should eq 1
       end
 
-      it "can discover UID from file name" do
+      it "discover UID from file name" do
         MigrationByFile.new.uid.should eq 12_345
       end
 
-      it "can apply migration" do
+      it "apply migration" do
         temporary do
           Clear::Migration::Manager.instance.reinit!
           Migration1.new.apply
@@ -75,7 +75,7 @@ module MigrationSpec
   end
 
   describe "Migration" do
-    it "can run migrations apply_all multiple times" do
+    it "run migrations apply_all multiple times" do
       temporary do
         Clear::Migration::Manager.instance.reinit!
         # Ensure that multiple migration apply_all's can run without issue

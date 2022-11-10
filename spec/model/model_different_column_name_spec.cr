@@ -28,7 +28,7 @@ module ModelDifferentColumnNameSpec
 
   describe "Clear::Model" do
     context "Column definition" do
-      it "can define properties in the model with a name different of the column name in PG" do
+      it "define properties in the model with a name different of the column name in PG" do
         # Here the column "name" is linked to "brand_name" in postgreSQL
         temporary do
           reinit
