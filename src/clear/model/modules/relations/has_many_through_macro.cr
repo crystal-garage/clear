@@ -144,7 +144,7 @@ module Clear::Model::Relations::HasManyThroughMacro
       end
 
       def with_{{method_name}}
-        with_{{method_name}}{}
+        with_{{method_name}} { }
       end
     end
   end

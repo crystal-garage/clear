@@ -124,7 +124,7 @@ module Clear::Model::Relations::BelongsToMacro
       end
 
       def with_{{method_name}}(fetch_columns = false) : self
-        with_{{method_name}}(fetch_columns) {}
+        with_{{method_name}}(fetch_columns) { }
 
         self
       end

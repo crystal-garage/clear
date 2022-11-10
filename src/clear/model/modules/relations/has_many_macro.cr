@@ -75,7 +75,7 @@ module Clear::Model::Relations::HasManyMacro
       end
 
       def with_{{method_name}}(fetch_columns = false)
-        with_{{method_name}}(fetch_columns){|q|} #empty block
+        with_{{method_name}}(fetch_columns) { }
       end
     end
   end
