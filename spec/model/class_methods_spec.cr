@@ -25,17 +25,38 @@ describe Clear::Model::ClassMethods do
       end
     end
 
+    it "can build with NamedTuple" do
+      temporary do
+        reinit_example_models
+
+        user = User.build({first_name: "name"})
+
+        user.persisted?.should be_false
+        user.valid?.should be_true
+      end
+    end
+
     it "can build with block" do
       temporary do
         reinit_example_models
 
-        user = User.build(first_name: "John") do |u|
+        user1 = User.build({first_name: "John"}) do |u|
           u.last_name = "Doe"
         end
 
-        user.persisted?.should be_false
-        user.valid?.should be_true
-        user.full_name.should eq("John Doe")
+        user2 = User.build(first_name: "Jane") do |u|
+          u.last_name = "Doe"
+        end
+
+        User.query.count.should eq(0)
+
+        user1.persisted?.should be_false
+        user1.valid?.should be_true
+        user1.full_name.should eq("John Doe")
+
+        user2.persisted?.should be_false
+        user2.valid?.should be_true
+        user2.full_name.should eq("Jane Doe")
       end
     end
   end
@@ -65,7 +86,7 @@ describe Clear::Model::ClassMethods do
       end
     end
 
-    it "can create from relation with block" do
+    it "can create with block" do
       temporary do
         reinit_example_models
 
@@ -110,7 +131,7 @@ describe Clear::Model::ClassMethods do
       end
     end
 
-    it "can create from relation with block" do
+    it "can create with block" do
       temporary do
         reinit_example_models
 

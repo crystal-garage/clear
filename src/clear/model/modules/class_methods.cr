@@ -99,9 +99,9 @@ module Clear::Model::ClassMethods
       # Build a new empty model and fill the columns using the NamedTuple in argument.
       #
       # Returns the new model
-      def self.build(**x : **T) forall T
+      def self.build(**tuple : **T) forall T
         \\{% if T.size > 0 %}
-          self.new(x)
+          self.new(tuple)
         \\{% else %}
           self.new
         \\{% end %}
@@ -119,6 +119,16 @@ module Clear::Model::ClassMethods
         yield(r)
 
         r
+      end
+
+      # :ditto:
+      def self.build(x : NamedTuple) : self
+        build(**x) { }
+      end
+
+      # :ditto:
+      def self.build(x : NamedTuple, &block : self -> Nil) : self
+        build(**x, &block)
       end
 
       # Build and new model and save it. Returns the model.
