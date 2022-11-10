@@ -50,10 +50,12 @@ module Clear::Model::Relations::HasManyThroughMacro
 
         {% if through.is_a?(Path) %}
           through_model = {{through}}.new
+
           through_model.reset({
             "#{%own_key}" => current_model_id,
             "#{%through_key}" => x.__pkey__
           })
+
           through_model.save!
         {% else %}
           Clear::SQL.insert({{through.id.stringify}}).values({

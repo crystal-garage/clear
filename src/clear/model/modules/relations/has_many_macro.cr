@@ -5,7 +5,13 @@ module Clear::Model::Relations::HasManyMacro
     # The method {{method_name}} is a `has_many` relation to {{relation_type}}
     def {{method_name}} : {{relation_type}}::Collection
       %primary_key = {{(primary_key || "__pkey__").id}}
-      %foreign_key = {% if foreign_key %} "{{foreign_key}}" {% else %} (self.class.table.to_s.singularize + "_id") {% end %}
+
+      %foreign_key =
+        {% if foreign_key %}
+          "{{foreign_key}}"
+        {% else %}
+          (self.class.table.to_s.singularize + "_id")
+        {% end %}
 
       cache = @cache
 
