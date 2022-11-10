@@ -568,10 +568,6 @@ module Clear::Model
       where(tuple).first!(fetch_columns)
     end
 
-    def find_or_build(**tuple) : T
-      find_or_build(**tuple) { }
-    end
-
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
     def find_or_build(**tuple, &block : T -> Nil) : T
@@ -589,14 +585,18 @@ module Clear::Model
       r
     end
 
-    # Try to fetch a row. If not found, build a new object and setup
-    # the fields like setup in the condition tuple.
-    # Just after building, save the object.
-    def find_or_create(**tuple) : T
-      r = find_or_build(**tuple)
+    def find_or_build(**tuple) : T
+      find_or_build(**tuple) { }
+    end
 
-      r.save!
-      r
+    # :ditto:
+    def find_or_build(x : NamedTuple) : T
+      find_or_build(**x)
+    end
+
+    # :ditto:
+    def find_or_build(x : NamedTuple, &block : T -> Nil) : T
+      find_or_build(**x, &block)
     end
 
     # Try to fetch a row. If not found, build a new object and setup
@@ -609,6 +609,21 @@ module Clear::Model
 
       r.save!
       r
+    end
+
+    # :ditto:
+    def find_or_create(**tuple) : T
+      find_or_create(**tuple) { }
+    end
+
+    # :ditto:
+    def find_or_create(x : NamedTuple) : T
+      find_or_create(**x)
+    end
+
+    # :ditto:
+    def find_or_create(x : NamedTuple, &block : T -> Nil) : T
+      find_or_create(**x, &block)
     end
 
     # Get the first row from the collection query.

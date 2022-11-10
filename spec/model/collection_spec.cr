@@ -98,7 +98,7 @@ module CollectionSpec
           end
         end
 
-        it "can create from relation with block" do
+        it "can create with block" do
           temporary do
             reinit_example_models
 
@@ -165,6 +165,74 @@ module CollectionSpec
 
             user1.full_name.should eq("John Doe")
             user2.full_name.should eq("Jane Doe")
+          end
+        end
+      end
+
+      context "#find_or_build" do
+        it "create with block" do
+          temporary do
+            reinit_example_models
+
+            existing_user = User.query.create(first_name: "Johnny", last_name: "Doe")
+
+            user1 = User.query.find_or_build({first_name: "John"}) do |u|
+              u.last_name = "Doe"
+            end
+
+            user2 = User.query.find_or_build(first_name: "Jane") do |u|
+              u.last_name = "Doe"
+            end
+
+            user3 = User.query.find_or_build do |u|
+              u.first_name = "Baby"
+              u.last_name = "Doe"
+            end
+
+            user4 = User.query.find_or_build({first_name: "Johnny"}) do |u|
+              u.last_name = "Roe"
+            end
+
+            User.query.count.should eq(1)
+
+            user1.full_name.should eq("John Doe")
+            user2.full_name.should eq("Jane Doe")
+            user3.full_name.should eq("Johnny Doe")
+            user4.full_name.should eq("Johnny Doe")
+          end
+        end
+      end
+
+      context "#find_or_create" do
+        it "create with block" do
+          temporary do
+            reinit_example_models
+
+            existing_user = User.query.create(first_name: "Johnny", last_name: "Doe")
+
+            user1 = User.query.find_or_create({first_name: "John"}) do |u|
+              u.last_name = "Doe"
+            end
+
+            user2 = User.query.find_or_create(first_name: "Jane") do |u|
+              u.last_name = "Doe"
+            end
+
+            user3 = User.query.find_or_create do |u|
+              u.first_name = "Baby"
+              u.last_name = "Doe"
+            end
+
+            user4 = User.query.find_or_create({first_name: "Johnny"}) do |u|
+              u.last_name = "Roe"
+            end
+
+            User.query.count.should eq(3)
+
+            user1.full_name.should eq("John Doe")
+            user2.full_name.should eq("Jane Doe")
+            user3.id.should eq(existing_user.id)
+            user4.id.should eq(existing_user.id)
           end
         end
       end
@@ -371,7 +439,7 @@ module CollectionSpec
       end
     end
 
-    it "first_or_create" do
+    it "find_or_create" do
       temporary do
         reinit_example_models
 
@@ -403,8 +471,8 @@ module CollectionSpec
       end
     end
 
-    it "first_or_build" do
-      # same test than first_or_create, persistance check changing.
+    it "find_or_build" do
+      # same test than find_or_create, persistance check changing.
       temporary do
         reinit_example_models
 
