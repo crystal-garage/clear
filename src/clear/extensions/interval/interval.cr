@@ -94,15 +94,15 @@ struct Clear::Interval
     }.join(" "))
   end
 
-  def +(i : self)
+  def +(interval : self)
     self.new(
-      months: self.months + i.months,
-      day: self.days + i.days,
-      hours: self.hours + i.hours,
-      minutes: self.minutes + i.minutes,
-      seconds: self.seconds + i.seconds,
-      milliseconds: self.milliseconds + i.milliseconds,
-      microseconds: self.microseconds + i.microseconds
+      months: self.months + interval.months,
+      day: self.days + interval.days,
+      hours: self.hours + interval.hours,
+      minutes: self.minutes + interval.minutes,
+      seconds: self.seconds + interval.seconds,
+      milliseconds: self.milliseconds + interval.milliseconds,
+      microseconds: self.microseconds + interval.microseconds
     )
   end
 

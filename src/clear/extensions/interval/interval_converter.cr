@@ -1,24 +1,26 @@
 struct Time
-  def +(i : Clear::Interval)
-    self +
-      i.months.months +
-      i.days.days +
-      i.hours.hours +
-      i.minutes.minutes +
-      i.seconds.seconds +
-      i.milliseconds.milliseconds +
-      i.microseconds.microseconds
+  def +(interval : Clear::Interval)
+    [
+      interval.months.months,
+      interval.days.days,
+      interval.hours.hours,
+      interval.minutes.minutes,
+      interval.seconds.seconds,
+      interval.milliseconds.milliseconds,
+      interval.microseconds.microseconds,
+    ].reduce(self) { |acc, e| acc + e }
   end
 
-  def -(i : Clear::Interval)
-    self -
-      i.months.months -
-      i.days.days -
-      i.hours.hours -
-      i.minutes.minutes -
-      i.seconds.seconds -
-      i.milliseconds.milliseconds -
-      i.microseconds.microseconds
+  def -(interval : Clear::Interval)
+    [
+      interval.months.months,
+      interval.days.days,
+      interval.hours.hours,
+      interval.minutes.minutes,
+      interval.seconds.seconds,
+      interval.milliseconds.milliseconds,
+      interval.microseconds.microseconds,
+    ].reduce(self) { |acc, e| acc - e }
   end
 end
 
