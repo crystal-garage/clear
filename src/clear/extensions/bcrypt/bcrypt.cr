@@ -1,5 +1,3 @@
-require "crypto/bcrypt/password"
-
 module Clear::Model::Converter::BcryptPasswordConverter
   def self.to_column(x) : ::Crypto::Bcrypt::Password?
     case x
