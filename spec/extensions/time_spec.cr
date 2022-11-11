@@ -51,6 +51,26 @@ module IntervalSpec
       end
     end
 
+    it "be saved into database with query and converted" do
+      temporary do
+        reinit!
+
+        3.times do |id|
+          months = Random.rand(-1000..1000)
+          days = Random.rand(-1000..1000)
+          microseconds = Random.rand(-10_000_000..10_000_000)
+
+          interval = Clear::Interval.new(months: months, days: days, microseconds: microseconds)
+          IntervalModel.query.create! id: id, interval: interval
+
+          record = IntervalModel.find! id
+          record.interval.not_nil!.months.should eq months
+          record.interval.not_nil!.days.should eq days
+          record.interval.not_nil!.microseconds.should eq microseconds
+        end
+      end
+    end
+
     it "be added and substracted to a date" do
       # TimeSpan
       [1.hour, 1.day, 1.month].each do |span|
@@ -97,7 +117,22 @@ module IntervalSpec
       temporary do
         reinit!
 
-        record = IntervalModel.create! time_in_date: "12:32"
+        time_in_date = "12:32"
+        record = IntervalModel.create! time_in_date: time_in_date
+        record.time_in_date.not_nil!.to_s(show_seconds: false).should eq("12:32")
+        record.time_in_date = record.time_in_date.not_nil! + 12.minutes
+        record.save!
+
+        record.reload.time_in_date.to_s.should eq("12:44:00")
+      end
+    end
+
+    it "be saved into database with query and converted" do
+      temporary do
+        reinit!
+
+        time_in_date = Clear::TimeInDay.new(12, 32, 0)
+        record = IntervalModel.query.create! time_in_date: time_in_date
         record.time_in_date.not_nil!.to_s(show_seconds: false).should eq("12:32")
         record.time_in_date = record.time_in_date.not_nil! + 12.minutes
         record.save!

@@ -57,6 +57,7 @@ module Clear
                 PG::Geo::Polygon | PG::Numeric | PG::Interval | Slice(UInt8) | String | Time |
                 UInt8 | UInt16 | UInt32 | UInt64 | UUID | ::Crypto::Bcrypt::Password |
                 Clear::Expression::UnsafeSql | Clear::Expression::Literal |
+                Clear::TimeInDay | Clear::Interval |
                 Nil
 
     include Clear::SQL::Logger
