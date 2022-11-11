@@ -54,7 +54,8 @@ module Clear
                 Bool | Char | Float32 | Float64 | Int8 | Int16 | Int32 | Int64 | BigDecimal | JSON::Any | JSON::PullParser | PG::Geo::Box | PG::Geo::Circle |
                 PG::Geo::Line | PG::Geo::LineSegment | PG::Geo::Path | PG::Geo::Point |
                 PG::Geo::Polygon | PG::Numeric | PG::Interval | Slice(UInt8) | String | Time |
-                UInt8 | UInt16 | UInt32 | UInt64 | Clear::Expression::UnsafeSql | UUID |
+                UInt8 | UInt16 | UInt32 | UInt64 | UUID |
+                Clear::Expression::UnsafeSql | Clear::Expression::Literal |
                 Nil
 
     include Clear::SQL::Logger

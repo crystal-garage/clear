@@ -710,7 +710,7 @@ module ModelSpec
           u.to_json.should eq %({"first_name":"Hello","last_name":"World"})
 
           u.to_json(emit_nulls: true).should eq(
-            %({"id":null,"first_name":"Hello","last_name":"World","middle_name":null,"active":null,"notification_preferences":null,"updated_at":null,"created_at":null}))
+            %({"id":null,"first_name":"Hello","last_name":"World","middle_name":null,"gender":null,"active":null,"notification_preferences":null,"updated_at":null,"created_at":null}))
         end
       end
 

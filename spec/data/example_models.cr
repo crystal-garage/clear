@@ -1,3 +1,17 @@
+Clear.enum GenderType, "male", "female", "other" do
+  def male?
+    self == Male
+  end
+
+  def female?
+    self == Female
+  end
+
+  def other?
+    self == Other
+  end
+end
+
 class User
   include Clear::Model
 
@@ -6,6 +20,8 @@ class User
   column first_name : String
   column last_name : String?
   column middle_name : String?, mass_assign: false
+
+  column gender : GenderType?
 
   column active : Bool?
 
@@ -141,6 +157,8 @@ class ModelSpecMigration123
   include Clear::Migration
 
   def change(dir)
+    create_enum(:gender_type, GenderType)
+
     create_table "categories" do |t|
       t.column "name", "string"
 
@@ -156,10 +174,11 @@ class ModelSpecMigration123
     create_table "users" do |t|
       t.column "first_name", "string"
       t.column "last_name", "string"
+      t.column "middle_name", type: "varchar(32)"
+
+      t.column :gender, :gender_type
 
       t.column "active", "bool", null: true
-
-      t.column "middle_name", type: "varchar(32)"
 
       t.column "notification_preferences", "jsonb", index: "gin", default: "'{}'"
 
