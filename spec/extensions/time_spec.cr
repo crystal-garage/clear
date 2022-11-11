@@ -53,7 +53,7 @@ module IntervalSpec
 
     it "be added and substracted to a date" do
       # TimeSpan
-      [1.hour, 1.day, 1.month].each do |span|
+      [1.month, 1.day, 1.hour, 1.minute, 1.second].each do |span|
         i = Clear::Interval.new(span)
         now = Time.local
 

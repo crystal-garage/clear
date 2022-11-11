@@ -1,30 +1,48 @@
-# Represents the "interval" object of PostgreSQL
+# `Clear::Interval` represents the "interval" object of PostgreSQL
+
+# It can be converted automatically from/to a `interval` column.
+#
+# ## Usage example
+#
+# ```
+# class MyModel
+#   include Clear::Model
+#
+#   column interval : Clear::TimeInDay
+# end
+#
+# interval = Clear::Interval.new(60.days)
+# record = MyModel.create!(interval: interval)
+# ```
 struct Clear::Interval
-  getter microseconds : Int64 = 0
-  getter days : Int32 = 0
   getter months : Int32 = 0
+  getter days : Int32 = 0
+  getter microseconds : Int64 = 0
+
+  getter hours : Int32 = 0
+  getter minutes : Int32 = 0
+  getter seconds : Int32 = 0
+  getter milliseconds : Int32 = 0
 
   def initialize(span : Time::Span)
-    @microseconds = span.total_nanoseconds.to_i64 // 1_000
+    @days = (span.days || 0).to_i32
+    @hours = span.hours || 0
+    @minutes = span.minutes || 0
+    @seconds = span.seconds || 0
+    @milliseconds = span.milliseconds || 0
+    @microseconds = (span.microseconds || 0).to_i64
   end
 
   def initialize(span : Time::MonthSpan)
     @months = span.value.to_i32
   end
 
+  # For `PG::Interval`
   def initialize(
-    years : Number = 0,
-    months : Number = 0,
-    weeks : Number = 0,
-    days : Number = 0,
-    hours : Number = 0,
-    minutes : Number = 0,
-    seconds : Number = 0,
-    milliseconds : Number = 0,
-    microseconds : Number = 0
+    @months : Int32,
+    @days : Int32,
+    microseconds : Number
   )
-    @months = (12 * years + months).to_i32
-    @days = days.to_i32
     @microseconds = (
       microseconds.to_i64 +
       milliseconds * 1_000_i64 +
@@ -32,6 +50,17 @@ struct Clear::Interval
       minutes * 60_000_000_i64 +
       hours * 3_600_000_000_i64
     )
+  end
+
+  def initialize(
+    @months : Int32 = 0,
+    @days : Int32 = 0,
+    @hours : Int32 = 0,
+    @minutes : Int32 = 0,
+    @seconds : Int32 = 0,
+    @milliseconds : Int32 = 0,
+    @microseconds : Int64 = 0
+  )
   end
 
   def initialize(io : IO)
@@ -51,9 +80,13 @@ struct Clear::Interval
   def to_sql
     o = [] of String
 
-    (o << @months.to_s << "months") if @months != 0
-    (o << @days.to_s << "days") if @days != 0
-    (o << @microseconds.to_s << "microseconds") if @microseconds != 0
+    (o << @months.to_s << "months") unless @months.zero?
+    (o << @days.to_s << "days") unless @days.zero?
+    (o << @hours.to_s << "hours") unless @hours.zero?
+    (o << @minutes.to_s << "minutes") unless @minutes.zero?
+    (o << @seconds.to_s << "seconds") unless @seconds.zero?
+    (o << @milliseconds.to_s << "milliseconds") unless @milliseconds.zero?
+    (o << @microseconds.to_s << "microseconds") unless @microseconds.zero?
 
     Clear::SQL.unsafe({
       "INTERVAL",
@@ -62,7 +95,15 @@ struct Clear::Interval
   end
 
   def +(i : self)
-    self.new(months: self.months + i.months, day: self.days + i.days, microseconds: self.microseconds + i.microseconds)
+    self.new(
+      months: self.months + i.months,
+      day: self.days + i.days,
+      hours: self.hours + i.hours,
+      minutes: self.minutes + i.minutes,
+      seconds: self.seconds + i.seconds,
+      milliseconds: self.milliseconds + i.milliseconds,
+      microseconds: self.microseconds + i.microseconds
+    )
   end
 
   def self.decode(x : Slice(UInt8))

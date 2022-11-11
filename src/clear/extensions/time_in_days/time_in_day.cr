@@ -23,7 +23,7 @@
 # class MyModel
 #   include Clear::Model
 #
-#   column i : Clear::TimeInDay
+#   column time_in_day : Clear::TimeInDay
 # end
 # ```
 struct Clear::TimeInDay
