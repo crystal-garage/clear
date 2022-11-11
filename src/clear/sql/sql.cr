@@ -48,6 +48,11 @@ module Clear
   # you must use manually the `dup` method.
   #
   module SQL
+    extend self
+
+    include Clear::SQL::Logger
+    include Clear::SQL::Transaction
+
     alias Any = Array(PG::BoolArray) | Array(PG::CharArray) | Array(PG::Float32Array) |
                 Array(PG::Float64Array) | Array(PG::Int16Array) | Array(PG::Int32Array) |
                 Array(PG::Int64Array) | Array(PG::StringArray) | Array(PG::TimeArray) |
@@ -59,10 +64,6 @@ module Clear
                 Clear::Expression::UnsafeSql | Clear::Expression::Literal |
                 Clear::TimeInDay | Clear::Interval |
                 Nil
-
-    include Clear::SQL::Logger
-    include Clear::SQL::Transaction
-    extend self
 
     alias Symbolic = String | Symbol
     alias Selectable = Symbolic | Clear::SQL::SelectBuilder
