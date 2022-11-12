@@ -174,7 +174,7 @@ module CollectionSpec
           temporary do
             reinit_example_models
 
-            existing_user = User.query.create(first_name: "Johnny", last_name: "Doe")
+            User.query.create(first_name: "Johnny", last_name: "Doe")
 
             user1 = User.query.find_or_build({first_name: "John"}) do |u|
               u.last_name = "Doe"
@@ -390,7 +390,7 @@ module CollectionSpec
             user = User.create!(first_name: "name")
 
             expect_raises(Clear::Model::InvalidError) do
-              post = user.posts.create!(title: "")
+              user.posts.create!(title: "")
             end
           end
         end
@@ -404,9 +404,10 @@ module CollectionSpec
             user = User.create!(first_name: "name")
 
             post1 = user.posts.create!(title: "title1")
-            post2 = user.posts.where(title: "title1").find_or_create
-            post3 = user.posts.where(title: "title2").find_or_create
-            post4 = user.posts.find_or_create(title: "title3")
+            user.posts.where(title: "title1").find_or_create
+
+            user.posts.where(title: "title2").find_or_create
+            user.posts.find_or_create(title: "title3")
 
             post1.user.id.should eq(user.id)
             user.posts.count.should eq(3)
@@ -538,7 +539,7 @@ module CollectionSpec
 
         user = User.create! first_name: "user"
 
-        post1 = Post.create! title: "title 1", user_id: user.id
+        Post.create! title: "title 1", user_id: user.id
         post2 = Post.create! title: "title 2", user_id: user.id
 
         if post = Post
