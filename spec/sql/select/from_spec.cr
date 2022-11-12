@@ -39,7 +39,7 @@ module FromSpec
       end
     end
 
-    it "can be cleared" do
+    it "be cleared" do
       r = Clear::SQL.select.from("x").clear_from.from("y")
       r.to_sql.should eq "SELECT * FROM y"
     end

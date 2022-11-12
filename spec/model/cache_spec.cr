@@ -49,7 +49,7 @@ module CacheSpec
         end
       end
 
-      it "can be chained" do
+      it "be chained" do
         temporary do
           reinit
           Clear::Model::QueryCache.reset_counter
@@ -66,7 +66,7 @@ module CacheSpec
         end
       end
 
-      it "can be called in chain on the through relations" do
+      it "be called in chain on the through relations" do
         temporary do
           reinit
           # Relation belongs_to

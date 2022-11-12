@@ -3,7 +3,7 @@ require "./model_spec"
 
 module ModelSpec
   describe "JSON" do
-    it "Can load and export from JSON::Any" do
+    it "load and export from JSON::Any" do
       json = JSON.parse(%<{"id": 1, "first_name": "hello", "last_name": "boss"}>)
 
       u = User.new.reset(json)

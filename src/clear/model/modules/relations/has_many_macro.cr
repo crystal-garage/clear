@@ -2,28 +2,35 @@
 module Clear::Model::Relations::HasManyMacro
   # has many
   macro generate(self_type, method_name, relation_type, foreign_key = nil, primary_key = nil)
-    # The method {{method_name}} is a `has_many` relation
-    #   to {{relation_type}}
+    # The method {{method_name}} is a `has_many` relation to {{relation_type}}
     def {{method_name}} : {{relation_type}}::Collection
-      %primary_key = {{(primary_key || "pkey").id}}
-      %foreign_key =   {% if foreign_key %} "{{foreign_key}}" {% else %} (self.class.table.to_s.singularize + "_id") {% end %}
+      %primary_key = {{(primary_key || "__pkey__").id}}
+
+      %foreign_key =
+        {% if foreign_key %}
+          "{{foreign_key}}"
+        {% else %}
+          (self.class.table.to_s.singularize + "_id")
+        {% end %}
 
       cache = @cache
-      query = if cache && cache.active?("{{method_name}}")
-        arr = cache.hit("{{method_name}}", {{(primary_key || "pkey").id}}_column.to_sql_value, {{relation_type}})
 
-        # This relation will trigger the cache if it exists
-        {{relation_type}}.query \
-          .tags({ "#{%foreign_key}" => "#{%primary_key}" }) \
-          .where{ raw(%foreign_key) == %primary_key }
-          .with_cached_result(arr)
-      else
-        {{relation_type}}.query \
-          .tags({ "#{%foreign_key}" => "#{%primary_key}" }) \
-        .where{ raw(%foreign_key) == %primary_key }
-      end
+      query =
+        if cache && cache.active?("{{method_name}}")
+          arr = cache.hit("{{method_name}}", self.__pkey_column__.to_sql_value, {{relation_type}})
 
-      query.add_operation = -> (x : {{relation_type}}) {
+          # This relation will trigger the cache if it exists
+          {{relation_type}}.query
+            .tags({ "#{%foreign_key}" => "#{%primary_key}" })
+            .where { raw(%foreign_key) == %primary_key }
+            .with_cached_result(arr)
+        else
+          {{relation_type}}.query
+            .tags({ "#{%foreign_key}" => "#{%primary_key}" })
+            .where { raw(%foreign_key) == %primary_key }
+        end
+
+      query.append_operation = -> (x : {{relation_type}}) {
         x.reset(query.tags)
         x.save!
         x
@@ -38,19 +45,18 @@ module Clear::Model::Relations::HasManyMacro
       # Use it to avoid N+1 queries.
       def with_{{method_name}}(fetch_columns = false, &block : {{relation_type}}::Collection -> ) : self
         before_query do
-          %primary_key = {{(primary_key || "#{relation_type}.pkey").id}}
+          %primary_key = {{(primary_key || "#{relation_type}.__pkey__").id}}
           %foreign_key =   {% if foreign_key %} "{{foreign_key}}" {% else %} ({{self_type}}.table.to_s.singularize + "_id") {% end %}
 
           #SELECT * FROM foreign WHERE foreign_key IN ( SELECT primary_key FROM users )
           sub_query = self.dup.clear_select.select("#{{{self_type}}.table}.#{%primary_key}")
 
-          qry = {{relation_type}}.query.where{ raw(%foreign_key).in?(sub_query) }
+          qry = {{relation_type}}.query.where { raw(%foreign_key).in?(sub_query) }
           block.call(qry)
 
           @cache.active "{{method_name}}"
 
           h = {} of Clear::SQL::Any => Array({{relation_type}})
-
 
           qry.each(fetch_columns: true) do |mdl|
             unless h[mdl.attributes[%foreign_key]]?
@@ -69,9 +75,8 @@ module Clear::Model::Relations::HasManyMacro
       end
 
       def with_{{method_name}}(fetch_columns = false)
-        with_{{method_name}}(fetch_columns){|q|} #empty block
+        with_{{method_name}}(fetch_columns) { }
       end
     end
-
   end
 end

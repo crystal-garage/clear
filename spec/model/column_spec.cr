@@ -51,7 +51,7 @@ module ColumnSpec
         end
       end
 
-      it "can revert a column to previous state" do
+      it "revert a column to previous state" do
         temporary do
           reinit_example_models
           u = User.new({id: 1, first_name: "Henry"})
@@ -74,7 +74,7 @@ module ColumnSpec
         end
       end
 
-      it "can setup a default value to column if not defined" do
+      it "setup a default value to column if not defined" do
         temporary do
           reinit_example_models
           u = User.new({id: 1, first_name: "John"})

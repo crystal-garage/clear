@@ -45,8 +45,6 @@
 # In the example above, room_per_days will be first dropped before a migration
 # start and last created after the migration finished, to prevent issue where some
 # views are linked to others
-#
-#
 class Clear::View
   # Call the DSL to register a new view
   #

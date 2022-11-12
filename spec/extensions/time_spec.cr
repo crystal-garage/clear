@@ -6,8 +6,8 @@ module IntervalSpec
 
     def change(dir)
       create_table(:interval_table) do |t|
-        t.column :i, :interval, null: false
-        t.column :t, :time, null: true
+        t.column :interval, :interval, null: true
+        t.column :time_in_date, :time, null: true
 
         t.timestamps
       end
@@ -26,33 +26,34 @@ module IntervalSpec
 
     self.table = "interval_table"
 
-    column i : Clear::Interval
-    column t : Clear::TimeInDay?
+    column interval : Clear::Interval?
+    column time_in_date : Clear::TimeInDay?
   end
 
   describe Clear::Interval do
-    it "Can be saved into database (and converted to pg interval type)" do
+    it "be saved into database (and converted to pg interval type)" do
       temporary do
         reinit!
 
-        3.times do |x|
-          mth = Random.rand(-1000..1000)
+        3.times do |id|
+          months = Random.rand(-1000..1000)
           days = Random.rand(-1000..1000)
           microseconds = Random.rand(-10_000_000..10_000_000)
 
-          IntervalModel.create! id: x, i: Clear::Interval.new(months: mth, days: days, microseconds: microseconds)
+          interval = Clear::Interval.new(months: months, days: days, microseconds: microseconds)
+          IntervalModel.create! id: id, interval: interval
 
-          mdl = IntervalModel.find! x
-          mdl.i.months.should eq mth
-          mdl.i.days.should eq days
-          mdl.i.microseconds.should eq microseconds
+          record = IntervalModel.find! id
+          record.interval.not_nil!.months.should eq months
+          record.interval.not_nil!.days.should eq days
+          record.interval.not_nil!.microseconds.should eq microseconds
         end
       end
     end
 
-    it "can be added and substracted to a date" do
+    it "be added and substracted to a date" do
       # TimeSpan
-      [1.hour, 1.day, 1.month].each do |span|
+      [1.month, 1.day, 1.hour, 1.minute, 1.second].each do |span|
         i = Clear::Interval.new(span)
         now = Time.local
 
@@ -67,19 +68,19 @@ module IntervalSpec
       (now - i).to_unix.should eq((now - 1.month + 1.day - 12.minute).to_unix)
     end
 
-    it "can be used in expression engine" do
+    it "be used in expression engine" do
       IntervalModel.query.where {
         (created_at - Clear::Interval.new(months: 1)) > updated_at
       }.to_sql.should eq %(SELECT * FROM "interval_table" WHERE (("created_at" - INTERVAL '1 months') > "updated_at"))
     end
 
-    it "can be casted into string" do
+    it "be casted into string" do
       Clear::Interval.new(months: 1, days: 1).to_sql.to_s.should eq("INTERVAL '1 months 1 days'")
     end
   end
 
   describe Clear::TimeInDay do
-    it "can be parsed" do
+    it "be parsed" do
       value = 12i64 * 3_600 + 50*60
       Clear::TimeInDay.parse("12:50").microseconds.should eq(value * 1_000_000)
 
@@ -92,16 +93,17 @@ module IntervalSpec
       end
     end
 
-    it "can be saved into database and converted" do
+    it "be saved into database and converted" do
       temporary do
         reinit!
 
-        i = IntervalModel.create! i: Clear::Interval.new(days: 1), t: "12:32"
-        i.t.not_nil!.to_s(show_seconds: false).should eq("12:32")
-        i.t = i.t.not_nil! + 12.minutes
-        i.save!
+        time_in_date = "12:32"
+        record = IntervalModel.create! time_in_date: time_in_date
+        record.time_in_date.not_nil!.to_s(show_seconds: false).should eq("12:32")
+        record.time_in_date = record.time_in_date.not_nil! + 12.minutes
+        record.save!
 
-        i.reload.t.to_s.should eq("12:44:00")
+        record.reload.time_in_date.to_s.should eq("12:44:00")
       end
     end
   end

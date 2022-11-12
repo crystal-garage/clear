@@ -4,7 +4,7 @@ require "../data/example_models"
 module ModelSpec
   describe "Clear::Model" do
     context "fields management" do
-      it "can load from tuple" do
+      it "load from tuple" do
         temporary do
           reinit_example_models
           u = User.new({id: 123})
@@ -13,7 +13,7 @@ module ModelSpec
         end
       end
 
-      it "can load link string <-> varchar" do
+      it "load link string <-> varchar" do
         temporary do
           reinit_example_models
           User.create!(id: 1, first_name: "John", middle_name: "William")
@@ -24,7 +24,7 @@ module ModelSpec
         end
       end
 
-      it "can pluck" do
+      it "pluck" do
         temporary do
           reinit_example_models
           User.create!(id: 1, first_name: "John", middle_name: "William")
@@ -38,7 +38,7 @@ module ModelSpec
         end
       end
 
-      it "can detect persistence" do
+      it "detect persistence" do
         temporary do
           reinit_example_models
           u = User.new({id: 1}, persisted: true)
@@ -46,7 +46,7 @@ module ModelSpec
         end
       end
 
-      it "can detect change in fields" do
+      it "detect change in fields" do
         temporary do
           reinit_example_models
           u = User.new({id: 1})
@@ -57,7 +57,7 @@ module ModelSpec
         end
       end
 
-      it "can deal with boolean nullable" do # Specific bug with converter already fixed
+      it "deal with boolean nullable" do # Specific bug with converter already fixed
         temporary do
           reinit_example_models
           u = User.new({id: 1, first_name: "x", active: nil})
@@ -80,7 +80,7 @@ module ModelSpec
         end
       end
 
-      it "can save the model" do
+      it "save the model" do
         temporary do
           reinit_example_models
           u = User.new({id: 1, first_name: "x"})
@@ -91,7 +91,7 @@ module ModelSpec
         end
       end
 
-      it "can update the model" do
+      it "update the model" do
         temporary do
           reinit_example_models
 
@@ -102,7 +102,7 @@ module ModelSpec
         end
       end
 
-      it "can reload the model" do
+      it "reload the model" do
         temporary do
           reinit_example_models
 
@@ -129,7 +129,7 @@ module ModelSpec
         end
       end
 
-      it "can import a number of models" do
+      it "import a number of models" do
         temporary do
           reinit_example_models
           u = User.new({id: 1, first_name: "x"})
@@ -147,7 +147,7 @@ module ModelSpec
         end
       end
 
-      it "can save with conflict resolution" do
+      it "save with conflict resolution" do
         temporary do
           reinit_example_models
           u = User.new({id: 1, first_name: "John"})
@@ -233,7 +233,7 @@ module ModelSpec
         end
       end
 
-      it "can save persisted model" do
+      it "save persisted model" do
         temporary do
           reinit_example_models
           u = User.new
@@ -247,7 +247,7 @@ module ModelSpec
         end
       end
 
-      it "can use set to setup multiple fields at once" do
+      it "use set to setup multiple fields at once" do
         temporary do
           reinit_example_models
 
@@ -277,7 +277,7 @@ module ModelSpec
         end
       end
 
-      it "can load models" do
+      it "load models" do
         temporary do
           reinit_example_models
           User.create
@@ -287,7 +287,7 @@ module ModelSpec
         end
       end
 
-      it "can read through cursor" do
+      it "read through cursor" do
         temporary do
           reinit_example_models
           User.create
@@ -297,7 +297,7 @@ module ModelSpec
         end
       end
 
-      it "can fetch computed column" do
+      it "fetch computed column" do
         temporary do
           reinit_example_models
           User.create({first_name: "a", last_name: "b"})
@@ -307,7 +307,7 @@ module ModelSpec
         end
       end
 
-      it "can create a model using virtual fields" do
+      it "create a model using virtual fields" do
         temporary do
           reinit_example_models
           User.create!(full_name: "Hello World")
@@ -349,7 +349,7 @@ module ModelSpec
         end
       end
 
-      it "can count using offset and limit" do
+      it "count using offset and limit" do
         temporary do
           reinit_example_models
 
@@ -362,7 +362,7 @@ module ModelSpec
         end
       end
 
-      it "can count using group_by" do
+      it "count using group_by" do
         temporary do
           reinit_example_models
           9.times do |x|
@@ -373,7 +373,7 @@ module ModelSpec
         end
       end
 
-      it "can find_or_create" do
+      it "find_or_create" do
         temporary do
           reinit_example_models
 
@@ -405,7 +405,7 @@ module ModelSpec
         end
       end
 
-      it "can set back a field to nil" do
+      it "set back a field to nil" do
         temporary do
           reinit_example_models
 
@@ -418,7 +418,7 @@ module ModelSpec
         end
       end
 
-      it "can read and write jsonb" do
+      it "read and write jsonb" do
         temporary do
           reinit_example_models
           u = User.new
@@ -437,7 +437,7 @@ module ModelSpec
         end
       end
 
-      it "can query the last model" do
+      it "query the last model" do
         temporary do
           reinit_example_models
           User.create({first_name: "Yacine"})
@@ -470,7 +470,7 @@ module ModelSpec
         end
       end
 
-      it "can delete a model" do
+      it "delete a model" do
         temporary do
           reinit_example_models
 
@@ -490,7 +490,7 @@ module ModelSpec
         end
       end
 
-      it "can touch model" do
+      it "touch model" do
         temporary do
           reinit_example_models
 
@@ -502,7 +502,7 @@ module ModelSpec
       end
     end
 
-    it "can load a column of type Array" do
+    it "load a column of type Array" do
       temporary do
         reinit_example_models
 
@@ -523,7 +523,7 @@ module ModelSpec
     end
 
     context "with self-reference and has_many through" do
-      it "can assign self-reference has_many through" do
+      it "assign self-reference has_many through" do
         temporary do
           reinit_example_models
 
@@ -545,7 +545,7 @@ module ModelSpec
         end
       end
 
-      it "can create self-reference has_many through" do
+      it "create self-reference has_many through" do
         temporary do
           reinit_example_models
 
@@ -559,7 +559,7 @@ module ModelSpec
         end
       end
 
-      it "can unlink self-reference has_many through" do
+      it "unlink self-reference has_many through" do
         temporary do
           reinit_example_models
 
@@ -580,7 +580,7 @@ module ModelSpec
     end
 
     context "with has_many through relation" do
-      it "can query has_many through" do
+      it "query has_many through" do
         temporary do
           reinit_example_models
 
@@ -617,7 +617,7 @@ module ModelSpec
         end
       end
 
-      it "can unlink has_many through" do
+      it "unlink has_many through" do
         temporary do
           reinit_example_models
 
@@ -689,7 +689,7 @@ module ModelSpec
       it "test array" do
       end
 
-      it "can pull the next 5 users from page 2" do
+      it "pull the next 5 users from page 2" do
         temporary do
           reinit_example_models
 
@@ -703,18 +703,18 @@ module ModelSpec
         end
       end
 
-      it "can export to json" do
+      it "export to json" do
         temporary do
           reinit_example_models
           u = User.new({first_name: "Hello", last_name: "World"})
           u.to_json.should eq %({"first_name":"Hello","last_name":"World"})
 
           u.to_json(emit_nulls: true).should eq(
-            %({"id":null,"first_name":"Hello","last_name":"World","middle_name":null,"active":null,"notification_preferences":null,"updated_at":null,"created_at":null}))
+            %({"id":null,"first_name":"Hello","last_name":"World","middle_name":null,"gender":null,"active":null,"notification_preferences":null,"updated_at":null,"created_at":null}))
         end
       end
 
-      it "can paginate with where clause" do
+      it "paginate with where clause" do
         temporary do
           reinit_example_models
           last_names = ["smith", "jones"]
@@ -731,14 +731,14 @@ module ModelSpec
     end
 
     describe "Clear::Model::JSONDeserialize" do
-      it "can create a model json IO" do
+      it "create a model json IO" do
         user_body = {first_name: "foo"}
         io = IO::Memory.new user_body.to_json
         user = User.from_json(io)
         user.first_name.should eq user_body["first_name"]
       end
 
-      it "can create a new model instance from json" do
+      it "create a new model instance from json" do
         user_body = {first_name: "Steve"}
         user = User.from_json(user_body.to_json)
         user.first_name.should eq(user_body["first_name"])

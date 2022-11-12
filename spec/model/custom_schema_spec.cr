@@ -3,7 +3,7 @@ require "../data/example_models"
 
 module CustomSchemaSpec
   describe "Model inside another schema" do
-    it "can create a model" do
+    it "create a model" do
       temporary do
         reinit_example_models
 

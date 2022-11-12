@@ -8,6 +8,12 @@ struct Char
   end
 end
 
+class Crypto::Bcrypt::Password
+  def to_json(json : JSON::Builder) : Nil
+    json.string(self)
+  end
+end
+
 struct PG::Interval
   def to_json(json : JSON::Builder)
     json.object do

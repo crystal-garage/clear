@@ -13,7 +13,7 @@ module OrderBySpec
         .to_sql.should eq(%[SELECT * FROM users ORDER BY "id" ASC])
     end
 
-    it "can be reverted" do
+    it "be reverted" do
       qry = Clear::SQL.select.from("users").order_by(id: :desc).order_by(:name, :asc, :nulls_first)
 
       qry.to_sql.should eq(%[SELECT * FROM users ORDER BY "id" DESC, "name" ASC NULLS FIRST])

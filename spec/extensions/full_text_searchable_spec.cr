@@ -32,7 +32,7 @@ module FullTextSearchableSpec
   end
 
   describe "test tsv searchable" do
-    it "Can translate client query to ts_query" do
+    it "translate client query to ts_query" do
       Clear::Model::FullTextSearchable.to_tsq("rick & morty").should eq("'rick' & '&' & 'morty'")
       Clear::Model::FullTextSearchable.to_tsq("rick+morty").should eq("'rick' & 'morty'")
       Clear::Model::FullTextSearchable.to_tsq("\"rick morty\"").should eq("'rick morty'")
@@ -45,7 +45,7 @@ module FullTextSearchableSpec
       Clear::Model::FullTextSearchable.to_tsq("'l'usine").should eq("'l' & 'usine'")
     end
 
-    it "Can search through tsvector" do
+    it "search through tsvector" do
       temporary do
         reinit
 
@@ -65,7 +65,7 @@ module FullTextSearchableSpec
     end
   end
 
-  it "Can convert tsvector" do
+  it "convert tsvector" do
     temporary do
       reinit
 
@@ -85,7 +85,7 @@ module FullTextSearchableSpec
   end
 
   describe "Clear::TSVector" do
-    it "can be encoded/decoded" do
+    it "be encoded/decoded" do
       data = ("\u0000\u0000\u0000\tbad\u0000\u0000\u0001@\fbetter\u0000\u0000\u0001" +
               "\xC0\u0001break\u0000\u0000\u0001@\vcall\u0000\u0000\u0001\xC0\u0002" +
               "follow\u0000\u0000\u0001@\u0004goodman\u0000\u0000\u0001@\u0006lawyer" +

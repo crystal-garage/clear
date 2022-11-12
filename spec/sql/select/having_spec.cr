@@ -54,7 +54,7 @@ module HavingSpec
         .should eq "SELECT * FROM \"users\" HAVING (\"x\" >= 1 AND \"x\" < 4)"
     end
 
-    it "can prepare query" do
+    it "prepare query" do
       r = Clear::SQL.select.from(:users).having("a LIKE ?", "hello")
       r.to_sql.should eq "SELECT * FROM \"users\" HAVING a LIKE 'hello'"
     end
@@ -65,7 +65,7 @@ module HavingSpec
       end
     end
 
-    it "can prepare query with tuple" do
+    it "prepare query with tuple" do
       r = Clear::SQL.select.from(:users).having("a LIKE :hello AND b LIKE :world",
         hello: "h", world: "w")
       r.to_sql.should eq "SELECT * FROM \"users\" HAVING a LIKE 'h' AND b LIKE 'w'"
@@ -81,12 +81,12 @@ module HavingSpec
       end
     end
 
-    it "can prepare group by query" do
+    it "prepare group by query" do
       Clear::SQL.select.select("role").from(:users).group_by(:role).order_by(:role).to_sql.should eq \
         "SELECT role FROM \"users\" GROUP BY \"role\" ORDER BY \"role\" ASC"
     end
 
-    it "can use different comparison and arithmetic operators" do
+    it "use different comparison and arithmetic operators" do
       r = Clear::SQL.select.from(:users).having { users.id > 1 }
       r.to_sql.should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" > 1)"
       r = Clear::SQL.select.from(:users).having { users.id < 1 }
@@ -107,28 +107,28 @@ module HavingSpec
       r.to_sql.should eq "SELECT * FROM \"users\" HAVING (-\"users\".\"id\" < -1000)"
     end
 
-    it "can use expression engine equal" do
+    it "use expression engine equal" do
       r = Clear::SQL.select.from(:users).having { users.id == var("test") }
       r.to_sql.should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" = \"test\")"
     end
 
-    it "can use expression engine not equals" do
+    it "use expression engine not equals" do
       r = Clear::SQL.select.from(:users).having { users.id != 1 }
       r.to_sql.should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" <> 1)"
     end
 
-    it "can use expression engine not null" do
+    it "use expression engine not null" do
       r = Clear::SQL.select.from(:users).having { users.id != nil }
       r.to_sql.should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" IS NOT NULL)"
     end
 
-    it "can use expression engine null" do
+    it "use expression engine null" do
       r = Clear::SQL.select.from(:users).having { users.id == nil }
       r.to_sql.should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" IS NULL)"
     end
 
     describe "HAVING Expression engine Nodes" do
-      it "can stack with `AND` operator" do
+      it "stack with `AND` operator" do
         now = Time.local
         r = Clear::SQL.select.from(:users).having { users.id == nil }.having {
           var("users", "updated_at") >= now
@@ -137,7 +137,7 @@ module HavingSpec
                            "AND (\"users\".\"updated_at\" >= #{Clear::Expression[now]})"
       end
 
-      it "can stack with `OR` operator" do
+      it "stack with `OR` operator" do
         now = Time.local
         r = Clear::SQL.select.from(:users).having { users.id == nil }.or_having {
           var("users", "updated_at") >= now

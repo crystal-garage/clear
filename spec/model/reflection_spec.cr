@@ -3,7 +3,7 @@ require "../spec_helper"
 module ReflectionSpec
   describe "Clear::Reflection::Table" do
     context "querying" do
-      it "can list the tables" do
+      it "list the tables" do
         temporary do
           first_table = Clear::Reflection::Table.query.first!
           first_table.columns.first!

@@ -19,25 +19,25 @@ module JSONBSpec
         jsonb_arr2h(["a", "b"], 1).should eq({"a" => {"b" => 1}})
       end
 
-      it "can generate arrow writing" do
+      it "generate arrow writing" do
         jsonb_resolve("data", "x.y.z").should eq("data->'x'->'y'->'z'")
         jsonb_resolve("data", "x.\\.y.z").should eq("data->'x'->'.y'->'z'")
         jsonb_resolve("data", "x.y'b.z", "text").should eq("(data->'x'->'y''b'->'z')::text")
       end
 
-      it "can use `?|` operator" do
+      it "use `?|` operator" do
         jsonb_any_exists?("jsonb_column", ["a", "b", "c"]).should eq("jsonb_column ?| array['a','b','c']")
       end
 
-      it "can use `?` operator" do
+      it "use `?` operator" do
         jsonb_exists?("jsonb_column", "a").should eq("jsonb_column ? 'a'")
       end
 
-      it "can use `?&` operator" do
+      it "use `?&` operator" do
         jsonb_all_exists?("jsonb_column", ["a", "b", "c"]).should eq("jsonb_column ?& array['a','b','c']")
       end
 
-      it "can use @> operator" do
+      it "use @> operator" do
         jsonb_eq("data", "x.y", "value").should eq("data @> '{\"x\":{\"y\":\"value\"}}'")
         jsonb_eq("data", "x.y", 1).should eq("data @> '{\"x\":{\"y\":1}}'")
       end

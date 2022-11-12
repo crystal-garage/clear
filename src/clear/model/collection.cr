@@ -191,7 +191,7 @@ module Clear::Model
     @cached_result : Array(T)?
 
     # :nodoc:
-    property add_operation : Proc(T, T)?
+    property append_operation : Proc(T, T)?
     # :nodoc:
     property unlink_operation : Proc(T, T)?
 
@@ -301,6 +301,7 @@ module Clear::Model
       }
 
       tags(any_hash)
+
       super(**tuple)
     end
 
@@ -370,18 +371,89 @@ module Clear::Model
     # (e.g. `my_model.associations.build`), the foreign column which store
     # the primary key of `my_model` will be setup by default, preventing you
     # to forget it.
-    def build : T
-      Clear::Model::Factory.build(T, @tags, persisted: false)
-    end
-
-    # Build a new collection; if the collection comes from a has_many relation
-    # (e.g. `my_model.associations.build`), the foreign column which store
-    # the primary key of `my_model` will be setup by default, preventing you
-    # to forget it.
     # You can pass extra parameters using a named tuple:
     # `my_model.associations.build({a_column: "value"}) `
+    def build(**tuple, &block : T -> Nil) : T
+      str_hash = @tags.dup
+      tuple.map { |k, v| str_hash[k.to_s] = v }
+
+      r = Clear::Model::Factory.build(T, str_hash, persisted: false)
+
+      yield(r)
+
+      r
+    end
+
+    # :ditto:
+    def build(**tuple) : T
+      build(**tuple) { }
+    end
+
+    # :ditto:
     def build(x : NamedTuple) : T
-      Clear::Model::Factory.build(T, @tags.merge(x.to_h), persisted: false)
+      build(**x) { }
+    end
+
+    # :ditto:
+    def build(x : NamedTuple, &block : T -> Nil) : T
+      build(**x, &block)
+    end
+
+    # Build a new object and setup
+    # the fields like setup in the condition tuple.
+    # Just after building, save the object.
+    def create(**tuple, &block : T -> Nil) : T
+      r = build(**tuple) do |mdl|
+        yield(mdl)
+      end
+
+      r.save
+
+      r
+    end
+
+    # :ditto:
+    def create(**tuple) : T
+      create(**tuple) { }
+    end
+
+    # :ditto:
+    def create(x : NamedTuple) : T
+      create(**x)
+    end
+
+    # :ditto:
+    def create(x : NamedTuple, &block : T -> Nil) : T
+      create(**x, &block)
+    end
+
+    # Build a new object and setup
+    # the fields like setup in the condition tuple.
+    # Just after building, save the object.
+    # But instead of returning self if validation failed,
+    # raise `Clear::Model::InvalidError` exception
+    def create!(**tuple, &block : T -> Nil) : T
+      r = build(**tuple) do |mdl|
+        yield(mdl)
+      end
+
+      r.save!
+      r
+    end
+
+    # :ditto:
+    def create!(**tuple) : T
+      create!(**tuple) { }
+    end
+
+    # :ditto:
+    def create!(x : NamedTuple) : T
+      create(**x)
+    end
+
+    # :ditto:
+    def create!(x : NamedTuple, &block : T -> Nil) : T
+      create(**x, &block)
     end
 
     # Check whether the query return any row.
@@ -417,11 +489,11 @@ module Clear::Model
     #
     # Returns `self` and therefore can be chained
     def <<(item : T)
-      add_operation = self.add_operation
+      append_operation = self.append_operation
 
-      raise "Operation not permitted on this collection." unless add_operation
+      raise "Operation not permitted on this collection." unless append_operation
 
-      add_operation.call(item)
+      append_operation.call(item)
       @cached_result.try &.<<(item)
 
       self
@@ -497,10 +569,6 @@ module Clear::Model
       where(tuple).first!(fetch_columns)
     end
 
-    def find_or_build(**tuple) : T
-      find_or_build(**tuple) { }
-    end
-
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
     def find_or_build(**tuple, &block : T -> Nil) : T
@@ -518,14 +586,18 @@ module Clear::Model
       r
     end
 
-    # Try to fetch a row. If not found, build a new object and setup
-    # the fields like setup in the condition tuple.
-    # Just after building, save the object.
-    def find_or_create(**tuple) : T
-      r = find_or_build(**tuple)
+    def find_or_build(**tuple) : T
+      find_or_build(**tuple) { }
+    end
 
-      r.save!
-      r
+    # :ditto:
+    def find_or_build(x : NamedTuple) : T
+      find_or_build(**x)
+    end
+
+    # :ditto:
+    def find_or_build(x : NamedTuple, &block : T -> Nil) : T
+      find_or_build(**x, &block)
     end
 
     # Try to fetch a row. If not found, build a new object and setup
@@ -540,16 +612,25 @@ module Clear::Model
       r
     end
 
-    # Get the first row from the collection query.
-    # if not found, throw an error
-    def first!(fetch_columns = false) : T
-      first(fetch_columns) || raise Clear::SQL::RecordNotFoundError.new
+    # :ditto:
+    def find_or_create(**tuple) : T
+      find_or_create(**tuple) { }
+    end
+
+    # :ditto:
+    def find_or_create(x : NamedTuple) : T
+      find_or_create(**x)
+    end
+
+    # :ditto:
+    def find_or_create(x : NamedTuple, &block : T -> Nil) : T
+      find_or_create(**x, &block)
     end
 
     # Get the first row from the collection query.
     # if not found, return `nil`
     def first(fetch_columns = false) : T?
-      order_by(Clear::SQL.escape("#{T.pkey}"), :asc) if T.pkey || order_bys.empty?
+      order_by(Clear::SQL.escape("#{T.__pkey__}"), :asc) if T.__pkey__ || order_bys.empty?
 
       limit(1).fetch do |hash|
         return Clear::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
@@ -558,23 +639,16 @@ module Clear::Model
       nil
     end
 
-    # Get the last row from the collection query.
+    # Get the first row from the collection query.
     # if not found, throw an error
-    def last!(fetch_columns = false) : T
-      last(fetch_columns) || raise Clear::SQL::RecordNotFoundError.new
-    end
-
-    # Redefinition of `join_impl` to avoid ambiguity on the column
-    # name if no specific column have been selected.
-    protected def join_impl(name, type, lateral, clear_expr)
-      self.set_default_table_wildcard(Clear::SQL.escape(T.table))
-      super(name, type, lateral, clear_expr)
+    def first!(fetch_columns = false) : T
+      first(fetch_columns) || raise Clear::SQL::RecordNotFoundError.new
     end
 
     # Get the last row from the collection query.
     # if not found, return `nil`
     def last(fetch_columns = false) : T?
-      order_by("#{T.pkey}", :asc) if T.pkey || order_bys.empty?
+      order_by("#{T.__pkey__}", :asc) if T.__pkey__ || order_bys.empty?
 
       arr = order_bys.dup # Save current order by
 
@@ -594,6 +668,19 @@ module Clear::Model
         # reset the order by in case we want to reuse the query
         clear_order_bys.order_by(order_bys)
       end
+    end
+
+    # Get the last row from the collection query.
+    # if not found, throw an error
+    def last!(fetch_columns = false) : T
+      last(fetch_columns) || raise Clear::SQL::RecordNotFoundError.new
+    end
+
+    # Redefinition of `join_impl` to avoid ambiguity on the column
+    # name if no specific column have been selected.
+    protected def join_impl(name, type, lateral, clear_expr)
+      self.set_default_table_wildcard(Clear::SQL.escape(T.table))
+      super(name, type, lateral, clear_expr)
     end
 
     # Delete all the rows which would have been returned by this collection.

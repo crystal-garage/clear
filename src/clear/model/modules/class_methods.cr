@@ -58,28 +58,14 @@ module Clear::Model::ClassMethods
       # ex: "schema"."table"
       def self.full_table_name
         if s = schema
-          {schema, table}.map{ |x| Clear::SQL.escape(x.to_s) }.join(".")
+          {schema, table}.map { |x| Clear::SQL.escape(x.to_s) }.join(".")
         else
           # Default schema
           Clear::SQL.escape(table)
         end
       end
 
-      # Returns the name of the `pkey` field
-      class_property pkey : String = "id"      # <~~ FIXME
-
-      # :nodoc:
-      # FIXME
-      # @@pkey : String? = nil
-      # def self.pkey
-      #   pkey = @@pkey
-      #   raise Clear::ErrorMessages.lack_of_primary_key(self.name) unless pkey
-      #   pkey
-      # end
-      #
-      # def self.pkey=(value)
-      #   @@pkey = value
-      # end
+      class_property __pkey__ : String = "id"
 
       # :doc:
       # {{@type}}::Collection
@@ -101,7 +87,7 @@ module Clear::Model::ClassMethods
       # Returns a model using primary key equality
       # Returns `nil` if not found.
       def self.find(x)
-        query.where { raw(pkey) == x }.first
+        query.where { raw(__pkey__) == x }.first
       end
 
       # Returns a model using primary key equality.
@@ -113,74 +99,94 @@ module Clear::Model::ClassMethods
       # Build a new empty model and fill the columns using the NamedTuple in argument.
       #
       # Returns the new model
-      def self.build(**x : **T) forall T
+      def self.build(**tuple : **T) forall T
         \\{% if T.size > 0 %}
-          self.new(x)
+          self.new(tuple)
         \\{% else %}
           self.new
         \\{% end %}
+      end
+
+      # :ditto:
+      def self.build(**tuple)
+        build(**tuple) { }
+      end
+
+      # :ditto:
+      def self.build(**tuple, &block)
+        r = build(**tuple)
+
+        yield(r)
+
+        r
+      end
+
+      # :ditto:
+      def self.build(x : NamedTuple) : self
+        build(**x) { }
+      end
+
+      # :ditto:
+      def self.build(x : NamedTuple, &block : self -> Nil) : self
+        build(**x, &block)
       end
 
       # Build and new model and save it. Returns the model.
       #
       # The model may not be saved due to validation failure;
       # check the returned model `errors?` and `persisted?` flags.
-      def self.create(**args) : self
-        mdl = build(**args)
-        mdl.save
-        mdl
+      def self.create(**tuple, &block : self -> Nil) : self
+        r = build(**tuple) do |mdl|
+          yield(mdl)
+        end
+
+        r.save
+
+        r
+      end
+
+      # :ditto:
+      def self.create(**tuple) : self
+        create(**tuple) { }
+      end
+
+      # :ditto:
+      def self.create(x : NamedTuple) : self
+        create(**x) { }
+      end
+
+      # :ditto:
+      def self.create(x : NamedTuple, &block : self -> Nil) : self
+        create(**x, &block)
       end
 
       # Build and new model and save it. Returns the model.
       #
       # Returns the newly inserted model
       # Raises an exception if validation failed during the saving process.
-      def self.create!(**args) : self
-        mdl = build(**args)
-        mdl.save!
-        mdl
+      def self.create!(**tuple, &block : self -> Nil) : self
+        r = build(**tuple) do |mdl|
+          yield(mdl)
+        end
+
+        r.save!
+
+        r
       end
 
-      def self.create!(a : Hash) : self
-        mdl = self.new(a)
-        mdl.save!
-        mdl
+      # :ditto:
+      def self.create!(**tuple) : self
+        create!(**tuple) { }
       end
 
-      def self.create(x : Hash) : self
-        mdl = self.new(a)
-        mdl.save
-        mdl
-      end
-
-      # Multi-models creation. See `Collection#create(**args)`
-      #
-      # Returns the list of newly created model.
-      #
-      # Each model will call an `INSERT` query.
-      # You may want to use `Collection#import` to insert multiple model more efficiently in one query.
-      def self.create(x : Array(NamedTuple)) : Array(self)
-        x.map{ |elm| create(**elm) }
-      end
-
-      # Multi-models creation. See `Collection#create!(**args)`
-      #
-      # Returns the list of newly created model.
-      # Raises exception if any of the model has validation error.
-      def self.create!(x : Array(NamedTuple)) : Array(self)
-        x.map{ |elm| create!(**elm) }
-      end
-
-      def self.create(x : NamedTuple) : self
-        mdl = build(**x)
-        mdl.save
-        mdl
-      end
-
+      # :ditto:
       def self.create!(x : NamedTuple) : self
-        mdl = build(**x)
-        mdl.save!
-        mdl
+        create!(**x) { }
+      end
+
+      # :ditto:
+      def self.create!(x : NamedTuple, &block : self -> Nil) : self
+        create!(**x, &block)
       end
 
       def self.columns

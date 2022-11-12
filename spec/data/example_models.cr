@@ -1,77 +1,27 @@
-class Tag
-  include Clear::Model
-
-  column id : Int32, primary: true, presence: false
-
-  column name : String
-
-  has_many posts : Post, through: :post_tags, foreign_key: :post_id, own_key: :tag_id
-end
-
-class PostTag
-  include Clear::Model
-
-  belongs_to post : Post, key_type: Int32?
-  belongs_to tag : Tag, key_type: Int32?
-end
-
-class Category
-  include Clear::Model
-
-  column id : Int32, primary: true, presence: false
-
-  column name : String
-
-  has_many posts : Post
-  has_many users : User, through: Post, foreign_key: :user_id, own_key: :category_id
-
-  timestamps
-end
-
-class Post
-  include Clear::Model
-
-  column id : Int32, primary: true, presence: false
-
-  column title : String
-
-  column tags : Array(String), presence: false
-  column flags : Array(Int64), presence: false, column_name: "flags_other_column_name"
-
-  column content : String, presence: false
-
-  column published : Bool, presence: false
-
-  scope("published") { where published: true }
-
-  def validate
-    ensure_than(title, "is not empty", &.size.>(0))
+Clear.enum GenderType, "male", "female", "other" do
+  def male?
+    self == Male
   end
 
-  has_many post_tags : PostTag, foreign_key: "post_id"
-  has_many tag_relations : Tag, through: :post_tags, foreign_key: :tag_id, own_key: :post_id
+  def female?
+    self == Female
+  end
 
-  belongs_to user : User, key_type: Int32?
-  belongs_to category : Category, key_type: Int32?
-end
-
-class UserInfo
-  include Clear::Model
-
-  column id : Int32, primary: true, presence: false
-
-  belongs_to user : User, key_type: Int32?
-  column registration_number : Int64
+  def other?
+    self == Other
+  end
 end
 
 class User
   include Clear::Model
 
-  column id : Int32, primary: true, presence: false
+  primary_key
 
   column first_name : String
   column last_name : String?
   column middle_name : String?, mass_assign: false
+
+  column gender : GenderType?
 
   column active : Bool?
 
@@ -95,6 +45,74 @@ class User
   def full_name
     {self.first_name, self.last_name}.join(" ")
   end
+end
+
+class Post
+  include Clear::Model
+
+  primary_key
+
+  column title : String
+
+  column tags : Array(String), presence: false
+  column flags : Array(Int64), presence: false, column_name: "flags_other_column_name"
+
+  column content : String, presence: false
+
+  column published : Bool, presence: false
+
+  scope("published") { where published: true }
+
+  def validate
+    ensure_than(title, "title: is empty", &.size.>(0))
+  end
+
+  has_many post_tags : PostTag, foreign_key: "post_id"
+  has_many tag_relations : Tag, through: :post_tags, foreign_key: :tag_id, own_key: :post_id
+
+  belongs_to user : User
+  belongs_to category : Category, foreign_key_type: Int32?
+end
+
+class Tag
+  include Clear::Model
+
+  column id : Int32, primary: true, presence: false
+
+  column name : String
+
+  has_many posts : Post, through: :post_tags, foreign_key: :post_id, own_key: :tag_id
+end
+
+class PostTag
+  include Clear::Model
+
+  primary_key
+
+  belongs_to post : Post, foreign_key_type: Int64?
+  belongs_to tag : Tag, foreign_key_type: Int32?
+end
+
+class UserInfo
+  include Clear::Model
+
+  column id : Int32, primary: true, presence: false
+
+  belongs_to user : User, foreign_key_type: Int64?
+  column registration_number : Int64
+end
+
+class Category
+  include Clear::Model
+
+  column id : Int32, primary: true, presence: false
+
+  column name : String
+
+  has_many posts : Post
+  has_many users : User, through: Post, foreign_key: :user_id, own_key: :category_id
+
+  timestamps
 end
 
 class Relationship
@@ -139,6 +157,8 @@ class ModelSpecMigration123
   include Clear::Migration
 
   def change(dir)
+    create_enum(:gender_type, GenderType)
+
     create_table "categories" do |t|
       t.column "name", "string"
 
@@ -154,10 +174,11 @@ class ModelSpecMigration123
     create_table "users" do |t|
       t.column "first_name", "string"
       t.column "last_name", "string"
+      t.column "middle_name", type: "varchar(32)"
+
+      t.column :gender, :gender_type
 
       t.column "active", "bool", null: true
-
-      t.column "middle_name", type: "varchar(32)"
 
       t.column "notification_preferences", "jsonb", index: "gin", default: "'{}'"
 
@@ -184,7 +205,7 @@ class ModelSpecMigration123
       t.references to: "categories", name: "category_id", null: true, on_delete: "set null"
     end
 
-    create_table "post_tags", id: false do |t|
+    create_table "post_tags" do |t|
       t.references to: "tags", name: "tag_id", on_delete: "cascade", null: false, primary: true
       t.references to: "posts", name: "post_id", on_delete: "cascade", null: false, primary: true
 
@@ -220,5 +241,6 @@ end
 
 def self.reinit_example_models
   reinit_migration_manager
+
   ModelSpecMigration123.new.apply
 end

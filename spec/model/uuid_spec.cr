@@ -32,7 +32,7 @@ module UUIDSpec
 
     self.table = "dbobjects2"
 
-    belongs_to db_object : DBObject?, foreign_key: "db_object_id", key_type: UUID?
+    belongs_to db_object : DBObject?, foreign_key: "db_object_id", foreign_key_type: UUID?
 
     primary_key type: :uuid
   end
@@ -43,7 +43,7 @@ module UUIDSpec
   end
 
   describe "Clear::Model::HasSerialPkey with uuid" do
-    it "can generate objects with UUID as primary keys" do
+    it "generate objects with UUID as primary keys" do
       temporary do
         reinit
 
@@ -67,7 +67,7 @@ module UUIDSpec
       end
     end
 
-    it "can call relations between the objects" do
+    it "call relations between the objects" do
       temporary do
         reinit
 
@@ -87,7 +87,7 @@ module UUIDSpec
       end
     end
 
-    it "can create a model by generating an uuid primary key" do
+    it "create a model by generating an uuid primary key" do
       temporary do
         reinit_example_models
         m = ModelWithUUID.create!
@@ -95,7 +95,7 @@ module UUIDSpec
       end
     end
 
-    it "can create a model with a predefined uuid primary key" do
+    it "create a model with a predefined uuid primary key" do
       temporary do
         reinit_example_models
         some_uuid = UUID.new("5ca27508-f2ce-441b-b2cf-41134793e7a1")
@@ -104,7 +104,7 @@ module UUIDSpec
       end
     end
 
-    it "can save a model with UUID to JSON" do
+    it "save a model with UUID to JSON" do
       temporary do
         reinit
 

@@ -48,7 +48,7 @@ module ValidationSpec
   end
 
   describe "Clear::Model Validation" do
-    it "can validate presence using the type of the column" do
+    it "validate presence using the type of the column" do
       u = User.new
       u.valid?.should eq(false)
       u.print_errors.should eq("user_name: must be present")
@@ -72,7 +72,7 @@ module ValidationSpec
       u.valid?.should eq(true)
     end
 
-    it "can validate multiple columns" do
+    it "validate multiple columns" do
       m = MultiValidation.new
       m.email = "test"
 
@@ -88,7 +88,7 @@ module ValidationSpec
       m.print_errors.should eq("email: must be email, must not be a free email")
     end
 
-    it "can use on_presence helper" do
+    it "use on_presence helper" do
       u = User.new({user_name: "u"}); u.valid?
       u.on_presence_working?.should eq false
 
@@ -96,7 +96,7 @@ module ValidationSpec
       u.on_presence_working?.should eq true
     end
 
-    it "can validate" do
+    it "validate" do
       v = ValidateNotEmpty.new
       v.a = ""
       v.valid?.should eq(false)

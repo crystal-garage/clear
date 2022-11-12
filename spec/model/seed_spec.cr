@@ -35,7 +35,7 @@ module SeedSpec
   end
 
   describe "Clear::Model::HasScope" do
-    it "can access to scope with different arguments " do
+    it "access to scope with different arguments " do
       temporary do
         reinit
 
