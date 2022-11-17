@@ -138,7 +138,7 @@ module Clear::Model::FullTextSearchable
           currtoken << c
         end
       when '"'
-        if (quote_char.nil?)
+        if quote_char.nil?
           quote_char = '"'
         elsif quote_char == '"'
           arr_tokens << {modifier, currtoken.join}

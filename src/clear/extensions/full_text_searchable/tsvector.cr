@@ -10,7 +10,7 @@ class Clear::TSVector
     def initialize(io)
       chars = [] of UInt8
 
-      while ((c = io.read_byte.not_nil!) != 0)
+      while (c = io.read_byte.not_nil!) != 0
         chars << c
       end
 

@@ -42,11 +42,11 @@ module Clear::SQL::Logger
   end
 
   def self.display_time(x) : String
-    if (x > 60)
+    if x > 60
       display_mn_sec(x)
-    elsif (x > 1)
+    elsif x > 1
       ("%.2f" % x) + "s"
-    elsif (x > 0.001)
+    elsif x > 0.001
       (1_000*x).to_i.to_s + "ms"
     else
       (1_000_000*x).to_i.to_s + "µs"
