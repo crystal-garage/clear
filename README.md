@@ -41,17 +41,17 @@ You don't want to use Clear if:
 
 ```crystal
   # Like ...
-  Product.query.where{ ( type == "Book" ) & ( metadata.jsonb("author.full_name") == "Philip K. Dick" ) }
+  Product.query.where { ( type == "Book" ) & ( metadata.jsonb("author.full_name") == "Philip K. Dick" ) }
   # ^--- will use @> operator, to relay on your gin index. For real.
 
-  Product.query.where{ ( products.type == "Book" ) & ( products.metadata.jsonb("author.full_name") != "Philip K. Dick" ) }
+  Product.query.where { ( products.type == "Book" ) & ( products.metadata.jsonb("author.full_name") != "Philip K. Dick" ) }
   # ^--- this time will use -> notation, because no optimizations possible :/
 
   # Or...
-  User.query.where{ created_at.in? 5.days.ago .. 1.day.ago }
+  User.query.where { created_at.in? 5.days.ago .. 1.day.ago }
 
   # Or even...
-  ORM.query.where{ ( description =~ /(^| )awesome($| )/i ) }.first!.name # Clear! :-)
+  ORM.query.where { ( description =~ /(^| )awesome($| )/i ) }.first!.name # Clear! :-)
 ```
 
 - Proper debug information
@@ -221,7 +221,7 @@ User.query.first #Get the first user, ordered by primary key
 User.find!(1) #Get the first user, or throw exception if not found.
 
 # Usage of query provides a `find_by` kind of method:
-u : User? = User.query.find{ email =~ /yacine/i }
+u : User? = User.query.find { email =~ /yacine/i }
 ```
 
 ##### Fetch multiple models
@@ -232,12 +232,12 @@ Collections include `SQL::Select` object, so all the low level API
 
 ```crystal
 # Get multiple users
-User.query.where{ (id >= 100) & (id <= 200) }.each do |user|
+User.query.where { (id >= 100) & (id <= 200) }.each do |user|
   # Do something with user !
 end
 
 #In case you know there's millions of row, use a cursor to avoid memory issues !
-User.query.where{ (id >= 1) & (id <= 20_000_000) }.each_cursor(batch: 100) do |user|
+User.query.where { (id >= 1) & (id <= 20_000_000) }.each_cursor(batch: 100) do |user|
   # Do something with user; only 100 users will be stored in memory
   # This method is using pg cursor, so it's 100% transaction-safe
 end
@@ -251,9 +251,9 @@ and keep the model query for _fetching_ models only
 
 ```crystal
 # count
-user_on_gmail = User.query.where{ email.ilike "@gmail.com%" }.count #Note: count return is Int64
+user_on_gmail = User.query.where { email.ilike "@gmail.com%" }.count #Note: count return is Int64
 # min/max
-max_id = User.query.where{ email.ilike "@gmail.com%" }.max("id", Int32)
+max_id = User.query.where { email.ilike "@gmail.com%" }.max("id", Int32)
 # your own aggregate
 weighted_avg = User.query.agg( "SUM(performance_weight * performance_score) / SUM(performance_weight)", Float64 )
 ```

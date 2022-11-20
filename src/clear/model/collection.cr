@@ -547,7 +547,7 @@ module Clear::Model
       self.offset(range.begin).limit(range.end - range.begin).to_a(fetch_columns)
     end
 
-    # A convenient way to write `where{ condition }.first`
+    # A convenient way to write `where { condition }.first`
     def find(fetch_columns = false, &block) : T?
       x = Clear::Expression.ensure_node!(with Clear::Expression.new yield)
       where(x).first(fetch_columns)
@@ -564,7 +564,7 @@ module Clear::Model
       where(x).first!(fetch_columns)
     end
 
-    # A convenient way to write `where{ condition }.first!`
+    # A convenient way to write `where { condition }.first!`
     def find!(tuple : NamedTuple, fetch_columns = false) : T
       where(tuple).first!(fetch_columns)
     end

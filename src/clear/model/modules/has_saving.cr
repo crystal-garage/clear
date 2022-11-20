@@ -77,7 +77,7 @@ module Clear::Model::HasSaving
   #
   # ```
   # u = User.new id: 123, email: "email@example.com"
-  # u.save(-> (qry) { qry.on_conflict.do_update{ |u| u.set(email: "email@example.com") } #update
+  # u.save(-> (qry) { qry.on_conflict.do_update { |u| u.set(email: "email@example.com") } #update
   # # IMPORTANT NOTICE: user may not be saved, but will be still detected as persisted !
   # ```
   #
@@ -86,7 +86,7 @@ module Clear::Model::HasSaving
   # ```
   # u = User.new id: 123, email: "email@example.com"
   # u.save do |qry|
-  #    qry.on_conflict.do_update{ |u| u.set(email: "email@example.com")
+  #    qry.on_conflict.do_update { |u| u.set(email: "email@example.com")
   # end
   # ```
   #

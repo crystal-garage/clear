@@ -191,7 +191,7 @@ class Clear::Expression
          "It happens when a test is done with values on both sides.\n" +
          "Maybe a local variable is breaking the expression engine like here:\n" +
          "id = 1\n" +
-         "Users.where{ id == nil }\n\n" +
+         "Users.where { id == nil }\n\n" +
          "In this case, please use `raw(\"id IS NULL\")` to allow the expression." %}
   end
 
@@ -202,7 +202,7 @@ class Clear::Expression
 
   # Return a node of the expression engine
   # This node can then be combined with others node
-  # in case of chain request creation `where{...}.where{...}`
+  # in case of chain request creation `where {...}.where {...}`
   # through the chaining engine
   def self.where(&block) : Node
     expression_engine = self.new

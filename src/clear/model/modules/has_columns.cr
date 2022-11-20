@@ -417,7 +417,7 @@ module Clear::Model::HasColumns
     end
 
     def to_json(emit_nulls : Bool = false)
-      JSON.build{ |json| to_json(json, emit_nulls) }
+      JSON.build { |json| to_json(json, emit_nulls) }
     end
 
     def to_json(json, emit_nulls = false)

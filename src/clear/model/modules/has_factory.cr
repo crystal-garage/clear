@@ -49,14 +49,14 @@ module Clear::Model::HasFactory
       class Collection < Clear::Model::CollectionBase(\{{@type}}); end
 
       def self.query
-        Collection.new.from(table).where{ {{through.id}} == self.name }
+        Collection.new.from(table).where { {{through.id}} == self.name }
       end
     end
 
     # Base class can be refined too, only if the baseclass is not abstract.
     {% unless @type.abstract? %}
       def self.query
-        Collection.new.from(table).where{ {{through.id}} == self.name }
+        Collection.new.from(table).where { {{through.id}} == self.name }
       end
     {% end %}
 
