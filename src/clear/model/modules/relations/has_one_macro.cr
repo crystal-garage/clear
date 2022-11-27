@@ -12,7 +12,13 @@ module Clear::Model::Relations::HasOneMacro
     # Otherwise, will try to find in the cache.
     def {{method_name}} : {{relation_type}}?
       %primary_key = {{(primary_key || "__pkey__").id}}
-      %foreign_key =  {{foreign_key}} || ( self.class.table.to_s.singularize + "_id" )
+
+      %foreign_key =
+        {% if foreign_key %}
+          "{{foreign_key}}"
+        {% else %}
+          self.class.table.to_s.singularize + "_id"
+        {% end %}
 
       {{relation_type}}.query.where { raw(%foreign_key) == %primary_key }.first
     end
