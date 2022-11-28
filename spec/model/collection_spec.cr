@@ -516,20 +516,56 @@ module CollectionSpec
       end
     end
 
-    it "find / find!" do
-      temporary do
-        reinit_example_models
+    context "find / find!" do
+      it "with block" do
+        temporary do
+          reinit_example_models
 
-        10.times do |x|
-          User.create! first_name: "user #{x}"
+          10.times do |x|
+            User.create! first_name: "user #{x}"
+          end
+
+          User.query.find! { first_name == "user 2" }.first_name.should eq("user 2")
+          User.query.find { first_name == "not_exists" }.should be_nil
+
+          expect_raises(Clear::SQL::RecordNotFoundError) {
+            User.query.find! { first_name == "not_exists" }
+          }
         end
+      end
 
-        User.query.find! { first_name == "user 2" }.first_name.should eq("user 2")
-        User.query.find { first_name == "not_exists" }.should be_nil
+      it "with NamedTuple" do
+        temporary do
+          reinit_example_models
 
-        expect_raises(Clear::SQL::RecordNotFoundError) {
-          User.query.find! { first_name == "not_exists" }
-        }
+          10.times do |x|
+            User.create! first_name: "user #{x}"
+          end
+
+          User.query.find!({first_name: "user 2"}).first_name.should eq("user 2")
+          User.query.find({first_name: "not_exists"}).should be_nil
+
+          expect_raises(Clear::SQL::RecordNotFoundError) {
+            User.query.find!({first_name: "not_exists"})
+          }
+        end
+      end
+
+      it "with arguments" do
+        temporary do
+          reinit_example_models
+
+          10.times do |x|
+            User.create!(first_name: "first #{x}", last_name: "last #{x}")
+          end
+
+          User.query.find!(first_name: "first 2", last_name: "last 2").first_name.should eq("first 2")
+          User.query.find(first_name: "not_exists").should be_nil
+
+          expect_raises(Clear::SQL::RecordNotFoundError) {
+            User.query.find!(first_name: "not_exists")
+          }
+        end
       end
     end
 

@@ -547,26 +547,38 @@ module Clear::Model
       self.offset(range.begin).limit(range.end - range.begin).to_a(fetch_columns)
     end
 
-    # A convenient way to write `where { condition }.first`
+    # A convenient way to write `where { condition }.first(fetch_columns)`
     def find(fetch_columns = false, &block) : T?
       x = Clear::Expression.ensure_node!(with Clear::Expression.new yield)
+
       where(x).first(fetch_columns)
     end
 
-    # A convenient way to write `where({any_column: "any_value"}).first`
+    # A convenient way to write `where({any_column: "any_value"}).first(fetch_columns)`
     def find(tuple : NamedTuple, fetch_columns = false) : T?
       where(tuple).first(fetch_columns)
     end
 
-    # A convenient way to write `where({any_column: "any_value"}).first!`
+    # A convenient way to write `where({any_column: "any_value"}).first`
+    def find(**tuple) : T?
+      where(tuple).first
+    end
+
+    # A convenient way to write `where { condition }.first!(fetch_columns)`
     def find!(fetch_columns = false, &block) : T
       x = Clear::Expression.ensure_node!(with Clear::Expression.new yield)
+
       where(x).first!(fetch_columns)
     end
 
-    # A convenient way to write `where { condition }.first!`
+    # A convenient way to write `where({any_column: "any_value"}).first!(fetch_columns)`
     def find!(tuple : NamedTuple, fetch_columns = false) : T
       where(tuple).first!(fetch_columns)
+    end
+
+    # A convenient way to write `where({any_column: "any_value"}).first!`
+    def find!(**tuple) : T
+      where(tuple).first!
     end
 
     # Try to fetch a row. If not found, build a new object and setup
