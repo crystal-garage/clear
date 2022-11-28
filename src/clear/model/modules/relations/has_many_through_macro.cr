@@ -89,7 +89,7 @@ module Clear::Model::Relations::HasManyThroughMacro
     class Collection
       # Eager load the relation {{method_name}}.
       # Use it to avoid N+1 queries.
-      def with_{{method_name}}(&block : {{relation_type}}::Collection -> ) : self
+      def with_{{method_name}}(&block : {{relation_type}}::Collection ->) : self
         before_query do
           %final_table = {{relation_type}}.table
           %final_pkey = {{relation_type}}.__pkey__

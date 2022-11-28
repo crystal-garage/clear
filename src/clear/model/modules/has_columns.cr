@@ -206,8 +206,10 @@ module Clear::Model::HasColumns
       {% end %}
 
       @{{var_name}}_column : Clear::Model::Column({{type}}, {{converter}}) =
-        Clear::Model::Column({{type}}, {{converter}}).new({{db_name}},
-        has_db_default: {{has_db_default}} )
+        Clear::Model::Column({{type}}, {{converter}}).new(
+          {{db_name}},
+          has_db_default: {{has_db_default}}
+        )
 
       # Returns the column object used to manage `{{var_name}}` field
       #
@@ -243,7 +245,7 @@ module Clear::Model::HasColumns
     {% end %}
 
     # reset flavors
-    def reset( **t : **T ) forall T
+    def reset(**t : **T) forall T
       super
 
       {% verbatim do %}
@@ -263,12 +265,12 @@ module Clear::Model::HasColumns
       self
     end
 
-    def reset( t : NamedTuple )
+    def reset(t : NamedTuple)
       reset(**t)
     end
 
     # Set the columns from hash
-    def reset( h : Hash(Symbol, _) )
+    def reset(h : Hash(Symbol, _))
       super
 
       {% verbatim do %}
@@ -281,7 +283,7 @@ module Clear::Model::HasColumns
     end
 
     # Set the model fields from hash
-    def reset( h : Hash(String, _) )
+    def reset(h : Hash(String, _))
       super
 
       {% verbatim do %}
@@ -294,11 +296,11 @@ module Clear::Model::HasColumns
       self
     end
 
-    def reset( from_json : JSON::Any )
+    def reset(from_json : JSON::Any)
       reset(from_json.as_h)
     end
 
-    def set( **t : **T ) forall T
+    def set(**t : **T) forall T
       super
 
       {% verbatim do %}
@@ -317,12 +319,12 @@ module Clear::Model::HasColumns
       self
     end
 
-    def set( t : NamedTuple )
+    def set(t : NamedTuple)
       set(**t)
     end
 
     # Set the columns from hash
-    def set( h : Hash(Symbol, _) )
+    def set(h : Hash(Symbol, _))
       super
 
       {% verbatim do %}
@@ -336,7 +338,7 @@ module Clear::Model::HasColumns
     end
 
     # Set the model fields from hash
-    def set( h : Hash(String, _) )
+    def set(h : Hash(String, _))
       super
 
       {% verbatim do %}
@@ -349,7 +351,7 @@ module Clear::Model::HasColumns
       self
     end
 
-    def set( from_json : JSON::Any )
+    def set(from_json : JSON::Any)
       set(from_json.as_h)
     end
 

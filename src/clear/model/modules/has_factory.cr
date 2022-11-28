@@ -64,10 +64,16 @@ module Clear::Model::HasFactory
       true
     end
 
-    Clear::Model::Factory.add("{{@type}}", Clear::Model::Factory::PolymorphicFactory({{@type}}).new({{through.id.stringify}}, "{{@type}}" ) )
+    Clear::Model::Factory.add(
+      "{{@type}}",
+      Clear::Model::Factory::PolymorphicFactory({{@type}}).new({{through.id.stringify}}, "{{@type}}")
+    )
 
     macro inherited
-      Clear::Model::Factory.add("\{{@type}}", Clear::Model::Factory::SimpleFactory(\{{@type}}).new )
+      Clear::Model::Factory.add(
+        "\{{@type}}",
+        Clear::Model::Factory::SimpleFactory(\{{@type}}).new
+      )
     end
   end
 end

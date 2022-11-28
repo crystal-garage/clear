@@ -255,7 +255,7 @@ user_on_gmail = User.query.where { email.ilike "@gmail.com%" }.count #Note: coun
 # min/max
 max_id = User.query.where { email.ilike "@gmail.com%" }.max("id", Int32)
 # your own aggregate
-weighted_avg = User.query.agg( "SUM(performance_weight * performance_score) / SUM(performance_weight)", Float64 )
+weighted_avg = User.query.agg("SUM(performance_weight * performance_score) / SUM(performance_weight)", Float64)
 ```
 
 ##### Fetching associations
@@ -625,7 +625,7 @@ up in migration
 ## Performances
 
 Models add a layer of computation. Below is a sample with a very simple model
-(two integer column ), with fetching of 100k rows over 1M rows database, using --release flag:
+(two integer column), with fetching of 100k rows over 1M rows database, using --release flag:
 
 |                     Method |       | Total time           |        Speed |
 | -------------------------: | ----: | -------------------- | -----------: |

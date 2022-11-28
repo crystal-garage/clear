@@ -105,7 +105,7 @@ module Clear::Model::Relations::BelongsToMacro
     end
 
     class Collection
-      def with_{{method_name}}(fetch_columns = false, &block : {{relation_type}}::Collection -> ) : self
+      def with_{{method_name}}(fetch_columns = false, &block : {{relation_type}}::Collection ->) : self
         before_query do
           sub_query = self.dup.clear_select.select("#{{{self_type}}.table}.{{foreign_key.id}}")
 

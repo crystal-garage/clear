@@ -43,7 +43,7 @@ module Clear::Model::Relations::HasManyMacro
     class Collection
       # Eager load the has many relation {{method_name}}.
       # Use it to avoid N+1 queries.
-      def with_{{method_name}}(fetch_columns = false, &block : {{relation_type}}::Collection -> ) : self
+      def with_{{method_name}}(fetch_columns = false, &block : {{relation_type}}::Collection ->) : self
         before_query do
           %primary_key = {{(primary_key || "#{relation_type}.__pkey__").id}}
           %foreign_key =   {% if foreign_key %} "{{foreign_key}}" {% else %} ({{self_type}}.table.to_s.singularize + "_id") {% end %}

@@ -50,13 +50,13 @@ module Clear::Model
       @persisted = false
     end
 
-    def initialize(h : Hash(String, _), @cache : Clear::Model::QueryCache? = nil, @persisted = false, fetch_columns = false )
+    def initialize(h : Hash(String, _), @cache : Clear::Model::QueryCache? = nil, @persisted = false, fetch_columns = false)
       @attributes.merge!(h) if fetch_columns
 
       reset(h)
     end
 
-    def initialize(json : ::JSON::Any, @cache : Clear::Model::QueryCache? = nil, @persisted = false )
+    def initialize(json : ::JSON::Any, @cache : Clear::Model::QueryCache? = nil, @persisted = false)
       reset(json.as_h)
     end
 

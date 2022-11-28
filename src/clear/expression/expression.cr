@@ -223,7 +223,7 @@ class Clear::Expression
     Node::Not.new(x)
   end
 
-  # In case the name of the variable is a reserved word (e.g. `not`, `var`, `raw` )
+  # In case the name of the variable is a reserved word (e.g. `not`, `var`, `raw`)
   # or in case of a complex piece of computation impossible to express with the expression engine
   # (e.g. usage of functions) you can use then raw to pass the String.
   #
@@ -238,7 +238,7 @@ class Clear::Expression
     Node::Raw.new(self.class.raw(x, *args))
   end
 
-  # In case the name of the variable is a reserved word (e.g. `not`, `var`, `raw` )
+  # In case the name of the variable is a reserved word (e.g. `not`, `var`, `raw`)
   # or in case of a complex piece of computation impossible to express with the expression engine
   # (e.g. usage of functions) you can use then raw to pass the String.
   #
@@ -267,7 +267,7 @@ class Clear::Expression
     end
   end
 
-  # In case the name of the variable is a reserved word (e.g. `not`, `var`, `raw` )
+  # In case the name of the variable is a reserved word (e.g. `not`, `var`, `raw`)
   # or in case of a complex piece of computation impossible to express with the expression engine
   # (e.g. usage of functions) you can use then raw to pass the String.
   #
@@ -282,7 +282,7 @@ class Clear::Expression
     Node::Raw.new(self.class.raw(__template, **tuple))
   end
 
-  # In case the name of the variable is a reserved word (e.g. `not`, `var`, `raw` )
+  # In case the name of the variable is a reserved word (e.g. `not`, `var`, `raw`)
   # or in case of a complex piece of computation impossible to express with the expression engine
   # (e.g. usage of functions) you can use then raw to pass the String.
   #
