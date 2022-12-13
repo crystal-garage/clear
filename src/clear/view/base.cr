@@ -97,7 +97,7 @@ class Clear::View
   getter query : String = ""
   getter requirement = Set(String).new
   getter connection : String = "default"
-  getter materialized : Bool = false
+  getter? materialized : Bool = false
 
   # name of the view
   def name(value : String | Symbol)
@@ -139,6 +139,6 @@ class Clear::View
   end
 
   def to_create_sql
-    {"CREATE OR REPLACE", (@materialized ? "MATERIALIZED VIEW" : "VIEW"), full_name, "AS (", @query, ")"}.join(' ')
+    {"CREATE OR REPLACE", (materialized? ? "MATERIALIZED VIEW" : "VIEW"), full_name, "AS (", @query, ")"}.join(' ')
   end
 end

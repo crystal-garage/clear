@@ -2,7 +2,7 @@ require "colorize"
 require "benchmark"
 
 module Clear::SQL::Logger
-  class_property colorize : Bool = STDOUT.tty? && STDERR.tty?
+  class_property? colorize : Bool = STDOUT.tty? && STDERR.tty?
 
   private SQL_KEYWORDS = Set(String).new(%w(
     ADD ALL ALTER ANALYSE ANALYZE AND ANY ARRAY AS ASC ASYMMETRIC
