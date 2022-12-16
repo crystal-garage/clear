@@ -141,7 +141,7 @@ module Clear
     #   end
     # end
     # ```
-    def with_savepoint(connection_name = "default", &block)
+    def with_savepoint(connection_name = "default", &)
       transaction do |cnx|
         sp_name = "sp_#{@@savepoint_uid += 1}"
         begin

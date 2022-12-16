@@ -37,7 +37,7 @@ module Clear::SQL::Query::Where
   # ```
   # query.where { id == 1 }
   # ```
-  def where(&block)
+  def where(&)
     where(Clear::Expression.ensure_node!(with Clear::Expression.new yield))
   end
 
@@ -182,7 +182,7 @@ module Clear::SQL::Query::Where
   # ```
   # query.or_where { id == 1 }
   # ```
-  def or_where(&block)
+  def or_where(&)
     or_where(Clear::Expression.ensure_node!(with Clear::Expression.new yield))
   end
 

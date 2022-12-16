@@ -29,7 +29,7 @@ module Clear::SQL::Query::Having
   # ```
   # query.having { id == 1 }
   # ```
-  def having(&block)
+  def having(&)
     having(Clear::Expression.ensure_node!(with Clear::Expression.new yield))
   end
 
@@ -164,7 +164,7 @@ module Clear::SQL::Query::Having
   # ```
   # query.or_having { id == 1 }
   # ```
-  def or_having(&block)
+  def or_having(&)
     or_having(Clear::Expression.ensure_node!(with Clear::Expression.new yield))
   end
 

@@ -204,7 +204,7 @@ class Clear::Expression
   # This node can then be combined with others node
   # in case of chain request creation `where {...}.where {...}`
   # through the chaining engine
-  def self.where(&block) : Node
+  def self.where(&) : Node
     expression_engine = self.new
 
     ensure_node!(with expression_engine yield)

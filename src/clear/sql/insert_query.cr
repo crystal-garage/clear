@@ -37,7 +37,7 @@ class Clear::SQL::InsertQuery
   def into(@table : Symbol | String)
   end
 
-  def fetch(connection_name : String = "default", &block : Hash(String, ::Clear::SQL::Any) -> Nil)
+  def fetch(connection_name : String = "default", & : Hash(String, ::Clear::SQL::Any) -> Nil)
     h = {} of String => ::Clear::SQL::Any
 
     Clear::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
@@ -50,7 +50,7 @@ class Clear::SQL::InsertQuery
     end
   end
 
-  protected def fetch_result_set(h : Hash(String, ::Clear::SQL::Any), rs, &block) : Bool
+  protected def fetch_result_set(h : Hash(String, ::Clear::SQL::Any), rs, &) : Bool
     return false unless rs.move_next
 
     loop do

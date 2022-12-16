@@ -30,9 +30,10 @@ def reinit_migration_manager
   Clear::Migration::Manager.instance.reinit!
 end
 
-def temporary(&block)
+def temporary(&)
   Clear::SQL.with_savepoint do
     yield
+
     Clear::SQL.rollback
   end
 end

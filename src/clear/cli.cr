@@ -29,7 +29,7 @@ module Clear
   end
 
   # Check for the CLI. If the CLI is not triggered, yield the block passed as parameter
-  def self.with_cli(&block)
+  def self.with_cli(&)
     if ARGV.size > 0 && ARGV[0] == "clear"
       ARGV.shift
       Clear::CLI.run

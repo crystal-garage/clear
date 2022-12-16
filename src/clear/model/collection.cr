@@ -373,7 +373,7 @@ module Clear::Model
     # to forget it.
     # You can pass extra parameters using a named tuple:
     # `my_model.associations.build({a_column: "value"}) `
-    def build(**tuple, &block : T -> Nil) : T
+    def build(**tuple, & : T -> Nil) : T
       str_hash = @tags.dup
       tuple.map { |k, v| str_hash[k.to_s] = v }
 
@@ -402,7 +402,7 @@ module Clear::Model
     # Build a new object and setup
     # the fields like setup in the condition tuple.
     # Just after building, save the object.
-    def create(**tuple, &block : T -> Nil) : T
+    def create(**tuple, & : T -> Nil) : T
       r = build(**tuple) do |mdl|
         yield(mdl)
       end
@@ -432,7 +432,7 @@ module Clear::Model
     # Just after building, save the object.
     # But instead of returning self if validation failed,
     # raise `Clear::Model::InvalidError` exception
-    def create!(**tuple, &block : T -> Nil) : T
+    def create!(**tuple, & : T -> Nil) : T
       r = build(**tuple) do |mdl|
         yield(mdl)
       end
@@ -548,7 +548,7 @@ module Clear::Model
     end
 
     # A convenient way to write `where { condition }.first(fetch_columns)`
-    def find(fetch_columns = false, &block) : T?
+    def find(fetch_columns = false, &) : T?
       x = Clear::Expression.ensure_node!(with Clear::Expression.new yield)
 
       where(x).first(fetch_columns)
@@ -565,7 +565,7 @@ module Clear::Model
     end
 
     # A convenient way to write `where { condition }.first!(fetch_columns)`
-    def find!(fetch_columns = false, &block) : T
+    def find!(fetch_columns = false, &) : T
       x = Clear::Expression.ensure_node!(with Clear::Expression.new yield)
 
       where(x).first!(fetch_columns)
@@ -583,7 +583,7 @@ module Clear::Model
 
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
-    def find_or_build(**tuple, &block : T -> Nil) : T
+    def find_or_build(**tuple, & : T -> Nil) : T
       where(tuple) unless tuple.size == 0
       r = first
 
@@ -615,7 +615,7 @@ module Clear::Model
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
     # Just after building, save the object.
-    def find_or_create(**tuple, &block : T -> Nil) : T
+    def find_or_create(**tuple, & : T -> Nil) : T
       r = find_or_build(**tuple) do |mdl|
         yield(mdl)
       end

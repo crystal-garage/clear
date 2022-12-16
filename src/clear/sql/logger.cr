@@ -53,7 +53,7 @@ module Clear::SQL::Logger
     end
   end
 
-  def log_query(sql, &block)
+  def log_query(sql, &)
     start_time = Time.monotonic
 
     o = yield
