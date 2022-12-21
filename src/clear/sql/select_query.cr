@@ -26,7 +26,7 @@ class Clear::SQL::SelectQuery
   include Enumerable(Hash(String, Clear::SQL::Any))
   include SelectBuilder
 
-  def each
+  def each(&) : Nil
     fetch { |h| yield(h) }
   end
 end
