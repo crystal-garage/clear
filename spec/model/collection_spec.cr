@@ -507,7 +507,7 @@ module CollectionSpec
         qry[1].first_name.should eq("user 1")
         qry[3..5].map(&.first_name).should eq(["user 3", "user 4"])
 
-        qry[2]?.not_nil!.first_name.should eq("user 2")
+        qry[2].first_name.should eq("user 2")
         qry[10]?.should be_nil
 
         expect_raises(Clear::SQL::RecordNotFoundError) {

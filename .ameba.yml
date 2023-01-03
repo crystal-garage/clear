@@ -10,10 +10,5 @@ Lint/NotNil:
   Excluded:
   - src/clear/extensions/full_text_searchable/migration.cr
   - src/clear/extensions/full_text_searchable/tsvector.cr
-  - spec/model/collection_spec.cr
-  - spec/model/uuid_spec.cr
-  - spec/model/multiple_connections_spec.cr
-  - spec/model/cache_spec.cr
-  - spec/extensions/time_spec.cr
   Enabled: true
   Severity: Warning

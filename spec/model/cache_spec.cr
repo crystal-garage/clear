@@ -57,9 +57,9 @@ module CacheSpec
             user.posts.each do |p|
               case p.id
               when 301, 302
-                (p.category.not_nil!.id == 201).should eq(true)
+                p.category.id.should eq 201
               when 303, 304
-                (p.category.not_nil!.id == 202).should eq(true)
+                p.category.id.should eq 202
               end
             end
           end
@@ -72,14 +72,14 @@ module CacheSpec
           # Relation belongs_to
           Clear::Model::QueryCache.reset_counter
           Post.query.with_user.each do |post|
-            post.user.not_nil!
+            post.user.should_not be_nil
           end
           Clear::Model::QueryCache.cache_hitted.should eq(4) # Number of posts
 
           Category.query.with_users(&.order_by("users.id", :asc)).order_by("id", :asc).each do |c|
+            c.id.should_not be_nil
             c.users.each do |user|
-              c.id.not_nil!
-              user.id.not_nil!
+              user.id.should_not be_nil
             end
           end
         end

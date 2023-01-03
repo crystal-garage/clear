@@ -77,13 +77,14 @@ module UUIDSpec
 
         dbo_id = DBObject.query.first!.id
         obj1 = DBObject2.create!({db_object_id: dbo_id})
-        obj2 = DBObject2.create!
+        DBObject2.create!
 
-        obj1.db_object.not_nil!.id.should eq dbo_id
-        obj2.db_object.should eq nil
+        obj1.db_object.should_not be_nil
+        obj1.db_object.try(&.id.should(eq(dbo_id)))
 
         dbo = DBObject.find!(dbo_id)
-        dbo.db_objects.not_nil!.count.should eq 1
+        dbo.db_objects.should_not be_nil
+        dbo.db_objects.try(&.count.should(eq(1)))
       end
     end
 

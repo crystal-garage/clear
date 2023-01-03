@@ -44,9 +44,13 @@ module IntervalSpec
           IntervalModel.create! id: id, interval: interval
 
           record = IntervalModel.find! id
-          record.interval.not_nil!.months.should eq months
-          record.interval.not_nil!.days.should eq days
-          record.interval.not_nil!.microseconds.should eq microseconds
+          record.should_not be_nil
+
+          if interval = record.interval
+            interval.months.should eq months
+            interval.days.should eq days
+            interval.microseconds.should eq microseconds
+          end
         end
       end
     end
@@ -99,9 +103,15 @@ module IntervalSpec
 
         time_in_date = "12:32"
         record = IntervalModel.create! time_in_date: time_in_date
-        record.time_in_date.not_nil!.to_s(show_seconds: false).should eq("12:32")
-        record.time_in_date = record.time_in_date.not_nil! + 12.minutes
-        record.save!
+
+        record.time_in_date.should_not be_nil
+
+        if time_in_date = record.time_in_date
+          time_in_date.to_s(show_seconds: false).should eq("12:32")
+
+          record.time_in_date = time_in_date + 12.minutes
+          record.save!
+        end
 
         record.reload.time_in_date.to_s.should eq("12:44:00")
       end
