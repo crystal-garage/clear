@@ -8,7 +8,6 @@
 Lint/NotNil:
   Description: Identifies usage of `not_nil!` calls
   Excluded:
-  - src/clear/extensions/full_text_searchable/migration.cr
   - src/clear/extensions/full_text_searchable/tsvector.cr
   Enabled: true
   Severity: Warning

@@ -107,7 +107,7 @@ module Clear::Migration::FullTextSearchableTableHelpers
                            trigger_name = nil, function_name = nil)
     column(column_name, "tsvector", index: "gin")
 
-    migration.not_nil!.add_operation(
+    migration.try(&.add_operation(
       Clear::Migration::FullTextSearchableOperation.new(
         self.name,
         on,
@@ -116,7 +116,7 @@ module Clear::Migration::FullTextSearchableTableHelpers
         function_name,
         column_name
       )
-    )
+    ))
   end
 
   def full_text_searchable(on : String, column_name = "full_text_vector",
