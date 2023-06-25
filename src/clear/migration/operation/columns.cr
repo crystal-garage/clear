@@ -73,7 +73,7 @@ module Clear::Migration
 
   class ChangeColumnType < Operation
     @table : String
-    @column_name: String
+    @column_name : String
     @new_column_type : String
     @old_column_type : String
 
