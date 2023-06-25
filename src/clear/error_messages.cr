@@ -161,18 +161,6 @@ module Clear::ErrorMessages
       }
   end
 
-  def migration_drop_irreversible(name)
-    build_error_message \
-      "Cannot revert column drop, because datatype is `unknown`",
-      {
-        "Add the optional previous data `type` argument in the operation `drop`:" +
-        "`drop_column(table, column, type)`",
-      },
-      {
-        "migration/Migration.md",
-      }
-  end
-
   def migration_not_unique(numbers)
     build_error_message \
       "The migration manage found collision on migration number. Migrations number are: #{numbers.join(", ")}",
