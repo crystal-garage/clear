@@ -77,7 +77,7 @@ module Clear::SQL::JSONB
     ignore_next = false
     buff = "" # Todo: Use stringbuffer
 
-    key.chars.each do |c|
+    key.each_char do |c|
       if ignore_next
         ignore_next = false
         buff += c

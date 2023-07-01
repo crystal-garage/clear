@@ -115,7 +115,7 @@ module Clear::Model::FullTextSearchable
     currtoken = [] of Char
     arr_tokens = [] of {Symbol?, String}
 
-    text.chars.each do |c|
+    text.each_char do |c|
       case c
       when '\''
         if quote_char.nil?
