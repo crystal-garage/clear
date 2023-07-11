@@ -53,7 +53,7 @@ class Clear::Migration::Manager
 
   def max_version
     if @migrations.size > 0
-      @migrations.map(&.uid).max
+      @migrations.max_of(&.uid)
     else
       nil
     end
