@@ -60,7 +60,7 @@ jobs:
 
       # Performs a clean installation of all dependencies in the `shard.yml` file
       - name: Install dependencies
-        run: shards install
+        run: shards install --skip-postinstall --skip-executables
 
       - name: Run tests
         run: crystal spec
