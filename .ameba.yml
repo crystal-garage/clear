@@ -11,3 +11,6 @@ Lint/NotNil:
   - src/clear/extensions/full_text_searchable/tsvector.cr
   Enabled: true
   Severity: Warning
+
+Lint/DocumentationAdmonition:
+  Enabled: false
