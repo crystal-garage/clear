@@ -14,7 +14,7 @@ module Clear::SQL::Query::Select
   # In some case you want you query to return `table.*` instead of `*`
   #   if no select parameters has been set. This occurs in the case of joins
   #   between models.
-  def set_default_table_wildcard(table : String? = nil)
+  def default_wildcard_table=(table : String? = nil)
     @default_wildcard_table = table
     change!
   end
