@@ -14,3 +14,12 @@ Lint/NotNil:
 
 Lint/DocumentationAdmonition:
   Enabled: false
+
+Documentation/DocumentationAdmonition:
+  Enabled: false
+
+Naming/AccessorMethodName:
+  Enabled: false
+
+Lint/SpecFilename:
+  Enabled: false
