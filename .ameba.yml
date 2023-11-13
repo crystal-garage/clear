@@ -23,3 +23,9 @@ Naming/AccessorMethodName:
 
 Lint/SpecFilename:
   Enabled: false
+
+Naming/BlockParameterName:
+  Enabled: false
+
+Naming/BinaryOperatorParameterName:
+  Enabled: false
