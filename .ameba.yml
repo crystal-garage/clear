@@ -12,6 +12,9 @@ Lint/NotNil:
   Enabled: true
   Severity: Warning
 
+Lint/UselessAssign:
+  Enabled: false
+
 Lint/DocumentationAdmonition:
   Enabled: false
 
