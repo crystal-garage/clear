@@ -2,7 +2,7 @@ name: clear
 
 version: 0.8.18
 
-crystal: ">= 1.0.0"
+crystal: ">= 1.0.0, < 1.13.0"
 
 authors:
    - Yacine Petitprez <anykeyh@gmail.com>
