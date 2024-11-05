@@ -213,7 +213,7 @@ module Clear::Model
       @before_query_triggers = [] of -> Nil,
       @tags = {} of String => Clear::SQL::Any,
       @cache = Clear::Model::QueryCache.new,
-      @cached_result = nil
+      @cached_result = nil,
     )
     end
 

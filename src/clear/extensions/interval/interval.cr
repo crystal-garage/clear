@@ -41,7 +41,7 @@ struct Clear::Interval
   def initialize(
     @months : Int32,
     @days : Int32,
-    microseconds : Number
+    microseconds : Number,
   )
     @microseconds = (
       microseconds.to_i64 +
@@ -59,7 +59,7 @@ struct Clear::Interval
     @minutes : Int32 = 0,
     @seconds : Int32 = 0,
     @milliseconds : Int32 = 0,
-    @microseconds : Int64 = 0
+    @microseconds : Int64 = 0,
   )
   end
 

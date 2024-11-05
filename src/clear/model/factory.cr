@@ -12,7 +12,7 @@ module Clear::Model::Factory
     h : Hash,
     cache : Clear::Model::QueryCache? = nil,
     persisted = false,
-    fetch_columns = false
+    fetch_columns = false,
   ) : Clear::Model
     factory = FACTORIES[type].as(Base)
 
@@ -24,7 +24,7 @@ module Clear::Model::Factory
     h : Hash,
     cache : Clear::Model::QueryCache? = nil,
     persisted = false,
-    fetch_columns = false
+    fetch_columns = false,
   ) : T forall T
     self.build(T.name, h, cache, persisted, fetch_columns).as(T)
   end
