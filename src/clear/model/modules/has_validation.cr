@@ -25,6 +25,7 @@ module Clear::Model::HasValidation
   # Clear the errors log (if any) of the model and return itself
   def clear_errors
     @errors.clear
+
     self
   end
 
@@ -45,6 +46,7 @@ module Clear::Model::HasValidation
   # Return the model itself
   def valid!
     raise InvalidError.new(self) unless valid?
+
     self
   end
 
