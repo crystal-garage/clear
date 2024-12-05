@@ -296,9 +296,9 @@ module Clear::Model
       any_hash = {} of String => Clear::SQL::Any
 
       # remove terms which are not real value but conditions like range or array
-      hash.each { |k, v|
+      hash.each do |k, v|
         any_hash[k] = v if v.is_a?(Clear::SQL::Any)
-      }
+      end
 
       tags(any_hash)
 

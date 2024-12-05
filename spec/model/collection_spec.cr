@@ -510,9 +510,7 @@ module CollectionSpec
         qry[2].first_name.should eq("user 2")
         qry[10]?.should be_nil
 
-        expect_raises(Clear::SQL::RecordNotFoundError) {
-          qry[11]
-        }
+        expect_raises(Clear::SQL::RecordNotFoundError) { qry[11] }
       end
     end
 
@@ -528,9 +526,9 @@ module CollectionSpec
           User.query.find! { first_name == "user 2" }.first_name.should eq("user 2")
           User.query.find { first_name == "not_exists" }.should be_nil
 
-          expect_raises(Clear::SQL::RecordNotFoundError) {
+          expect_raises(Clear::SQL::RecordNotFoundError) do
             User.query.find! { first_name == "not_exists" }
-          }
+          end
         end
       end
 
@@ -545,9 +543,9 @@ module CollectionSpec
           User.query.find!({first_name: "user 2"}).first_name.should eq("user 2")
           User.query.find({first_name: "not_exists"}).should be_nil
 
-          expect_raises(Clear::SQL::RecordNotFoundError) {
+          expect_raises(Clear::SQL::RecordNotFoundError) do
             User.query.find!({first_name: "not_exists"})
-          }
+          end
         end
       end
 
@@ -562,9 +560,9 @@ module CollectionSpec
           User.query.find!(first_name: "first 2", last_name: "last 2").first_name.should eq("first 2")
           User.query.find(first_name: "not_exists").should be_nil
 
-          expect_raises(Clear::SQL::RecordNotFoundError) {
+          expect_raises(Clear::SQL::RecordNotFoundError) do
             User.query.find!(first_name: "not_exists")
-          }
+          end
         end
       end
     end
@@ -581,10 +579,10 @@ module CollectionSpec
         if post = Post
              .query
              .join("users") { users.id == posts.user_id }
-             .find {
+             .find do
                (users.first_name == "user") &
                  (posts.title == "title 2")
-             }
+             end
           (post.id).should eq(post2.id)
         end
       end

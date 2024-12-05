@@ -52,10 +52,10 @@ module Clear::Model::HasValidation
   def valid?
     clear_errors
 
-    with_triggers(:validate) {
+    with_triggers(:validate) do
       validate
       validate_fields_presence # < This is built by the column system using Union type !!
-    }
+    end
 
     !error?
   end

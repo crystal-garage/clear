@@ -73,9 +73,9 @@ module IntervalSpec
     end
 
     it "be used in expression engine" do
-      IntervalModel.query.where {
+      IntervalModel.query.where do
         (created_at - Clear::Interval.new(months: 1)) > updated_at
-      }.to_sql.should eq %(SELECT * FROM "interval_table" WHERE (("created_at" - INTERVAL '1 months') > "updated_at"))
+      end.to_sql.should eq %(SELECT * FROM "interval_table" WHERE (("created_at" - INTERVAL '1 months') > "updated_at"))
     end
 
     it "be casted into string" do

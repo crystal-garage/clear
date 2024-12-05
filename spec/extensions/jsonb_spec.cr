@@ -56,10 +56,10 @@ module JSONBSpec
 
         it "uses @> operator when it can !" do
           Clear::SQL.select("*").from(:users)
-            .where {
+            .where do
               (data.jsonb("security.role") == "admin") &
                 (data.jsonb("security.level") == 1)
-            }.to_sql
+            end.to_sql
             .should eq "SELECT * FROM \"users\" WHERE (\"data\" @> '{\"security\":{\"role\":\"admin\"}}' AND " +
                        "\"data\" @> '{\"security\":{\"level\":1}}')"
         end
