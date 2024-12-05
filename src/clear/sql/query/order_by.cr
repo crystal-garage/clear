@@ -51,12 +51,12 @@ module Clear::SQL::Query::OrderBy
   #
   # return `self`
   def reverse_order_by
-    @order_bys = @order_bys.map { |rec|
+    @order_bys = @order_bys.map do |rec|
       Record.new(rec.op,
         rec.dir == :desc ? :asc : :desc,
         rec.nulls.try { |n| n == :nulls_last ? :nulls_first : :nulls_last }
       )
-    }
+    end
     change!
   end
 

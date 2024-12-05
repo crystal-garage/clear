@@ -55,9 +55,9 @@ module Clear::ErrorMessages
     if manual_pages.size > 0
       {
         "You may want to check the manual:",
-        manual_pages.join("\n") { |x|
+        manual_pages.join("\n") do |x|
           build_url("https://github.com/anykeyh/clear/tree/master/manual/#{x}")
-        },
+        end,
       }.join("\n") + "\n\n"
     end
   end

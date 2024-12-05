@@ -144,27 +144,27 @@ module WhereSpec
     describe "where expressions" do
       it "where.where" do
         now = Time.local
-        r = Clear::SQL.select.from(:users).where { users.id == nil }.where {
+        r = Clear::SQL.select.from(:users).where { users.id == nil }.where do
           var("users", "updated_at") >= now
-        }
+        end
         r.to_sql.should eq "SELECT * FROM \"users\" WHERE (\"users\".\"id\" IS NULL) " +
                            "AND (\"users\".\"updated_at\" >= #{Clear::Expression[now]})"
       end
 
       it "where.or_where" do
         now = Time.local
-        r = Clear::SQL.select.from(:users).where { users.id == nil }.or_where {
+        r = Clear::SQL.select.from(:users).where { users.id == nil }.or_where do
           var("users", "updated_at") >= now
-        }
+        end
         r.to_sql.should eq "SELECT * FROM \"users\" WHERE ((\"users\".\"id\" IS NULL) " +
                            "OR (\"users\".\"updated_at\" >= #{Clear::Expression[now]}))"
       end
 
       it "op(:&)/op(:|)" do
-        r = Clear::SQL.select.from(:users).where {
+        r = Clear::SQL.select.from(:users).where do
           ((raw("users.id") > 100) & (raw("users.visible") == true)) |
             (raw("users.role") == "superadmin")
-        }
+        end
 
         r.to_sql.should eq "SELECT * FROM \"users\" WHERE (((users.id > 100) " +
                            "AND (users.visible = TRUE)) OR (users.role = 'superadmin'))"

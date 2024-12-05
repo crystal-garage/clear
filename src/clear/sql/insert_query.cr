@@ -175,11 +175,11 @@ class Clear::SQL::InsertQuery
 
   protected def print_values
     v = @values.as(Array(Array(Inserable)))
-    v.map_with_index { |row, idx|
+    v.map_with_index do |row, idx|
       raise QueryBuildingError.new "No value to insert (at row ##{idx})" if row.empty?
 
       "(" + row.join(", ") { |x| Clear::Expression[x] } + ")"
-    }.join(",\n")
+    end.join(",\n")
   end
 
   def to_sql

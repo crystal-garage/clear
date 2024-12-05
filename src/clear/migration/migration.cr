@@ -113,17 +113,17 @@ module Clear::Migration
         change(dir)
 
         dir.up do
-          @operations.each { |op|
+          @operations.each do |op|
             op.up.each { |x| Clear::SQL.execute(x.as(String)) }
-          }
+          end
 
           SQL.insert("__clear_metadatas", {metatype: "migration", value: uid.to_s}).execute
         end
 
         dir.down do
-          @operations.reverse_each { |op|
+          @operations.reverse_each do |op|
             op.down.each { |x| Clear::SQL.execute(x.as(String)) }
-          }
+          end
 
           SQL.delete("__clear_metadatas").where({metatype: "migration", value: uid.to_s}).execute
         end

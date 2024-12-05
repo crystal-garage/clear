@@ -57,14 +57,14 @@ class Clear::Reflection::Table
       column_name: "a.attname",
     })
       .from({t: "pg_class", i: "pg_class", ix: "pg_index", a: "pg_attribute"})
-      .where {
+      .where do
         (t.oid == ix.indrelid) &
           (i.oid == ix.indexrelid) &
           (a.attrelid == t.oid) &
           (a.attnum == raw("ANY(ix.indkey)")) &
           (t.relkind == "r") &
           (t.relname == self.table_name)
-      }
+      end
       .order_by("t.relname").order_by("i.relname")
       .fetch do |h|
         col = h["column_name"].to_s

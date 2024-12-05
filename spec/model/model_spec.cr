@@ -166,12 +166,12 @@ module ModelSpec
           u.save! # Create a new user
 
           u2 = User.new({id: 1, first_name: "Louis"})
-          u2.save! { |qry|
-            qry.on_conflict("(id)").do_update { |up|
+          u2.save! do |qry|
+            qry.on_conflict("(id)").do_update do |up|
               up.set("first_name = excluded.first_name")
                 .where { users.id == excluded.id }
-            }
-          }
+            end
+          end
 
           User.query.count.should eq 1
           User.query.first!.first_name.should eq("Louis")

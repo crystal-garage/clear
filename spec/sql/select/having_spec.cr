@@ -130,27 +130,27 @@ module HavingSpec
     describe "HAVING Expression engine Nodes" do
       it "stack with `AND` operator" do
         now = Time.local
-        r = Clear::SQL.select.from(:users).having { users.id == nil }.having {
+        r = Clear::SQL.select.from(:users).having { users.id == nil }.having do
           var("users", "updated_at") >= now
-        }
+        end
         r.to_sql.should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" IS NULL) " +
                            "AND (\"users\".\"updated_at\" >= #{Clear::Expression[now]})"
       end
 
       it "stack with `OR` operator" do
         now = Time.local
-        r = Clear::SQL.select.from(:users).having { users.id == nil }.or_having {
+        r = Clear::SQL.select.from(:users).having { users.id == nil }.or_having do
           var("users", "updated_at") >= now
-        }
+        end
         r.to_sql.should eq "SELECT * FROM \"users\" HAVING ((\"users\".\"id\" IS NULL) " +
                            "OR (\"users\".\"updated_at\" >= #{Clear::Expression[now]}))"
       end
 
       it "AND and OR" do
-        r = Clear::SQL.select.from(:users).having {
+        r = Clear::SQL.select.from(:users).having do
           ((raw("users.id") > 100) & (raw("users.visible") == true)) |
             (raw("users.role") == "superadmin")
-        }
+        end
 
         r.to_sql.should eq "SELECT * FROM \"users\" HAVING (((users.id > 100) " +
                            "AND (users.visible = TRUE)) OR (users.role = 'superadmin'))"
