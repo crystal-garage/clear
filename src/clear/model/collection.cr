@@ -240,12 +240,14 @@ module Clear::Model
     # Set a query cache on this Collection. Fetching and enumerate will use the cache instead of calling the SQL.
     def cached(cache : Clear::Model::QueryCache)
       @cache = cache
+
       self
     end
 
     # :nodoc:
     def with_cached_result(r : Array(T))
       @cached_result = r
+
       self
     end
 
@@ -263,6 +265,7 @@ module Clear::Model
     # Clear the current cache
     def clear_cached_result
       @cached_result = nil
+
       self
     end
 
@@ -275,12 +278,14 @@ module Clear::Model
     # :nodoc:
     def tags(x : NamedTuple)
       @tags.merge!(x.to_h)
+
       self
     end
 
     # :nodoc:
     def tags(x : Hash(String, X)) forall X
       @tags.merge!(x.to_h)
+
       self
     end
 
@@ -308,6 +313,7 @@ module Clear::Model
     # :nodoc:
     def clear_tags
       @tags = {} of String => Clear::SQL::Any
+
       self
     end
 
@@ -341,6 +347,7 @@ module Clear::Model
     def map(fetch_columns = false, &block : T -> X) : Array(X) forall X
       o = [] of X
       each(fetch_columns) { |mdl| o << block.call(mdl) }
+
       o
     end
 
@@ -403,9 +410,7 @@ module Clear::Model
     # the fields like setup in the condition tuple.
     # Just after building, save the object.
     def create(**tuple, & : T -> Nil) : T
-      r = build(**tuple) do |mdl|
-        yield(mdl)
-      end
+      r = build(**tuple) { |mdl| yield(mdl) }
 
       r.save
 
@@ -433,11 +438,10 @@ module Clear::Model
     # But instead of returning self if validation failed,
     # raise `Clear::Model::InvalidError` exception
     def create!(**tuple, & : T -> Nil) : T
-      r = build(**tuple) do |mdl|
-        yield(mdl)
-      end
+      r = build(**tuple) { |mdl| yield(mdl) }
 
       r.save!
+
       r
     end
 
@@ -462,9 +466,7 @@ module Clear::Model
 
       return !cr.empty? if cr
 
-      clear_select.select("1").limit(1).fetch do |_|
-        return true
-      end
+      clear_select.select("1").limit(1).fetch { |_| return true }
 
       false
     end
@@ -477,6 +479,7 @@ module Clear::Model
     # Use SQL `COUNT` over your query, and return this number as a Int64
     def count(type : X.class = Int64) forall X
       cr = @cached_result
+
       return X.new(cr.size) unless cr.nil?
 
       super(type)
@@ -529,6 +532,7 @@ module Clear::Model
 
       o = [] of T
       each(fetch_columns: fetch_columns) { |m| o << m }
+
       o
     end
 
@@ -616,11 +620,10 @@ module Clear::Model
     # the fields like setup in the condition tuple.
     # Just after building, save the object.
     def find_or_create(**tuple, & : T -> Nil) : T
-      r = find_or_build(**tuple) do |mdl|
-        yield(mdl)
-      end
+      r = find_or_build(**tuple) { |mdl| yield(mdl) }
 
       r.save!
+
       r
     end
 
@@ -692,6 +695,7 @@ module Clear::Model
     # name if no specific column have been selected.
     protected def join_impl(name, type, lateral, clear_expr)
       self.default_wildcard_table = Clear::SQL.escape(T.table)
+
       super(name, type, lateral, clear_expr)
     end
 

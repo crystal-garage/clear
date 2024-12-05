@@ -84,6 +84,7 @@ class Clear::SQL::InsertQuery
 
   def clear_values
     @values = [] of Array(Inserable)
+
     change!
   end
 
@@ -148,7 +149,7 @@ class Clear::SQL::InsertQuery
 
   # Insert into ... (...) SELECT
   def values(select_query : SelectBuilder)
-    if @values.is_a?(Array) && !@values.as(Array).empty?
+    if @values.is_a?(Array) && @values.as(Array).present?
       raise QueryBuildingError.new "Cannot insert both from SELECT and from data"
     end
 
@@ -175,11 +176,12 @@ class Clear::SQL::InsertQuery
 
   protected def print_values
     v = @values.as(Array(Array(Inserable)))
-    v.map_with_index do |row, idx|
+
+    v.each_with_index.join(",\n") do |row, idx|
       raise QueryBuildingError.new "No value to insert (at row ##{idx})" if row.empty?
 
       "(" + row.join(", ") { |x| Clear::Expression[x] } + ")"
-    end.join(",\n")
+    end
   end
 
   def to_sql
