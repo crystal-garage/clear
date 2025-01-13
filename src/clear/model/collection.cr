@@ -319,26 +319,26 @@ module Clear::Model
 
     # Build the SQL, send the query then iterate through each models
     # gathered by the request.
-    def each(fetch_columns = false, &block : T ->)
-      cr = @cached_result
+    def each(fetch_columns = false, & : T ->) : Nil
+      result = @cached_result
 
-      if cr
-        cr.each(&block)
-      else
-        o = [] of T
+      unless result
+        result = [] of T
 
         if @polymorphic
           fetch(fetch_all: false) do |hash|
             type = hash[@polymorphic_key].as(String)
-            o << Clear::Model::Factory.build(type, hash, persisted: true, fetch_columns: fetch_columns, cache: @cache).as(T)
+            result << Clear::Model::Factory.build(type, hash, persisted: true, fetch_columns: fetch_columns, cache: @cache).as(T)
           end
         else
           fetch(fetch_all: false) do |hash|
-            o << Clear::Model::Factory.build(T, hash, persisted: true, fetch_columns: fetch_columns, cache: @cache)
+            result << Clear::Model::Factory.build(T, hash, persisted: true, fetch_columns: fetch_columns, cache: @cache)
           end
         end
+      end
 
-        o.each(&block)
+      result.each do |value|
+        yield value
       end
     end
 
