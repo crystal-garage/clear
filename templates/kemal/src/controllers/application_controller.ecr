@@ -1,7 +1,7 @@
 class ApplicationController
   HTTP_METHODS = %w(get post put patch delete options)
 
-  class_property default_layout : -> TreeTemplate = ->{ View::Layouts.application }
+  class_property default_layout : -> TreeTemplate = -> { View::Layouts.application }
 
   def self.render(view : TreeTemplate, layout : Nil)
     view.render

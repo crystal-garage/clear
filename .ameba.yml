@@ -5,6 +5,10 @@
 
 # Problems found: 25
 # Run `ameba --only Lint/NotNil` for details
+
+Excluded:
+  - lib/**/*
+
 Lint/NotNil:
   Description: Identifies usage of `not_nil!` calls
   Excluded:
