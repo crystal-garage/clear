@@ -14,11 +14,11 @@ module Clear::SQL::Query::Aggregate
 
       # Optimize returning 1 if found, as we count only...
       # ... except if the subquery has distinct, otherwise will always returns "1"...
-      subquery = self.is_distinct? ? self : self.dup.clear_order_bys.clear_select.use_connection(self.connection_name).select("1")
+      subquery = is_distinct? ? self : dup.clear_order_bys.clear_select.use_connection(connection_name).select("1")
 
       o = X.new(Clear::SQL.select("COUNT(*)").from({query_count: subquery}).scalar(Int64))
     else
-      new_query = self.dup.clear_select.select("COUNT(*)")
+      new_query = dup.clear_select.select("COUNT(*)")
       o = X.new(new_query.scalar(Int64))
     end
     @columns = columns
@@ -36,7 +36,7 @@ module Clear::SQL::Query::Aggregate
   #
   # This return only one row, and should not be used with `group_by` (prefer pluck or fetch)
   def agg(field, x : X.class) forall X
-    self.clear_select.select(field).scalar(X)
+    clear_select.select(field).scalar(X)
   end
 
   # SUM through a field and return a Float64

@@ -181,7 +181,7 @@ module Clear::Migration
                type.to_s
              end
 
-      self.add_column(name.to_s, type: type, default: default, null: null,
+      add_column(name.to_s, type: type, default: default, null: null,
         primary: primary, index: index, unique: unique, array: array)
     end
   end
@@ -256,7 +256,7 @@ module Clear::Migration
     #
     def create_table(name, id : Symbol | Bool = true, schema = "public", &)
       table = Table.new(name.to_s, schema.to_s, is_create: true)
-      self.add_operation(table)
+      add_operation(table)
 
       case id
       when true, :bigserial

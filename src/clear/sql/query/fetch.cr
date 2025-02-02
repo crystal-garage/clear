@@ -92,7 +92,7 @@ module Clear::SQL::Query::Fetch
 
     h = {} of String => ::Clear::SQL::Any
 
-    sql = self.to_sql
+    sql = to_sql
 
     rs = Clear::SQL.log_query(sql) { Clear::SQL::ConnectionPool.with_connection(connection_name, &.query(sql)) }
 
@@ -127,7 +127,7 @@ module Clear::SQL::Query::Fetch
 
     h = {} of String => ::Clear::SQL::Any
 
-    sql = self.to_sql
+    sql = to_sql
 
     Clear::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
       rs = Clear::SQL.log_query(sql) { cnx.query(sql) }

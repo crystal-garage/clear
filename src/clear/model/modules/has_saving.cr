@@ -109,12 +109,12 @@ module Clear::Model::HasSaving
             on_conflict.call(query) if on_conflict
             hash = query.execute(@@connection)
 
-            self.reset(hash)
+            reset(hash)
             @persisted = true
           end
         end
 
-        self.clear_change_flags
+        clear_change_flags
         return true
       else
         return false

@@ -26,6 +26,6 @@ module Clear::Model::Factory
     persisted = false,
     fetch_columns = false,
   ) : T forall T
-    self.build(T.name, h, cache, persisted, fetch_columns).as(T)
+    build(T.name, h, cache, persisted, fetch_columns).as(T)
   end
 end

@@ -49,13 +49,13 @@ module Clear::Migration::Helper
   # Add a column to a specific table
   def create_index(table, column, name = nil,
                    using = nil, unique = false)
-    self.add_operation(Clear::Migration::CreateIndex.new(table, fields: [column], name: name,
+    add_operation(Clear::Migration::CreateIndex.new(table, fields: [column], name: name,
       using: using, unique: unique))
   end
 
   def create_index(table, columns : Array(String), name = nil,
                    using = nil, unique = false)
-    self.add_operation(Clear::Migration::CreateIndex.new(table, fields: columns, name: name,
+    add_operation(Clear::Migration::CreateIndex.new(table, fields: columns, name: name,
       using: using, unique: unique))
   end
 end

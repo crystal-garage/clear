@@ -109,7 +109,7 @@ module Clear::Migration::FullTextSearchableTableHelpers
 
     migration.try(&.add_operation(
       Clear::Migration::FullTextSearchableOperation.new(
-        self.name,
+        name,
         on,
         catalog,
         trigger_name,

@@ -125,7 +125,7 @@ class Clear::Expression
 
   # Transform multiple objects into a string which is SQL-Injection safe.
   def self.safe_literal(x : Enumerable(AvailableLiteral)) : Enumerable(String)
-    x.map { |item| self.safe_literal(item) }
+    x.map { |item| safe_literal(item) }
   end
 
   # Return unsafe string injected to the query.
@@ -165,7 +165,7 @@ class Clear::Expression
 
   # Sanitize an object and return a `String` representation of itself which is proofed against SQL injections.
   def self.safe_literal(x : _) : String
-    self.safe_literal(x.to_s)
+    safe_literal(x.to_s)
   end
 
   # This method will raise error on compilation if discovered in the code.
@@ -205,7 +205,7 @@ class Clear::Expression
   # in case of chain request creation `where {...}.where {...}`
   # through the chaining engine
   def self.where(&) : Node
-    expression_engine = self.new
+    expression_engine = new
 
     ensure_node!(with expression_engine yield)
   end

@@ -31,9 +31,9 @@ class Clear::Model::EventManager
       arr = arr.reverse
 
       arr.each &.call(mdl)
-      self.trigger(parent, direction, event, mdl) unless parent.nil?
+      trigger(parent, direction, event, mdl) unless parent.nil?
     else
-      self.trigger(parent, direction, event, mdl) unless parent.nil?
+      trigger(parent, direction, event, mdl) unless parent.nil?
       arr.each &.call(mdl)
     end
   end

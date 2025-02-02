@@ -95,7 +95,7 @@ struct Clear::Interval
   end
 
   def +(interval : self)
-    self.new(
+    new(
       months: self.months + interval.months,
       day: self.days + interval.days,
       hours: self.hours + interval.hours,
@@ -109,6 +109,6 @@ struct Clear::Interval
   def self.decode(x : Slice(UInt8))
     io = IO::Memory.new(x, writeable: false)
 
-    self.new(io)
+    new(io)
   end
 end

@@ -59,7 +59,7 @@ module Clear::SQL::SelectBuilder
       offset: @offset,
       lock: @lock,
       before_query_triggers: @before_query_triggers
-    ).use_connection(self.connection_name)
+    ).use_connection(connection_name)
   end
 
   def to_sql : String

@@ -9,7 +9,7 @@ struct Citext
   end
 
   def ==(x : String | Citext)
-    self.compare(x.to_s, true) == 0
+    compare(x.to_s, true) == 0
   end
 
   def !=(x : String | Citext)

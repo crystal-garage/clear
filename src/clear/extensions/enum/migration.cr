@@ -37,15 +37,15 @@ module Clear::Migration
 
   module Helper
     def create_enum(name, arr : Enumerable(T)) forall T
-      self.add_operation(CreateEnum.new(name.to_s, arr.map(&.to_s)))
+      add_operation(CreateEnum.new(name.to_s, arr.map(&.to_s)))
     end
 
     def drop_enum(name, arr : Enumerable(T)? = nil) forall T
-      self.add_operation(DropEnum.new(name.to_s, arr.try &.map(&.to_s)))
+      add_operation(DropEnum.new(name.to_s, arr.try &.map(&.to_s)))
     end
 
     def create_enum(name, e)
-      self.add_operation(CreateEnum.new(name.to_s, e.authorized_values))
+      add_operation(CreateEnum.new(name.to_s, e.authorized_values))
     end
   end
 end

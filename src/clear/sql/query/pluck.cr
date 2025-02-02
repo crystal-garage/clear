@@ -24,7 +24,7 @@ module Clear::SQL::Query::Pluck
   def pluck_col(field : Clear::SQL::Symbolic)
     field = Clear::SQL.escape(field) if field.is_a?(Symbol)
 
-    sql = self.clear_select.select(field).to_sql
+    sql = clear_select.select(field).to_sql
 
     Clear::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
       rs = Clear::SQL.log_query(sql) { cnx.query(sql) }
@@ -44,7 +44,7 @@ module Clear::SQL::Query::Pluck
   def pluck_col(field : Clear::SQL::Symbolic, type : T.class) forall T
     field = Clear::SQL.escape(field) if field.is_a?(Symbol)
 
-    sql = self.clear_select.select(field).to_sql
+    sql = clear_select.select(field).to_sql
 
     Clear::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
       rs = Clear::SQL.log_query(sql) { cnx.query(sql) }
@@ -76,7 +76,7 @@ module Clear::SQL::Query::Pluck
   # :ditto:
   def pluck(fields : Tuple(*T)) forall T
     select_clause = fields.join(", ") { |f| f.is_a?(Symbol) ? Clear::SQL.escape(f) : f.to_s }
-    sql = self.clear_select.select(select_clause).to_sql
+    sql = clear_select.select(select_clause).to_sql
 
     Clear::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
       rs = Clear::SQL.log_query(sql) { cnx.query(sql) }
