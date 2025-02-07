@@ -50,7 +50,7 @@ class Clear::Migration::FullTextSearchableOperation < Clear::Migration::Operatio
         return new;
       end
       $$ LANGUAGE plpgsql;
-    SQL
+      SQL
 
     cr_tr = <<-SQL
       CREATE TRIGGER #{trigger_name} BEFORE INSERT OR UPDATE

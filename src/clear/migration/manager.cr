@@ -166,11 +166,11 @@ class Clear::Migration::Manager
     unless @loaded
       Clear::SQL.execute <<-SQL
         CREATE TABLE IF NOT EXISTS __clear_metadatas ( metatype text NOT NULL, value text NOT NULL );
-      SQL
+        SQL
 
       Clear::SQL.execute <<-SQL
         CREATE UNIQUE INDEX IF NOT EXISTS __clear_metadatas_idx ON __clear_metadatas (metatype, value);
-      SQL
+        SQL
 
       load_existing_migrations
       ensure_unicity!

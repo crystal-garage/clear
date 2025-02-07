@@ -17,7 +17,7 @@ def initdb
   clear_secondary_spec_db.exec(
     <<-SQL
       CREATE TABLE models_post_stats (id serial PRIMARY KEY, post_id INTEGER);
-    SQL
+      SQL
   )
 
   Clear::SQL.init("postgres://#{postgres_user}:#{postgres_password}@#{postgres_host}/clear_spec")

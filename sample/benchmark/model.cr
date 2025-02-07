@@ -7,14 +7,14 @@ require "benchmark"
 Clear::SQL.init("postgres://postgres@localhost/benchmark_clear")
 
 init = <<-SQL
-  CREATE TABLE benchmark (id serial PRIMARY KEY NOT NULL, y int);
-  CREATE INDEX benchmark_y ON benchmark (y);
+    CREATE TABLE benchmark (id serial PRIMARY KEY NOT NULL, y int);
+    CREATE INDEX benchmark_y ON benchmark (y);
 
-  INSERT INTO benchmark
-  SELECT i AS x, 2*i as y
-  FROM generate_series(1, 1000000) AS i;
-end
-SQL
+    INSERT INTO benchmark
+    SELECT i AS x, 2*i as y
+    FROM generate_series(1, 1000000) AS i;
+  end
+  SQL
 
 init.split(";").each { |sql| Clear::SQL.execute(sql) }
 

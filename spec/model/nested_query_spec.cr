@@ -24,7 +24,7 @@ module NestedQuerySpec
         INSERT INTO releases VALUES (1, 1, 'Video Release');
         INSERT INTO topics VALUES     (1, 1, 'foo');
         INSERT INTO topics VALUES     (2, 1, 'bar');
-      SQL
+        SQL
         .split(";").each do |qry|
         execute(qry)
       end
