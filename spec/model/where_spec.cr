@@ -274,13 +274,13 @@ module WhereSpec
         User.create!(first_name: "Diana", posts_count: 20)
 
         # Test between operator
-        users = User.query.where { posts_count.between(10, 15) }
+        users = User.query.where { posts_count.between?(10, 15) }
         users.size.should eq(2)
         users.map(&.first_name).should contain("Bob")
         users.map(&.first_name).should contain("Charlie")
 
         # Test between with edge cases
-        users = User.query.where { posts_count.between(5, 5) }
+        users = User.query.where { posts_count.between?(5, 5) }
         users.size.should eq(1)
         users.first!.first_name.should eq("Alice")
       end
@@ -580,7 +580,7 @@ module WhereSpec
           # Test WHERE with between operator in JOINed tables using user IDs
           results = Post.query
             .inner_join(:users) { users.id == posts.user_id }
-            .where { users.id.between(user2.id, user3.id) }
+            .where { users.id.between?(user2.id, user3.id) }
 
           results.size.should eq(2)
           results.map(&.title).should contain("Jane's Post")      # user2.id

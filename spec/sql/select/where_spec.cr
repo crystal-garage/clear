@@ -183,23 +183,23 @@ module WhereSpec
                            "AND (users.visible = TRUE)) OR (users.role = 'superadmin'))"
       end
 
-      it "between(a, b)" do
-        Lustra::SQL.select.where { x.between(1, 2) }
+      it "between?(a, b)" do
+        Lustra::SQL.select.where { x.between?(1, 2) }
           .to_sql.should eq(%(SELECT * WHERE ("x" BETWEEN 1 AND 2)))
 
-        Lustra::SQL.select.where { not(x.between(1, 2)) }
+        Lustra::SQL.select.where { not(x.between?(1, 2)) }
           .to_sql.should eq(%(SELECT * WHERE NOT ("x" BETWEEN 1 AND 2)))
       end
 
-      it "between(a, b) with Time values" do
+      it "between?(a, b) with Time values" do
         time_start = Time.utc(2025, 1, 1, 12, 0, 0)
         time_end = Time.utc(2025, 1, 1, 15, 0, 0)
 
-        Lustra::SQL.select.from(:users).where { created_at.between(time_start, time_end) }
+        Lustra::SQL.select.from(:users).where { created_at.between?(time_start, time_end) }
           .to_sql.should eq("SELECT * FROM \"users\" WHERE (\"created_at\" BETWEEN " +
                             "#{Lustra::Expression[time_start]} AND #{Lustra::Expression[time_end]})")
 
-        Lustra::SQL.select.from(:users).where { not(created_at.between(time_start, time_end)) }
+        Lustra::SQL.select.from(:users).where { not(created_at.between?(time_start, time_end)) }
           .to_sql.should eq("SELECT * FROM \"users\" WHERE NOT (\"created_at\" BETWEEN " +
                             "#{Lustra::Expression[time_start]} AND #{Lustra::Expression[time_end]})")
       end

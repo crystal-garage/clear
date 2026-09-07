@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added polymorphic `belongs_to ..., polymorphic: true` associations for explicit union target types, including `with_<association>` eager loading.
 - Added concrete `belongs_to ..., polymorphic_type:` aliases for joining and eager loading one polymorphic target type through a shared foreign key.
 
+### Deprecated
+- Deprecated expression `between(a, b)` in favor of the predicate-style `between?(a, b)`.
+
 ### Changed
 - `Collection#to_a` now avoids allocating and copying an intermediate model array.
 - SQL query errors now include the original exception type in their message, including when the original exception has no message.

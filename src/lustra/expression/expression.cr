@@ -13,7 +13,7 @@
 #
 # You can write:
 # ```
-# model_collection.where { created_at.between(1.day.ago, DateTime.local) }
+# model_collection.where { created_at.between?(1.day.ago, DateTime.local) }
 # ```
 #
 # or even:

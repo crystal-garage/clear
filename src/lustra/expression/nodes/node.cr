@@ -74,8 +74,13 @@ abstract class Lustra::Expression::Node
     Node::InSelect.new(self, request)
   end
 
-  def between(a, b)
+  def between?(a, b)
     Node::Between.new(self, a, b)
+  end
+
+  @[Deprecated("Use #between? instead.")]
+  def between(a, b)
+    between?(a, b)
   end
 
   def -
