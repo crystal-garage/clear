@@ -191,6 +191,14 @@ module HavingSpec
                             "#{Lustra::Expression[time_start]} AND #{Lustra::Expression[time_end]})")
       end
 
+      it "after? and before?" do
+        Lustra::SQL.select.having { users.created_at.after?(posts.created_at) }
+          .to_sql.should eq(%(SELECT * HAVING ("users"."created_at" > "posts"."created_at")))
+
+        Lustra::SQL.select.having { users.created_at.before?(posts.created_at) }
+          .to_sql.should eq(%(SELECT * HAVING ("users"."created_at" < "posts"."created_at")))
+      end
+
       it "Function" do
         Lustra::SQL.select.having { ops_transform(x, "string", raw("INTERVAL '2 seconds'")) }
           .to_sql.should eq(%(SELECT * HAVING ops_transform("x", 'string', INTERVAL '2 seconds')))

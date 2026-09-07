@@ -78,6 +78,14 @@ abstract class Lustra::Expression::Node
     Node::Between.new(self, a, b)
   end
 
+  def after?(other)
+    self > other
+  end
+
+  def before?(other)
+    self < other
+  end
+
   @[Deprecated("Use #between? instead.")]
   def between(a, b)
     between?(a, b)

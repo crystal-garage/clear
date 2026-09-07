@@ -204,6 +204,24 @@ module WhereSpec
                             "#{Lustra::Expression[time_start]} AND #{Lustra::Expression[time_end]})")
       end
 
+      it "after? and before?" do
+        Lustra::SQL.select.where { users.created_at.after?(posts.created_at) }
+          .to_sql.should eq(%(SELECT * WHERE ("users"."created_at" > "posts"."created_at")))
+
+        Lustra::SQL.select.where { users.created_at.before?(posts.created_at) }
+          .to_sql.should eq(%(SELECT * WHERE ("users"."created_at" < "posts"."created_at")))
+      end
+
+      it "after? and before? with Time values" do
+        time = Time.utc(2025, 1, 1, 12, 0, 0)
+
+        Lustra::SQL.select.from(:users).where { created_at.after?(time) }
+          .to_sql.should eq("SELECT * FROM \"users\" WHERE (\"created_at\" > #{Lustra::Expression[time]})")
+
+        Lustra::SQL.select.from(:users).where { created_at.before?(time) }
+          .to_sql.should eq("SELECT * FROM \"users\" WHERE (\"created_at\" < #{Lustra::Expression[time]})")
+      end
+
       it "custom functions" do
         Lustra::SQL.select.where { ops_transform(x, "string", raw("INTERVAL '2 seconds'")) }
           .to_sql.should eq(%(SELECT * WHERE ops_transform("x", 'string', INTERVAL '2 seconds')))
