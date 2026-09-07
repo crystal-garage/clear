@@ -61,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deduplicated the internal direct column-update workflow without changing public overloads or persistence behavior.
 
 ### Removed
+- Removed the unused internal `Lustra::Expression::Node::NotBetween` node; negate `between?` expressions with `not(...)`.
 - Removed deprecated condition-based `Collection#find` and `Collection#find!` overloads; use `find_by` and `find_by!` instead.
 
 ## [v0.18.3] - 2026-06-11
