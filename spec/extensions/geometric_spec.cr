@@ -57,6 +57,10 @@ describe "Lustra Geometric Extensions" do
       # Test below? method
       expression = Lustra::Expression.where { coordinates.below?(point) }
       expression.resolve.should eq("(\"coordinates\" <<| point(5.0,0.0))")
+
+      # Test same_as? method
+      expression = Lustra::Expression.where { coordinates.same_as?(point) }
+      expression.resolve.should eq("(\"coordinates\" ~= point(5.0,0.0))")
     end
 
     it "should combine distance with comparison operators" do

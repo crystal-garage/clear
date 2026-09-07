@@ -206,6 +206,13 @@ module GeometricSpec
         south_locations = Location.query
           .where { coordinates.below?(reference_point) }
 
+        # Find the location with matching coordinates
+        same_location = Location.query
+          .where { coordinates.same_as?(PG::Geo::Point.new(-74.0060, 40.7128)) }
+
+        same_location.size.should eq(1)
+        same_location.first!.name.should eq("Downtown")
+
         # Test combined geometric operations
         center_point = PG::Geo::Point.new(-74.0000, 40.7100)
         max_distance = 0.05
