@@ -81,11 +81,17 @@ class Lustra::SQL::InsertQuery
   end
 
   private def append_row(row)
-    @keys = row.keys.to_a.map(&.as(Symbolic))
-
     case v = @values
     when Array(Array(Inserable))
-      v << row.values.to_a.map(&.as(Inserable))
+      values_by_column = row.to_h.transform_keys(&.to_s)
+      keys = v.empty? ? row.keys.to_a.map(&.as(Symbolic)) : @keys
+
+      unless keys.size == values_by_column.size && keys.all? { |key| values_by_column.has_key?(key.to_s) }
+        raise QueryBuildingError.new("All insert rows must have the same columns")
+      end
+
+      @keys = keys
+      v << keys.map { |key| values_by_column[key.to_s].as(Inserable) }
     else # when SelectBuilder
       raise "Cannot insert both from SELECT query and from data"
     end

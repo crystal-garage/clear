@@ -25,6 +25,57 @@ module InsertSpec
         )
       end
 
+      it "aligns named tuple values with the first row's columns" do
+        insert_request
+          .values({first_name: "Ada", last_name: "Lovelace"})
+          .values({last_name: "Hopper", first_name: "Grace"})
+          .to_sql
+          .should eq %(INSERT INTO "users" ("first_name", "last_name") VALUES ('Ada', 'Lovelace'),\n('Grace', 'Hopper'))
+      end
+
+      it "persists bulk hash rows by column name regardless of key order" do
+        temporary do
+          Lustra::SQL.execute("CREATE TEMP TABLE bulk_insert_alignment (first_name text, last_name text)")
+
+          rows = [
+            {"first_name" => "Ada", "last_name" => "Lovelace"} of Lustra::SQL::Symbolic => Lustra::SQL::InsertQuery::Inserable,
+            {"last_name" => "Hopper", "first_name" => "Grace"} of Lustra::SQL::Symbolic => Lustra::SQL::InsertQuery::Inserable,
+          ]
+
+          Lustra::SQL.insert_into(:bulk_insert_alignment).values(rows).execute
+
+          persisted = Lustra::SQL.select.from(:bulk_insert_alignment).order_by(:first_name).to_a
+          persisted.map { |row| {row["first_name"], row["last_name"]} }.should eq([
+            {"Ada", "Lovelace"},
+            {"Grace", "Hopper"},
+          ])
+        end
+      end
+
+      it "rejects a bulk row with a missing column" do
+        query = insert_request.values({first_name: "Ada", last_name: "Lovelace"})
+
+        expect_raises(Lustra::SQL::QueryBuildingError) do
+          query.values({first_name: "Grace"}).to_sql
+        end
+      end
+
+      it "rejects a bulk row with an extra column" do
+        query = insert_request.values({first_name: "Ada", last_name: "Lovelace"})
+
+        expect_raises(Lustra::SQL::QueryBuildingError) do
+          query.values({first_name: "Grace", last_name: "Hopper", nickname: "Amazing Grace"}).to_sql
+        end
+      end
+
+      it "rejects a bulk row with different columns of the same count" do
+        query = insert_request.values({first_name: "Ada", last_name: "Lovelace"})
+
+        expect_raises(Lustra::SQL::QueryBuildingError) do
+          query.values({first_name: "Grace", nickname: "Amazing Grace"}).to_sql
+        end
+      end
+
       it "build an insert from sql" do
         insert_request.values(
           Lustra::SQL.select.from(:old_users)
