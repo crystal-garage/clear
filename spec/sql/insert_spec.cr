@@ -9,8 +9,76 @@ module InsertSpec
     Lustra::SQL::InsertQuery.new(:users)
   end
 
+  def with_insert_connection_tables(&)
+    Lustra::SQL.transaction do
+      Lustra::SQL.transaction("secondary") do
+        Lustra::SQL.execute("CREATE TEMP TABLE insert_connection_selection (value integer) ON COMMIT DROP")
+        Lustra::SQL.execute("secondary", "CREATE TEMP TABLE insert_connection_selection (value integer) ON COMMIT DROP")
+        yield
+      end
+    end
+  end
+
   describe "Lustra::SQL" do
     describe "InsertQuery" do
+      it "executes inserts on the query's selected connection" do
+        with_insert_connection_tables do
+          Lustra::SQL.insert_into(:insert_connection_selection, {value: 1})
+            .use_connection("secondary")
+            .execute
+
+          Lustra::SQL.select.from(:insert_connection_selection).count.should eq(0)
+          Lustra::SQL.select.from(:insert_connection_selection).use_connection("secondary").count.should eq(1)
+        end
+      end
+
+      it "executes inserts with RETURNING on the query's selected connection" do
+        with_insert_connection_tables do
+          result = Lustra::SQL.insert_into(:insert_connection_selection, {value: 2})
+            .use_connection("secondary")
+            .returning("value")
+            .execute
+
+          result["value"].should eq(2)
+          Lustra::SQL.select.from(:insert_connection_selection).count.should eq(0)
+          Lustra::SQL.select.from(:insert_connection_selection).use_connection("secondary").count.should eq(1)
+        end
+      end
+
+      it "counts inserted rows on the query's selected connection" do
+        with_insert_connection_tables do
+          affected = Lustra::SQL.insert_into(:insert_connection_selection, {value: 3})
+            .use_connection("secondary")
+            .execute_and_count
+
+          affected.should eq(1)
+          Lustra::SQL.select.from(:insert_connection_selection).count.should eq(0)
+          Lustra::SQL.select.from(:insert_connection_selection).use_connection("secondary").count.should eq(1)
+        end
+      end
+
+      it "honors explicit insert connection overrides" do
+        with_insert_connection_tables do
+          Lustra::SQL.insert_into(:insert_connection_selection, {value: 1})
+            .use_connection("secondary")
+            .execute("default")
+
+          result = Lustra::SQL.insert_into(:insert_connection_selection, {value: 2})
+            .use_connection("secondary")
+            .returning("value")
+            .execute("default")
+          result["value"].should eq(2)
+
+          affected = Lustra::SQL.insert_into(:insert_connection_selection, {value: 3})
+            .use_connection("secondary")
+            .execute_and_count("default")
+          affected.should eq(1)
+
+          Lustra::SQL.select.from(:insert_connection_selection).count.should eq(3)
+          Lustra::SQL.select.from(:insert_connection_selection).use_connection("secondary").count.should eq(0)
+        end
+      end
+
       it "builds an insert with the zero-argument fluent API" do
         Lustra::SQL.insert
           .into(:users)

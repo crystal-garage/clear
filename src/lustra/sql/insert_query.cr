@@ -41,12 +41,12 @@ class Lustra::SQL::InsertQuery
     change!
   end
 
-  def execute(connection_name : String = "default") : Hash(String, ::Lustra::SQL::Any)
+  def execute(connection_name : String? = nil) : Hash(String, ::Lustra::SQL::Any)
     o = {} of String => ::Lustra::SQL::Any
 
     if @returning.nil?
       s = to_sql
-      Lustra::SQL.execute(connection_name, s)
+      Lustra::SQL.execute(connection_name || self.connection_name, s)
     else
       fetch(connection_name) { |x| o = x }
     end
@@ -55,10 +55,10 @@ class Lustra::SQL::InsertQuery
   end
 
   # Run the insert and return the number of rows affected.
-  def execute_and_count(connection_name : String = "default") : Int64
+  def execute_and_count(connection_name : String? = nil) : Int64
     sql = to_sql
     Lustra::SQL.log_query(sql) do
-      Lustra::SQL::ConnectionPool.with_connection(connection_name, &.exec(sql).rows_affected)
+      Lustra::SQL::ConnectionPool.with_connection(connection_name || self.connection_name, &.exec(sql).rows_affected)
     end
   end
 
