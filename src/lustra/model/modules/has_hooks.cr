@@ -15,7 +15,7 @@ module Lustra::Model::HasHooks
   #
   # Returns `self`
   def with_triggers(event_name, &)
-    Lustra::SQL.transaction do |cnx|
+    Lustra::SQL.transaction(self.class.connection) do |cnx|
       trigger_before_events(event_name)
       yield(cnx)
       trigger_after_events(event_name)

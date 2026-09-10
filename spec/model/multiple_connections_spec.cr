@@ -20,6 +20,28 @@ module MultipleConnectionsSpec
     column post_id : Int32
   end
 
+  class CallbackFailure < Exception; end
+
+  class CallbackPostStat
+    include Lustra::Model
+
+    self.connection = "secondary"
+    self.table = "models_post_stats"
+
+    column id : Int32, primary: true, presence: false
+    column post_id : Int32
+
+    property fail_after : Symbol? = nil
+
+    after(:create) { |model| model.as(CallbackPostStat).fail_callback(:create) }
+    after(:update) { |model| model.as(CallbackPostStat).fail_callback(:update) }
+    after(:destroy) { |model| model.as(CallbackPostStat).fail_callback(:destroy) }
+
+    def fail_callback(event : Symbol)
+      raise CallbackFailure.new("Failed after #{event}") if fail_after == event
+    end
+  end
+
   class CounterParent
     include Lustra::Model
 
@@ -130,6 +152,58 @@ module MultipleConnectionsSpec
           p = PostStat.new({post_id: 1})
           p.save
           p.delete.should be_true
+        end
+      end
+
+      it "rolls back a secondary insert when its after-create callback fails" do
+        clear_post_stats
+
+        begin
+          post_stat = CallbackPostStat.new({post_id: 1})
+          post_stat.fail_after = :create
+
+          expect_raises(CallbackFailure, "Failed after create") do
+            post_stat.save!
+          end
+
+          CallbackPostStat.query.count.should eq(0)
+        ensure
+          clear_post_stats
+        end
+      end
+
+      it "rolls back a secondary update when its after-update callback fails" do
+        clear_post_stats
+
+        begin
+          post_stat = CallbackPostStat.create!(post_id: 1)
+          post_stat.post_id = 2
+          post_stat.fail_after = :update
+
+          expect_raises(CallbackFailure, "Failed after update") do
+            post_stat.save!
+          end
+
+          CallbackPostStat.query.find!(post_stat.id).post_id.should eq(1)
+        ensure
+          clear_post_stats
+        end
+      end
+
+      it "rolls back a secondary delete when its after-destroy callback fails" do
+        clear_post_stats
+
+        begin
+          post_stat = CallbackPostStat.create!(post_id: 1)
+          post_stat.fail_after = :destroy
+
+          expect_raises(CallbackFailure, "Failed after destroy") do
+            post_stat.destroy
+          end
+
+          CallbackPostStat.query.where(id: post_stat.id).count.should eq(1)
+        ensure
+          clear_post_stats
         end
       end
 
