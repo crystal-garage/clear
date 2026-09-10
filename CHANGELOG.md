@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Transactions now explicitly request `SERIALIZABLE` when that level is selected or omitted, matching the API's declared default instead of inheriting PostgreSQL's session default. Applications relying on Read Committed should pass `level: Lustra::SQL::Transaction::Level::ReadCommitted` explicitly. Serializable transactions may raise serialization failures that require retrying the entire transaction; Lustra does not automatically retry those failures.
 - `increment!`, `decrement!`, `update_column`, and `update_columns` now preserve unrelated unsaved changes, clearing dirty state only for the columns they persist.
 - Bulk inserts now align values by the first row's column names and reject rows with mismatched columns, preventing reordered keys from writing values to the wrong columns.
 - Model lifecycle transactions now use the model's connection, so callback failures roll back creates, updates, and destroys on named connections.

@@ -17,7 +17,7 @@ module Lustra::SQL::Transaction
       when RepeatableRead
         "BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ"
       else # Serializable is the default
-        "BEGIN"
+        "BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE"
       end
     end
   end
@@ -31,6 +31,9 @@ module Lustra::SQL::Transaction
   end
 
   # Enter a new transaction block for the current connection/fiber pair.
+  # Defaults to Serializable, independently of the PostgreSQL session default.
+  # Pass Level::ReadCommitted explicitly when weaker isolation is intended.
+  # Nested calls reuse the outer transaction and its isolation level.
   #
   # Example:
   #

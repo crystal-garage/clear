@@ -5,7 +5,42 @@ require "../spec_helper"
 module TransactionSpec
   extend self
 
+  def with_session_isolation(isolation : String, &)
+    Lustra::SQL::ConnectionPool.with_connection("default") do |connection|
+      previous_isolation = connection.query_one("SHOW default_transaction_isolation", as: String)
+
+      begin
+        connection.query_one("SELECT set_config('default_transaction_isolation', $1, false)", isolation, as: String)
+        yield
+      ensure
+        connection.query_one("SELECT set_config('default_transaction_isolation', $1, false)", previous_isolation, as: String)
+      end
+    end
+  end
+
   describe "Lustra::SQL::Transaction#transaction" do
+    {
+      {Lustra::SQL::Transaction::Level::ReadCommitted, "read committed", "repeatable read"},
+      {Lustra::SQL::Transaction::Level::RepeatableRead, "repeatable read", "read committed"},
+      {Lustra::SQL::Transaction::Level::Serializable, "serializable", "read committed"},
+    }.each do |level, expected_isolation, session_isolation|
+      it "uses #{level} isolation instead of the session default" do
+        with_session_isolation(session_isolation) do
+          Lustra::SQL.transaction(level: level) do |connection|
+            connection.query_one("SHOW transaction_isolation", as: String).should eq(expected_isolation)
+          end
+        end
+      end
+    end
+
+    it "uses the declared Serializable default when no level is supplied" do
+      with_session_isolation("read committed") do
+        Lustra::SQL.transaction do |connection|
+          connection.query_one("SHOW transaction_isolation", as: String).should eq("serializable")
+        end
+      end
+    end
+
     it "create transactional block" do
       Lustra::SQL.transaction { Lustra::SQL.select("1").execute }
       Lustra::SQL.transaction(level: Lustra::SQL::Transaction::Level::ReadCommitted) { Lustra::SQL.select("1").execute }
