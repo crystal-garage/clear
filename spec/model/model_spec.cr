@@ -1611,6 +1611,73 @@ module ModelSpec
       end
 
       context "attribute change tracking" do
+        it "preserves pending edits when increment! writes another column" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John", posts_count: 5)
+            user.first_name = "Jane"
+
+            user.increment!(:posts_count)
+            user.posts_count_column.changed?.should be_false
+            User.find!(user.id).posts_count.should eq(6)
+            User.find!(user.id).first_name.should eq("John")
+            pending_change = user.first_name_column.change
+
+            user.save!
+
+            User.find!(user.id).first_name.should eq("Jane")
+            pending_change.should eq({"John", "Jane"})
+            user.reload.posts_count.should eq(6)
+          end
+        end
+
+        it "preserves pending edits when update_column writes another column" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John", posts_count: 5)
+            user.first_name = "Jane"
+
+            user.update_column(:posts_count, 10)
+            user.posts_count_column.changed?.should be_false
+            User.find!(user.id).posts_count.should eq(10)
+            User.find!(user.id).first_name.should eq("John")
+            pending_change = user.first_name_column.change
+
+            user.save!
+
+            User.find!(user.id).first_name.should eq("Jane")
+            pending_change.should eq({"John", "Jane"})
+            user.reload.posts_count.should eq(10)
+          end
+        end
+
+        it "preserves pending edits when update_columns writes other columns" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John", posts_count: 5, active: false)
+            user.first_name = "Jane"
+
+            user.update_columns(posts_count: 10, active: true)
+            user.posts_count_column.changed?.should be_false
+            user.active_column.changed?.should be_false
+            persisted = User.find!(user.id)
+            persisted.posts_count.should eq(10)
+            persisted.active.should be_true
+            persisted.first_name.should eq("John")
+            pending_change = user.first_name_column.change
+
+            user.save!
+
+            User.find!(user.id).first_name.should eq("Jane")
+            pending_change.should eq({"John", "Jane"})
+            user.reload.posts_count.should eq(10)
+            user.active.should be_true
+          end
+        end
+
         it "returns change tuple with column.change" do
           temporary do
             reinit_example_models

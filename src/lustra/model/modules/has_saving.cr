@@ -292,8 +292,7 @@ module Lustra::Model::HasSaving
 
     # Update in-memory value by reloading just this column
     result = Lustra::SQL.select(column_name).from(self.class.full_table_name).where { raw(self.class.__pkey__) == __pkey__ }.use_connection(@@connection).fetch_first!
-    set({column_name => result[column_name]})
-    clear_change_flags
+    reset({column_name => result[column_name]})
 
     self
   end
@@ -409,8 +408,7 @@ module Lustra::Model::HasSaving
       .execute(@@connection)
 
     # Update in-memory values
-    set(columns)
-    clear_change_flags
+    reset(columns)
 
     self
   end
