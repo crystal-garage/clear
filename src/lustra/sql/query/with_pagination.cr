@@ -3,7 +3,7 @@ module Lustra::SQL::Query::WithPagination
   DEFAULT_PAGE  =  1
 
   macro included
-    property total_entries : Int64 = 0_i64
+    property total_entries : Int64? = nil
   end
 
   # Enter pagination mode.
@@ -40,10 +40,10 @@ module Lustra::SQL::Query::WithPagination
 
   # Return the total number of pages.
   def total_pages : Int32 | Int64
-    if limit.nil? || total_entries.zero?
+    if limit.nil? || total_entries.nil?
       1
     else
-      (total_entries / limit.as(Int64).to_f).ceil.to_i
+      (total_entries.as(Int64) / limit.as(Int64).to_f).ceil.to_i
     end
   end
 
