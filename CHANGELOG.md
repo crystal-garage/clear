@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Rolling back a savepoint now discards its `after_commit` callbacks, including callbacks from released nested savepoints, while preserving callbacks for committed work.
+- Duplicated queries now have independent hook lists; eager loading uses each copy's filters and association cache. Duplicated association collections preserve foreign-key defaults, autosave, append, and unlink behavior.
 - Insert `execute` (including `RETURNING`) and `execute_and_count` now honor `use_connection` unless an explicit connection override is supplied.
 - Transactions now explicitly request `SERIALIZABLE` when that level is selected or omitted, matching the API's declared default instead of inheriting PostgreSQL's session default. Applications relying on Read Committed should pass `level: Lustra::SQL::Transaction::Level::ReadCommitted` explicitly. Serializable transactions may raise serialization failures that require retrying the entire transaction; Lustra does not automatically retry those failures.
 - `increment!`, `decrement!`, `update_column`, and `update_columns` now preserve unrelated unsaved changes, clearing dirty state only for the columns they persist.

@@ -121,15 +121,24 @@ module Lustra::SQL::Transaction
   # ```
   def with_savepoint(sp_name : Symbolic? = nil, connection_name : String = "default", &)
     transaction(connection_name) do |cnx|
+      callback_count = @@commit_callbacks[cnx]?.try(&.size) || 0
       sp_name ||= "sp_#{@@savepoint_uid += 1}"
-      execute(connection_name, "SAVEPOINT #{sp_name}")
-      yield
-      execute(connection_name, "RELEASE SAVEPOINT #{sp_name}") if cnx._in_transaction?
-    rescue e : RollbackError
-      if cnx._in_transaction?
-        execute(connection_name, "ROLLBACK TO SAVEPOINT #{sp_name}")
-        raise e if e.savepoint_id.try &.!=(sp_name)
+      begin
+        execute(connection_name, "SAVEPOINT #{sp_name}")
+        yield
+        execute(connection_name, "RELEASE SAVEPOINT #{sp_name}") if cnx._in_transaction?
+      rescue RollbackError
+        if cnx._in_transaction?
+          execute(connection_name, "ROLLBACK TO SAVEPOINT #{sp_name}")
+          discard_savepoint_callbacks(cnx, callback_count)
+        end
       end
+    end
+  end
+
+  private def discard_savepoint_callbacks(connection, count)
+    if callbacks = @@commit_callbacks[connection]?
+      callbacks.pop(callbacks.size - count)
     end
   end
 

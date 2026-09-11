@@ -35,6 +35,59 @@ module CacheSpec
 
   describe "Lustra::Model" do
     context "cache system" do
+      it "eager loads associations for each filtered duplicate" do
+        temporary do
+          reinit
+          base = User.query.with_posts
+          first = base.dup.where(id: 101).to_a
+          second = base.dup.where(id: 102).to_a
+
+          first.map(&.id).should eq([101])
+          second.map(&.id).should eq([102])
+          first.first.cache.not_nil!.hit("posts", 102_i64, Post).should be_empty
+          second.first.cache.not_nil!.hit("posts", 101_i64, Post).should be_empty
+          Lustra::Model::QueryCache.reset_counter
+
+          first.first.posts.map(&.id).sort.should eq([301, 304])
+          second.first.posts.map(&.id).sort.should eq([302, 303])
+          Lustra::Model::QueryCache.cache_hitted.should eq(2)
+        end
+      end
+
+      it "preserves belongs_to, has_one, and through eager loading on duplicates" do
+        temporary do
+          reinit
+          UserInfo.create!(user_id: 101, registration_number: 123)
+
+          post = Post.query.with_user.dup.where(id: 301).to_a.first
+          user = User.query.with_info.dup.where(id: 101).to_a.first
+          category = Category.query.with_users.dup.where(id: 201).to_a.first
+          Lustra::Model::QueryCache.reset_counter
+
+          post.user.id.should eq(101)
+          user.info!.registration_number.should eq(123)
+          category.users.map(&.id).sort.should eq([101, 102])
+          Lustra::Model::QueryCache.cache_hitted.should eq(3)
+        end
+      end
+
+      it "preserves polymorphic belongs_to eager loading on duplicates" do
+        temporary do
+          reinit_example_models
+          employee = Employee.create!(id: 101, name: "Employee")
+          product = Product.create!(id: 101, name: "Product")
+          Picture.create!(name: "employee", imageable_id: employee.id, imageable_type: "Employee")
+          Picture.create!(name: "product", imageable_id: product.id, imageable_type: "Product")
+
+          pictures = Picture.query.with_imageable.dup.order_by(:name).to_a
+          Lustra::Model::QueryCache.reset_counter
+
+          pictures.first.imageable.as(Employee).id.should eq(employee.id)
+          pictures.last.imageable.as(Product).id.should eq(product.id)
+          Lustra::Model::QueryCache.cache_hitted.should eq(2)
+        end
+      end
+
       it "manage has_many relations" do
         temporary do
           reinit

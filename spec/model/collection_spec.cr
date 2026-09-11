@@ -3,6 +3,61 @@ require "../data/example_models"
 
 module CollectionSpec
   describe Lustra::Model::CollectionBase do
+    describe "#dup on associations" do
+      it "preserves the parent foreign key when building through a duplicate" do
+        temporary do
+          reinit_example_models
+          user = User.create!(first_name: "John")
+
+          post = user.posts.dup.build(title: "Draft")
+
+          post.user_id_column.defined?.should be_true
+          post.user_id.should eq(user.id)
+        end
+      end
+
+      it "preserves autosave when building through a duplicate" do
+        temporary do
+          reinit_example_models
+          user = User.create!(first_name: "John")
+          post = user.posts.dup.build(title: "Draft", user_id: user.id)
+
+          user.save!
+
+          post.persisted?.should be_true
+          user.posts.count.should eq(1)
+        end
+      end
+
+      it "preserves append behavior on a duplicated association" do
+        temporary do
+          reinit_example_models
+          original_owner = User.create!(first_name: "John")
+          new_owner = User.create!(first_name: "Jane")
+          post = Post.create!(title: "Post", user_id: original_owner.id)
+
+          new_owner.posts.dup << post
+
+          post.reload.user_id.should eq(new_owner.id)
+        end
+      end
+
+      it "preserves unlink behavior on a duplicated through association" do
+        temporary do
+          reinit_example_models
+          user = User.create!(first_name: "John")
+          post = Post.create!(title: "Post", user_id: user.id)
+          tag = Tag.create!(name: "Crystal")
+          post.tags << tag
+
+          post.tags.dup.unlink(tag)
+
+          post.tags.count.should eq(0)
+          Tag.query.where(id: tag.id).count.should eq(1)
+        end
+      end
+    end
+
     describe "with query" do
       context "#build" do
         it "build empty model" do
