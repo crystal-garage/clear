@@ -80,7 +80,7 @@ class Lustra::View
 
     view = @@views[view_name]
     dependencies = if direction == :drop
-                     @@views.values.select { |candidate| candidate.requirement.includes?(view_name) }.map(&.name)
+                     @@views.values.select(&.requirement.includes?(view_name)).map(&.name)
                    else
                      view.requirement
                    end
