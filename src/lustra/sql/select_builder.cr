@@ -40,7 +40,7 @@ module Lustra::SQL::SelectBuilder
     @limit = nil,
     @offset = nil,
     @lock = nil,
-    @before_query_triggers = [] of -> Nil,
+    @before_query_triggers = [] of Lustra::SQL::SelectBuilder -> Nil,
   )
   end
 
@@ -60,7 +60,7 @@ module Lustra::SQL::SelectBuilder
       limit: @limit,
       offset: @offset,
       lock: @lock,
-      before_query_triggers: @before_query_triggers
+      before_query_triggers: @before_query_triggers.dup
     ).use_connection(connection_name)
   end
 

@@ -128,6 +128,74 @@ module TransactionSpec
   end
 
   describe "Lustra::SQL::Transaction#after_commit" do
+    {"default", "secondary"}.each do |connection_name|
+      it "discards rolled-back savepoint callbacks on #{connection_name}" do
+        called = [] of String
+
+        Lustra::SQL.transaction(connection_name) do
+          Lustra::SQL.after_commit(connection_name) { called << "before" }
+
+          Lustra::SQL.with_savepoint(connection_name: connection_name) do
+            Lustra::SQL.after_commit(connection_name) { called << "rolled back" }
+            Lustra::SQL.rollback
+          end
+
+          Lustra::SQL.after_commit(connection_name) { called << "after" }
+          called.should be_empty
+        end
+
+        called.should eq(["before", "after"])
+      end
+    end
+
+    it "discards released inner savepoint callbacks when their enclosing savepoint rolls back" do
+      called = [] of String
+
+      Lustra::SQL.transaction do
+        Lustra::SQL.after_commit { called << "committed" }
+
+        Lustra::SQL.with_savepoint do
+          Lustra::SQL.after_commit { called << "outer savepoint" }
+          Lustra::SQL.with_savepoint do
+            Lustra::SQL.after_commit { called << "inner savepoint" }
+          end
+          Lustra::SQL.rollback
+        end
+      end
+
+      called.should eq(["committed"])
+    end
+
+    it "runs released savepoint callbacks once and only after the outer commit" do
+      called = [] of String
+
+      Lustra::SQL.transaction do
+        Lustra::SQL.after_commit { called << "outer" }
+        Lustra::SQL.with_savepoint do
+          Lustra::SQL.after_commit { called << "savepoint" }
+        end
+        called.should be_empty
+      end
+
+      called.should eq(["outer", "savepoint"])
+      Lustra::SQL.transaction { }
+      called.should eq(["outer", "savepoint"])
+    end
+
+    it "discards callbacks when an explicitly named savepoint rolls back" do
+      called = [] of String
+
+      Lustra::SQL.transaction do
+        Lustra::SQL.after_commit { called << "outer" }
+        Lustra::SQL.with_savepoint(sp_name: :callback_scope) do
+          Lustra::SQL.after_commit { called << "savepoint" }
+          Lustra::SQL.rollback
+        end
+      end
+
+      called.should eq(["outer"])
+    end
+
     it "executes the callback code when transaction is commited" do
       is_called = false
 

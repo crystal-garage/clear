@@ -27,6 +27,28 @@ module SelectSpec
         cq_2.to_sql.should eq complex_query.to_sql
       end
 
+      it "preserves the original query's hooks after executing a duplicate" do
+        calls = 0
+        original = Lustra::SQL.select("1").before_query { calls += 1 }
+        copy = original.dup
+
+        copy.to_a
+        calls.should eq(1)
+        original.to_a
+        calls.should eq(2)
+      end
+
+      it "does not add a duplicate's hooks to the original query" do
+        calls = 0
+        original = Lustra::SQL.select("1")
+        copy = original.dup.before_query { calls += 1 }
+
+        original.to_a
+        calls.should eq(0)
+        copy.to_a
+        calls.should eq(1)
+      end
+
       it "transfert to delete method" do
         r = Lustra::SQL.select("*").from(:users).where { raw("users.id") > 1000 }
         r.to_delete.to_sql.should eq "DELETE FROM \"users\" WHERE (users.id > 1000)"

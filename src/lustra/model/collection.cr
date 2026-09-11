@@ -199,7 +199,7 @@ module Lustra::Model
     @polymorphic_scope : Set(String)?
 
     # :nodoc:
-    @cache : Lustra::Model::QueryCache
+    protected getter cache : Lustra::Model::QueryCache
 
     # :nodoc:
     @cached_result : Array(T)?
@@ -231,7 +231,7 @@ module Lustra::Model
       @limit = nil,
       @offset = nil,
       @lock = nil,
-      @before_query_triggers = [] of -> Nil,
+      @before_query_triggers = [] of Lustra::SQL::SelectBuilder -> Nil,
       @tags = {} of String => Lustra::SQL::Any,
       @cache = Lustra::Model::QueryCache.new,
       @cached_result = nil,
@@ -239,11 +239,18 @@ module Lustra::Model
     end
 
     def dup
+      copy = super
+      copy.tags(@tags)
+      copy.append_operation = append_operation
+      copy.unlink_operation = unlink_operation
+      copy.run_append_operation_after_create = run_append_operation_after_create?
+      copy.parent_model = parent_model
+      copy.association_name = association_name
+      copy.autosave = autosave?
       if @polymorphic && (polymorphic_key = @polymorphic_key) && (polymorphic_scope = @polymorphic_scope)
-        super.flag_as_polymorphic!(polymorphic_key, polymorphic_scope)
-      else
-        super
+        copy.flag_as_polymorphic!(polymorphic_key, polymorphic_scope)
       end
+      copy
     end
 
     # :nodoc:
@@ -934,7 +941,7 @@ module Lustra::Model
 
     # Build a single-column key query while preserving selected expressions
     # required by ordering and pagination in the inner query.
-    private def key_subquery(column : String, source : CollectionBase(T) = dup)
+    protected def key_subquery(column : String, source : CollectionBase(T) = dup)
       key_alias = "__lustra_query_key"
       source_alias = "__lustra_query_source"
 

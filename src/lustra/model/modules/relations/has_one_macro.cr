@@ -48,17 +48,18 @@ module Lustra::Model::Relations::HasOneMacro
       # Eager load the has_one relation {{ method_name }}.
       # Use it to avoid N+1 queries.
       def with_{{ method_name }}(fetch_columns = false, &block : {{ relation_type }}::Collection ->) : self
-        before_query do
+        before_query_with_context do |query|
+          collection = query.as(typeof(self))
           %primary_key = {{ (primary_key || "#{relation_type}.__pkey__").id }}
           %foreign_key = {% if foreign_key %} "{{ foreign_key }}" {% else %} ({{ self_type }}.table.to_s.singularize + "_id") {% end %}
 
           # SELECT * FROM foreign WHERE foreign_key IN ( SELECT primary_key FROM parents )
-          sub_query = key_subquery(%primary_key)
+          sub_query = collection.key_subquery(%primary_key)
 
           qry = {{ relation_type }}.query.where { raw(%foreign_key).in?(sub_query) }
           block.call(qry)
 
-          @cache.active "{{ method_name }}"
+          collection.cache.active "{{ method_name }}"
 
           h = {} of Lustra::SQL::Any => Array({{ relation_type }})
 
@@ -68,7 +69,7 @@ module Lustra::Model::Relations::HasOneMacro
           end
 
           h.each do |key, value|
-            @cache.set("{{ method_name }}", key, value)
+            collection.cache.set("{{ method_name }}", key, value)
           end
         end
 
