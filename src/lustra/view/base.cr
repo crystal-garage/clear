@@ -73,14 +73,22 @@ class Lustra::View
   end
 
   # :ditto:
-  def self.apply(direction : Symbol, view_name : String, apply_cache : Set(String))
+  def self.apply(direction : Symbol, view_name : String, apply_cache : Set(String), visiting = Set(String).new)
     return if apply_cache.includes?(view_name)
+    raise ArgumentError.new("Cyclic view dependency involving '#{view_name}'") if visiting.includes?(view_name)
+    visiting << view_name
 
     view = @@views[view_name]
-    view.requirement.each { |dep_view| apply(direction, dep_view, apply_cache) }
+    dependencies = if direction == :drop
+                     @@views.values.select { |candidate| candidate.requirement.includes?(view_name) }.map(&.name)
+                   else
+                     view.requirement
+                   end
+    dependencies.each { |dep_view| apply(direction, dep_view, apply_cache, visiting) }
 
     Lustra::SQL.execute(view.connection, direction == :drop ? view.to_drop_sql : view.to_create_sql)
     apply_cache << view_name
+    visiting.delete(view_name)
   end
 
   # :nodoc:
@@ -131,7 +139,7 @@ class Lustra::View
   end
 
   def to_drop_sql
-    "DROP VIEW IF EXISTS #{@name}"
+    {"DROP", (materialized? ? "MATERIALIZED VIEW" : "VIEW"), "IF EXISTS", full_name}.join(' ')
   end
 
   def full_name
@@ -139,6 +147,6 @@ class Lustra::View
   end
 
   def to_create_sql
-    {"CREATE OR REPLACE", (materialized? ? "MATERIALIZED VIEW" : "VIEW"), full_name, "AS (", @query, ")"}.join(' ')
+    {(materialized? ? "CREATE MATERIALIZED VIEW" : "CREATE OR REPLACE VIEW"), full_name, "AS (", @query, ")"}.join(' ')
   end
 end
