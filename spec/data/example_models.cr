@@ -285,6 +285,20 @@ class FloatData
   column temperature : Float32?
 end
 
+class RangeData
+  include Lustra::Model
+
+  primary_key
+
+  column name : String?
+  column int32_range : Range(Int32?, Int32?)?
+  column int64_range : Range(Int64?, Int64?)?
+  column numeric_range : Range(BigDecimal?, BigDecimal?)?
+  column time_range : Range(Time?, Time?)?
+
+  self.table = "range_data"
+end
+
 class ModelWithinAnotherSchema
   include Lustra::Model
 
@@ -514,6 +528,16 @@ class ModelSpecMigration123
       t.column "latitude", "double precision", null: true
       t.column "longitude", "double precision", null: true
       t.column "temperature", "real", null: true
+
+      t.timestamps
+    end
+
+    create_table :range_data do |t|
+      t.column "name", "string", null: true
+      t.column "int32_range", "int4range", null: true
+      t.column "int64_range", "int8range", null: true
+      t.column "numeric_range", "numrange", null: true
+      t.column "time_range", "tsrange", null: true
 
       t.timestamps
     end

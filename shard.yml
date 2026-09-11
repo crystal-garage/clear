@@ -17,8 +17,10 @@ dependencies:
     github: anykeyh/generate.cr
     branch: master
   pg:
-    github: will/crystal-pg
-    version: "~> 0.29.0"
+    # github: will/crystal-pg
+    # version: "~> 0.29.0"
+    github: mamantoha/crystal-pg
+    branch: range
   inflector:
     github: phoffer/inflector.cr
     version: ">= 0.1.8"
