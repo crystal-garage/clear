@@ -48,8 +48,8 @@ module CacheSpec
           second.first.cache.not_nil!.hit("posts", 101_i64, Post).should be_empty
           Lustra::Model::QueryCache.reset_counter
 
-          first.first.posts.map(&.id).sort.should eq([301, 304])
-          second.first.posts.map(&.id).sort.should eq([302, 303])
+          first.first.posts.map(&.id).sort!.should eq([301, 304])
+          second.first.posts.map(&.id).sort!.should eq([302, 303])
           Lustra::Model::QueryCache.cache_hitted.should eq(2)
         end
       end
@@ -66,7 +66,7 @@ module CacheSpec
 
           post.user.id.should eq(101)
           user.info!.registration_number.should eq(123)
-          category.users.map(&.id).sort.should eq([101, 102])
+          category.users.map(&.id).sort!.should eq([101, 102])
           Lustra::Model::QueryCache.cache_hitted.should eq(3)
         end
       end
